@@ -98,7 +98,7 @@
 
   <scm>
     <url>https://github.com/pjfanning/excel-streaming-reader.git</url>
-    <connection>scm:git://github.com/pjfanning/excel-streaming-reader.git</connection>
+    <connection>scm:git:http://github.com/pjfanning/excel-streaming-reader.git</connection>
     <tag>2.0.0</tag>
   </scm>
 
