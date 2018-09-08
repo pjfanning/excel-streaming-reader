@@ -1,7 +1,8 @@
 language: java
 
 jdk:
-   - oraclejdk8
+   - openjdk8
+   - openjdk10
 
 script:
    - mvn clean package -B

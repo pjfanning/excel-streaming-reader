@@ -1,9 +1,11 @@
-package com.monitorjbl.xlsx.impl;
+package com.github.pjfanning.xlsx.impl;
 
-import com.monitorjbl.xlsx.StreamingReader.Builder;
-import com.monitorjbl.xlsx.exceptions.OpenException;
-import com.monitorjbl.xlsx.exceptions.ReadException;
-import com.monitorjbl.xlsx.sst.BufferedStringsTable;
+import com.github.pjfanning.poi.xssf.streaming.TempFileSharedStringsTable;
+import com.github.pjfanning.xlsx.StreamingReader.Builder;
+import com.github.pjfanning.xlsx.exceptions.NotSupportedException;
+import com.github.pjfanning.xlsx.exceptions.OpenException;
+import com.github.pjfanning.xlsx.exceptions.ReadException;
+import org.apache.poi.ooxml.util.DocumentHelper;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
 import org.apache.poi.openxml4j.opc.OPCPackage;
@@ -20,15 +22,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.nio.file.Files;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,8 +38,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.monitorjbl.xlsx.XmlUtils.document;
-import static com.monitorjbl.xlsx.XmlUtils.searchForNodeList;
+import static com.github.pjfanning.xlsx.XmlUtils.searchForNodeList;
 import static java.util.Arrays.asList;
 
 public class StreamingWorkbookReader implements Iterable<Sheet>, AutoCloseable {
@@ -48,7 +48,6 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, AutoCloseable {
   private final List<Map<String, String>> sheetProperties = new ArrayList<>();
   private final Builder builder;
   private File tmp;
-  private File sstCache;
   private OPCPackage pkg;
   private SharedStringsTable sst;
   private boolean use1904Dates = false;
@@ -59,15 +58,13 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, AutoCloseable {
    * going forward.
    *
    * @param sst      The SST data for this workbook
-   * @param sstCache The backing cache file for the SST data
    * @param pkg      The POI package that should be closed when this workbook is closed
    * @param reader   A single streaming reader instance
    * @param builder  The builder containing all options
    */
   @Deprecated
-  public StreamingWorkbookReader(SharedStringsTable sst, File sstCache, OPCPackage pkg, StreamingSheetReader reader, Builder builder) {
+  public StreamingWorkbookReader(SharedStringsTable sst, OPCPackage pkg, StreamingSheetReader reader, Builder builder) {
     this.sst = sst;
-    this.sstCache = sstCache;
     this.pkg = pkg;
     this.sheets = asList(new StreamingSheet(null, reader));
     this.builder = builder;
@@ -85,7 +82,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, AutoCloseable {
   public void init(InputStream is) {
     File f = null;
     try {
-      f = writeInputStreamToFile(is, builder.getBufferSize());
+      f = TempFileUtil.writeInputStreamToFile(is, builder.getBufferSize());
       log.debug("Created temp file [" + f.getAbsolutePath() + "]");
 
       init(f);
@@ -112,16 +109,15 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, AutoCloseable {
       }
 
       XSSFReader reader = new XSSFReader(pkg);
-      if(builder.getSstCacheSize() > 0) {
-        sstCache = Files.createTempFile("", "").toFile();
-        log.debug("Created sst cache file [" + sstCache.getAbsolutePath() + "]");
-        sst = BufferedStringsTable.getSharedStringsTable(sstCache, builder.getSstCacheSize(), pkg);
+      if(builder.useSstTempFile()) {
+        log.debug("Created sst cache file");
+        sst = new TempFileSharedStringsTable(pkg, builder.encryptSstTempFile());
       } else {
         sst = reader.getSharedStringsTable();
       }
 
       StylesTable styles = reader.getStylesTable();
-      NodeList workbookPr = searchForNodeList(document(reader.getWorkbookData()), "/workbook/workbookPr");
+      NodeList workbookPr = searchForNodeList(DocumentHelper.readDocument(reader.getWorkbookData()), "/ss:workbook/ss:workbookPr");
       if(workbookPr.getLength() == 1) {
         final Node date1904 = workbookPr.item(0).getAttributes().getNamedItem("date1904");
         if(date1904 != null) {
@@ -130,6 +126,8 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, AutoCloseable {
       }
 
       loadSheets(reader, sst, styles, builder.getRowCacheSize());
+    } catch(SAXException e) {
+      throw new OpenException("Failed to parse file", e);
     } catch(IOException e) {
       throw new OpenException("Failed to open file", e);
     } catch(OpenXML4JException | XMLStreamException e) {
@@ -163,14 +161,18 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, AutoCloseable {
 
   void lookupSheetNames(XSSFReader reader) throws IOException, InvalidFormatException {
     sheetProperties.clear();
-    NodeList nl = searchForNodeList(document(reader.getWorkbookData()), "/workbook/sheets/sheet");
-    for(int i = 0; i < nl.getLength(); i++) {
-      Map<String, String> props = new HashMap<>();
-      props.put("name", nl.item(i).getAttributes().getNamedItem("name").getTextContent());
+    try {
+      NodeList nl = searchForNodeList(DocumentHelper.readDocument(reader.getWorkbookData()), "/ss:workbook/ss:sheets/ss:sheet");
+      for(int i = 0; i < nl.getLength(); i++) {
+        Map<String, String> props = new HashMap<>();
+        props.put("name", nl.item(i).getAttributes().getNamedItem("name").getTextContent());
 
-      Node state = nl.item(i).getAttributes().getNamedItem("state");
-      props.put("state", state == null ? "visible" : state.getTextContent());
-      sheetProperties.add(props);
+        Node state = nl.item(i).getAttributes().getNamedItem("state");
+        props.put("state", state == null ? "visible" : state.getTextContent());
+        sheetProperties.add(props);
+      }
+    } catch (SAXException e) {
+      throw new OpenException("Failed to parse file", e);
     }
   }
 
@@ -188,7 +190,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, AutoCloseable {
   }
 
   @Override
-  public void close() {
+  public void close() throws IOException {
     try {
       for(StreamingSheet sheet : sheets) {
         sheet.getReader().close();
@@ -196,28 +198,14 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, AutoCloseable {
       pkg.revert();
     } finally {
       if(tmp != null) {
-        log.debug("Deleting tmp file [" + tmp.getAbsolutePath() + "]");
+        if (log.isDebugEnabled()) {
+          log.debug("Deleting tmp file [" + tmp.getAbsolutePath() + "]");
+        }
         tmp.delete();
       }
-      if(sst instanceof BufferedStringsTable) {
-        log.debug("Deleting sst cache file [" + this.sstCache.getAbsolutePath() + "]");
-        ((BufferedStringsTable) sst).close();
-        sstCache.delete();
+      if(sst != null) {
+        sst.close();
       }
-    }
-  }
-
-  static File writeInputStreamToFile(InputStream is, int bufferSize) throws IOException {
-    File f = Files.createTempFile("tmp-", ".xlsx").toFile();
-    try(FileOutputStream fos = new FileOutputStream(f)) {
-      int read;
-      byte[] bytes = new byte[bufferSize];
-      while((read = is.read(bytes)) != -1) {
-        fos.write(bytes, 0, read);
-      }
-      is.close();
-      fos.close();
-      return f;
     }
   }
 
@@ -240,7 +228,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, AutoCloseable {
 
     @Override
     public void remove() {
-      throw new RuntimeException("NotSupported");
+      throw new NotSupportedException();
     }
   }
 }

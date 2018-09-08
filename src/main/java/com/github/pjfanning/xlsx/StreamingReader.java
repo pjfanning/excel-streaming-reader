@@ -1,12 +1,15 @@
-package com.monitorjbl.xlsx;
+package com.github.pjfanning.xlsx;
 
-import com.monitorjbl.xlsx.exceptions.MissingSheetException;
-import com.monitorjbl.xlsx.exceptions.OpenException;
-import com.monitorjbl.xlsx.exceptions.ReadException;
-import com.monitorjbl.xlsx.sst.BufferedStringsTable;
-import com.monitorjbl.xlsx.impl.StreamingSheetReader;
-import com.monitorjbl.xlsx.impl.StreamingWorkbook;
-import com.monitorjbl.xlsx.impl.StreamingWorkbookReader;
+import com.github.pjfanning.poi.xssf.streaming.TempFileSharedStringsTable;
+import com.github.pjfanning.xlsx.exceptions.CloseException;
+import com.github.pjfanning.xlsx.exceptions.MissingSheetException;
+import com.github.pjfanning.xlsx.impl.StreamingWorkbook;
+import com.github.pjfanning.xlsx.impl.StreamingWorkbookReader;
+import com.github.pjfanning.xlsx.exceptions.OpenException;
+import com.github.pjfanning.xlsx.exceptions.ReadException;
+import com.github.pjfanning.xlsx.impl.StreamingSheetReader;
+import com.github.pjfanning.xlsx.impl.TempFileUtil;
+import org.apache.poi.ooxml.util.DocumentHelper;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
 import org.apache.poi.openxml4j.opc.OPCPackage;
@@ -21,22 +24,21 @@ import org.apache.poi.xssf.model.SharedStringsTable;
 import org.apache.poi.xssf.model.StylesTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.security.GeneralSecurityException;
 import java.util.Iterator;
 import java.util.Objects;
 
-import static com.monitorjbl.xlsx.XmlUtils.document;
-import static com.monitorjbl.xlsx.XmlUtils.searchForNodeList;
+import static com.github.pjfanning.xlsx.XmlUtils.searchForNodeList;
 
 /**
  * Streaming Excel workbook implementation. Most advanced features of POI are not supported.
@@ -70,31 +72,19 @@ public class StreamingReader implements Iterable<Row>, AutoCloseable {
   /**
    * Closes the streaming resource, attempting to clean up any temporary files created.
    *
-   * @throws com.monitorjbl.xlsx.exceptions.CloseException if there is an issue closing the stream
+   * @throws CloseException if there is an issue closing the stream
    */
   @Override
-  public void close() {
+  public void close() throws IOException {
     try {
       workbook.close();
     } finally {
       if(tmp != null) {
-        log.debug("Deleting tmp file [" + tmp.getAbsolutePath() + "]");
+        if (log.isDebugEnabled()) {
+          log.debug("Deleting tmp file [" + tmp.getAbsolutePath() + "]");
+        }
         tmp.delete();
       }
-    }
-  }
-
-  static File writeInputStreamToFile(InputStream is, int bufferSize) throws IOException {
-    File f = Files.createTempFile("tmp-", ".xlsx").toFile();
-    try(FileOutputStream fos = new FileOutputStream(f)) {
-      int read;
-      byte[] bytes = new byte[bufferSize];
-      while((read = is.read(bytes)) != -1) {
-        fos.write(bytes, 0, read);
-      }
-      is.close();
-      fos.close();
-      return f;
     }
   }
 
@@ -106,7 +96,8 @@ public class StreamingReader implements Iterable<Row>, AutoCloseable {
     private int rowCacheSize = 10;
     private int bufferSize = 1024;
     private int sheetIndex = 0;
-    private int sstCacheSize = -1;
+    private boolean useSstTempFile = false;
+    private boolean encryptSstTempFile = false;
     private String sheetName;
     private String password;
 
@@ -142,11 +133,19 @@ public class StreamingReader implements Iterable<Row>, AutoCloseable {
     }
 
     /**
-     * @return The size of the shared string table cache. If less than 0, no
-     * cache will be used and the entire table will be loaded into memory.
+     * @return Whether to use a temp file for the Shared Strings data. If false, no
+     * temp file will be used and the entire table will be loaded into memory.
      */
-    public int getSstCacheSize() {
-      return sstCacheSize;
+    public boolean useSstTempFile() {
+      return useSstTempFile;
+    }
+
+    /**
+     * @return Whether to encrypt the temp file for the Shared Strings data. Only applies if <code>useSstTempFile()</code>
+     * is true.
+     */
+    public boolean encryptSstTempFile() {
+      return encryptSstTempFile;
     }
 
     /**
@@ -227,23 +226,35 @@ public class StreamingReader implements Iterable<Row>, AutoCloseable {
     }
 
     /**
-     * <h1>!!! This option is experimental !!!</h1>
-     *
-     * Set the size of the Shared Strings Table cache. This option exists to accommodate
+     * Enables use of Shared Strings Table temp file. This option exists to accommodate
      * extremely large workbooks with millions of unique strings. Normally the SST is entirely
      * loaded into memory, but with large workbooks with high cardinality (i.e., very few
      * duplicate values) the SST may not fit entirely into memory.
      * <p>
-     * By default, the entire SST *will* be loaded into memory. Setting a value greater than
-     * 0 for this option will only cache up to this many entries in memory. <strong>However</strong>,
-     * enabling this option at all will have some noticeable performance degredation as you are
+     * By default, the entire SST *will* be loaded into memory. <strong>However</strong>,
+     * enabling this option at all will have some noticeable performance degradation as you are
      * trading memory for disk space.
      *
-     * @param sstCacheSize size of SST cache
+     * @param useSstTempFile whether to use a temp file to store the Shared Strings Table data
      * @return reference to current {@code Builder}
      */
-    public Builder sstCacheSize(int sstCacheSize) {
-      this.sstCacheSize = sstCacheSize;
+    public Builder setUseSstTempFile(boolean useSstTempFile) {
+      this.useSstTempFile = useSstTempFile;
+      return this;
+    }
+
+    /**
+     * Enables use of encryption in Shared Strings Table temp file. This only applies if <code>setUseSstTempFile</code>
+     * is set to true.
+     * <p>
+     * By default, the temp file is not encrypted. <strong>However</strong>,
+     * enabling this option could slow down the processing of Shared Strings data.
+     *
+     * @param encryptSstTempFile whether to encrypt the temp file used to store the Shared Strings Table data
+     * @return reference to current {@code Builder}
+     */
+    public Builder setEncryptSstTempFile(boolean encryptSstTempFile) {
+      this.encryptSstTempFile = encryptSstTempFile;
       return this;
     }
 
@@ -256,7 +267,7 @@ public class StreamingReader implements Iterable<Row>, AutoCloseable {
      *
      * @param is input stream to read in
      * @return A {@link Workbook} that can be read from
-     * @throws com.monitorjbl.xlsx.exceptions.ReadException if there is an issue reading the stream
+     * @throws ReadException if there is an issue reading the stream
      */
     public Workbook open(InputStream is) {
       StreamingWorkbookReader workbook = new StreamingWorkbookReader(this);
@@ -270,8 +281,8 @@ public class StreamingReader implements Iterable<Row>, AutoCloseable {
      *
      * @param file file to read in
      * @return built streaming reader instance
-     * @throws com.monitorjbl.xlsx.exceptions.OpenException if there is an issue opening the file
-     * @throws com.monitorjbl.xlsx.exceptions.ReadException if there is an issue reading the file
+     * @throws OpenException if there is an issue opening the file
+     * @throws ReadException if there is an issue reading the file
      */
     public Workbook open(File file) {
       StreamingWorkbookReader workbook = new StreamingWorkbookReader(this);
@@ -288,13 +299,13 @@ public class StreamingReader implements Iterable<Row>, AutoCloseable {
      *
      * @param is input stream to read in
      * @return built streaming reader instance
-     * @throws com.monitorjbl.xlsx.exceptions.ReadException if there is an issue reading the stream
+     * @throws ReadException if there is an issue reading the stream
      * @deprecated This method will be removed in a future release. Use {@link Builder#open(InputStream)} instead
      */
     public StreamingReader read(InputStream is) {
       File f = null;
       try {
-        f = writeInputStreamToFile(is, bufferSize);
+        f = TempFileUtil.writeInputStreamToFile(is, bufferSize);
         log.debug("Created temp file [" + f.getAbsolutePath() + "]");
 
         StreamingReader r = read(f);
@@ -314,8 +325,8 @@ public class StreamingReader implements Iterable<Row>, AutoCloseable {
      *
      * @param f file to read in
      * @return built streaming reader instance
-     * @throws com.monitorjbl.xlsx.exceptions.OpenException if there is an issue opening the file
-     * @throws com.monitorjbl.xlsx.exceptions.ReadException if there is an issue reading the file
+     * @throws OpenException if there is an issue opening the file
+     * @throws ReadException if there is an issue reading the file
      * @deprecated This method will be removed in a future release. Use {@link Builder#open(File)} instead
      */
     public StreamingReader read(File f) {
@@ -336,17 +347,15 @@ public class StreamingReader implements Iterable<Row>, AutoCloseable {
         XSSFReader reader = new XSSFReader(pkg);
 
         SharedStringsTable sst;
-        File sstCache = null;
-        if(sstCacheSize > 0) {
-          sstCache = Files.createTempFile("", "").toFile();
-          log.debug("Created sst cache file [" + sstCache.getAbsolutePath() + "]");
-          sst = BufferedStringsTable.getSharedStringsTable(sstCache, sstCacheSize, pkg);
+        if(useSstTempFile) {
+          log.debug("Created sst cache file");
+          sst = new TempFileSharedStringsTable(pkg, encryptSstTempFile);
         } else {
           sst = reader.getSharedStringsTable();
         }
 
         StylesTable styles = reader.getStylesTable();
-        NodeList workbookPr = searchForNodeList(document(reader.getWorkbookData()), "/workbook/workbookPr");
+        NodeList workbookPr = searchForNodeList(DocumentHelper.readDocument(reader.getWorkbookData()), "/ss:workbook/ss:workbookPr");
         if (workbookPr.getLength() == 1) {
           final Node date1904 = workbookPr.item(0).getAttributes().getNamedItem("date1904");
           if (date1904 != null) {
@@ -360,8 +369,10 @@ public class StreamingReader implements Iterable<Row>, AutoCloseable {
 
         XMLEventReader parser = StaxHelper.newXMLInputFactory().createXMLEventReader(sheet);
 
-        return new StreamingReader(new StreamingWorkbookReader(sst, sstCache, pkg, new StreamingSheetReader(sst, styles, parser, use1904Dates, rowCacheSize),
+        return new StreamingReader(new StreamingWorkbookReader(sst, pkg, new StreamingSheetReader(sst, styles, parser, use1904Dates, rowCacheSize),
             this));
+      } catch(SAXException e) {
+        throw new OpenException("Failed to parse file", e);
       } catch(IOException e) {
         throw new OpenException("Failed to open file", e);
       } catch(OpenXML4JException | XMLStreamException e) {
@@ -378,12 +389,16 @@ public class StreamingReader implements Iterable<Row>, AutoCloseable {
       int index = sheetIndex;
       if(sheetName != null) {
         index = -1;
-        //This file is separate from the worksheet data, and should be fairly small
-        NodeList nl = searchForNodeList(document(reader.getWorkbookData()), "/workbook/sheets/sheet");
-        for(int i = 0; i < nl.getLength(); i++) {
-          if(Objects.equals(nl.item(i).getAttributes().getNamedItem("name").getTextContent(), sheetName)) {
-            index = i;
+        try {
+          //This file is separate from the worksheet data, and should be fairly small
+          NodeList nl = searchForNodeList(DocumentHelper.readDocument(reader.getWorkbookData()), "/ss:workbook/ss:sheets/ss:sheet");
+          for (int i = 0; i < nl.getLength(); i++) {
+            if (Objects.equals(nl.item(i).getAttributes().getNamedItem("name").getTextContent(), sheetName)) {
+              index = i;
+            }
           }
+        } catch (SAXException e) {
+          throw new OpenException("Failed to parse file", e);
         }
         if(index < 0) {
           return null;

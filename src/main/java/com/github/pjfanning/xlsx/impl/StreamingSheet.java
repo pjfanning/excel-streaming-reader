@@ -1,4 +1,4 @@
-package com.monitorjbl.xlsx.impl;
+package com.github.pjfanning.xlsx.impl;
 
 import org.apache.poi.ss.util.PaneInformation;
 import org.apache.poi.ss.usermodel.AutoFilter;
@@ -589,6 +589,14 @@ public class StreamingSheet implements Sheet {
    */
   @Override
   public void shiftRows(int startRow, int endRow, int n, boolean copyRowHeight, boolean resetOriginalRowHeight) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Not supported
+   */
+  @Override
+  public void shiftColumns(int startColumn, int endColumn, final int n) {
     throw new UnsupportedOperationException();
   }
 
