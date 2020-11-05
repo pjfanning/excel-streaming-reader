@@ -138,7 +138,6 @@ public class OoXmlStrictConverter implements AutoCloseable {
             }
 
             result.add(XEF.createAttribute(attribute.getName(), "n"));
-            break;
         }
 
         return Collections.unmodifiableList(result).iterator();
