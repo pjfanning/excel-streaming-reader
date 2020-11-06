@@ -20,8 +20,6 @@ import javax.xml.stream.events.EndElement;
 import javax.xml.stream.events.Namespace;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
-import org.apache.poi.hssf.usermodel.HSSFAnchor;
-import org.apache.poi.hssf.usermodel.HSSFDataBarFormatting;
 import org.apache.poi.hssf.usermodel.HSSFDateUtil;
 
 public class OoXmlStrictConverter implements AutoCloseable {
