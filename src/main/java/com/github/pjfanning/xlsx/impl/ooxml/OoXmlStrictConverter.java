@@ -21,17 +21,17 @@ import javax.xml.stream.events.Namespace;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 import org.apache.poi.hssf.usermodel.HSSFDateUtil;
+import org.apache.poi.util.XMLHelper;
 
 public class OoXmlStrictConverter implements AutoCloseable {
 
-    private static final XMLEventFactory XEF = XMLEventFactory.newInstance();
-    private static final XMLInputFactory XIF = XMLInputFactory.newInstance();
-    private static final XMLOutputFactory XOF = XMLOutputFactory.newInstance();
+    private static final XMLEventFactory XEF = XMLHelper.newXMLEventFactory();
+    private static final XMLInputFactory XIF = XMLHelper.newXMLInputFactory();
+    private static final XMLOutputFactory XOF = XMLHelper.newXMLOutputFactory();
     private static final QName CONFORMANCE = new QName("conformance");
     private static final Properties mappings;
 
     static {
-        XOF.setProperty(XMLOutputFactory.IS_REPAIRING_NAMESPACES, true);
         mappings = OoXmlStrictConverterUtils.readMappings();
     }
 
