@@ -210,6 +210,9 @@ public class StreamingSheetReader implements Iterable<Row> {
         }
       } else if("f".equals(tagLocalName)) {
         insideFormulaElement = true;
+        if (currentCell != null) {
+          currentCell.setFormulaType(true);
+        }
       }
 
       if (!insideIS) {
