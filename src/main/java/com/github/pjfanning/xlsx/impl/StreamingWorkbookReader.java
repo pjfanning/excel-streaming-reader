@@ -59,29 +59,49 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, AutoCloseable {
   }
 
   public void init(InputStream is) {
-    try {
-      if(builder.getPassword() != null) {
-        // Based on: https://poi.apache.org/encryption.html
-        POIFSFileSystem poifs = new POIFSFileSystem(is);
-        decryptIfNecessary(poifs);
-      } else {
-        if (builder.convertFromOoXmlStrict()) {
-          try(InputStream stream = new OoXmlStrictConverterInputStream(is)) {
-            pkg = OPCPackage.open(stream);
-          }
+    if (builder.avoidTempFiles()) {
+      try {
+        if(builder.getPassword() != null) {
+          // Based on: https://poi.apache.org/encryption.html
+          POIFSFileSystem poifs = new POIFSFileSystem(is);
+          decryptIfNecessary(poifs);
         } else {
-          pkg = OPCPackage.open(is);
+          if (builder.convertFromOoXmlStrict()) {
+            try(InputStream stream = new OoXmlStrictConverterInputStream(is)) {
+              pkg = OPCPackage.open(stream);
+            }
+          } else {
+            pkg = OPCPackage.open(is);
+          }
         }
+        loadPackage(pkg);
+      } catch(SAXException | ParserConfigurationException e) {
+        throw new ParseException("Failed to parse stream", e);
+      } catch(IOException e) {
+        throw new OpenException("Failed to open stream", e);
+      } catch(OpenXML4JException | XMLStreamException e) {
+        throw new ReadException("Unable to read workbook", e);
+      } catch(GeneralSecurityException e) {
+        throw new ReadException("Unable to read workbook - Decryption failed", e);
       }
-      loadPackage(pkg);
-    } catch(SAXException | ParserConfigurationException e) {
-      throw new ParseException("Failed to parse stream", e);
-    } catch(IOException e) {
-      throw new OpenException("Failed to open stream", e);
-    } catch(OpenXML4JException | XMLStreamException e) {
-      throw new ReadException("Unable to read workbook", e);
-    } catch(GeneralSecurityException e) {
-      throw new ReadException("Unable to read workbook - Decryption failed", e);
+    } else {
+      File f = null;
+      try {
+        f = TempFileUtil.writeInputStreamToFile(is, builder.getBufferSize());
+        log.debug("Created temp file [" + f.getAbsolutePath() + "]");
+        init(f);
+        tmp = f;
+      } catch(IOException e) {
+        if (f != null) {
+          f.delete();
+        }
+        throw new ReadException("Unable to read input stream", e);
+      } catch(RuntimeException e) {
+        if (f != null) {
+          f.delete();
+        }
+        throw e;
+      }
     }
   }
 
