@@ -62,9 +62,8 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, AutoCloseable {
     if (builder.avoidTempFiles()) {
       try {
         if(builder.getPassword() != null) {
-          // Based on: https://poi.apache.org/encryption.html
           POIFSFileSystem poifs = new POIFSFileSystem(is);
-          decryptIfNecessary(poifs);
+          decryptWorkbook(poifs);
         } else {
           if (builder.convertFromOoXmlStrict()) {
             try(InputStream stream = new OoXmlStrictConverterInputStream(is)) {
@@ -92,9 +91,6 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, AutoCloseable {
         init(f);
         tmp = f;
       } catch(IOException e) {
-        if (f != null) {
-          f.delete();
-        }
         throw new ReadException("Unable to read input stream", e);
       } catch(RuntimeException e) {
         if (f != null) {
@@ -108,9 +104,8 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, AutoCloseable {
   public void init(File f) {
     try {
       if(builder.getPassword() != null) {
-        // Based on: https://poi.apache.org/encryption.html
         POIFSFileSystem poifs = new POIFSFileSystem(f);
-        decryptIfNecessary(poifs);
+        decryptWorkbook(poifs);
       } else {
         if (builder.convertFromOoXmlStrict()) {
           try(InputStream stream = new OoXmlStrictConverterInputStream(new FileInputStream(f))) {
@@ -132,7 +127,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, AutoCloseable {
     }
   }
 
-  private void decryptIfNecessary(POIFSFileSystem poifs) throws IOException, GeneralSecurityException, InvalidFormatException {
+  private void decryptWorkbook(POIFSFileSystem poifs) throws IOException, GeneralSecurityException, InvalidFormatException {
     // Based on: https://poi.apache.org/encryption.html
     EncryptionInfo info = new EncryptionInfo(poifs);
     Decryptor d = Decryptor.getInstance(info);
