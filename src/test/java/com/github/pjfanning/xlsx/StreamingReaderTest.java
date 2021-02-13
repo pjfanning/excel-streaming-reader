@@ -936,7 +936,7 @@ public class StreamingReaderTest {
       assertNotNull(currentRow1);
 
       List<String> expected1 = Arrays.asList(new String[] {
-              "Lorem", "111.0"
+              "Lorem", "111"
       });
 
       for (int i = 0; i < currentRow1.getLastCellNum(); i++) {
