@@ -914,11 +914,9 @@ public class StreamingReaderTest {
   public void testStrictOOMXL() throws Exception {
     try (
             InputStream inputStream = new FileInputStream("src/test/resources/sample.strict.xlsx");
-            Workbook wb = StreamingReader.builder().open(inputStream)
+            Workbook wb = StreamingReader.builder().setUseSstTempFile(true).open(inputStream)
     ) {
       assertNull("CoreProperties should be null", ((StreamingWorkbook)wb).getCoreProperties());
-
-      DataFormatter formatter = new DataFormatter();
 
       Sheet sheet = wb.getSheet("Sheet1");
       assertEquals(10, sheet.getLastRowNum());
