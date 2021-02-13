@@ -64,12 +64,15 @@ import org.xml.sax.helpers.DefaultHandler;
  * parsing or similar.
  * It makes up the core part of the EventUserModel support
  * for XSSF.
+ *
+ * This is a forked copy of the POI XSSFReader class.
  */
 public class XSSFReader {
 
   private static final Set<String> WORKSHEET_RELS =
           Collections.unmodifiableSet(new HashSet<>(
                   Arrays.asList(XSSFRelation.WORKSHEET.getRelation(),
+                          "http://purl.oclc.org/ooxml/officeDocument/relationships/worksheet",
                           XSSFRelation.CHARTSHEET.getRelation(),
                           XSSFRelation.MACRO_SHEET_BIN.getRelation())
           ));
