@@ -5,6 +5,7 @@ import com.github.pjfanning.xlsx.impl.StreamingWorkbook;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.openxml4j.opc.PackageAccess;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellAddress;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -423,7 +424,8 @@ public class StreamingReaderTest {
 
       List<List<Cell>> obj = new ArrayList<>();
 
-      for(Row r : wb.getSheetAt(1)) {
+      Sheet sheet = wb.getSheetAt(1);
+      for(Row r : sheet) {
         List<Cell> o = new ArrayList<>();
         for(Cell c : r) {
           o.add(c);
@@ -438,6 +440,9 @@ public class StreamingReaderTest {
       assertEquals(1, row.size());
       assertEquals("yeah", row.get(0).getStringCellValue());
       assertEquals("yeah", row.get(0).getRichStringCellValue().getString());
+
+      assertEquals(0, sheet.getCellComments().size());
+      assertNull("getCellComment not enabled in builder", sheet.getCellComment(new CellAddress(0, 0)));
     }
   }
 
@@ -445,12 +450,13 @@ public class StreamingReaderTest {
   public void testSheetName_zulu() throws Exception {
     try(
         InputStream is = new FileInputStream("src/test/resources/sheets.xlsx");
-        Workbook wb = StreamingReader.builder().open(is);
+        Workbook wb = StreamingReader.builder().setReadComments(true).open(is);
     ) {
 
       List<List<Cell>> obj = new ArrayList<>();
 
-      for(Row r : wb.getSheet("SheetZulu")) {
+      Sheet sheet = wb.getSheet("SheetZulu");
+      for(Row r : sheet) {
         List<Cell> o = new ArrayList<>();
         for(Cell c : r) {
           o.add(c);
@@ -465,6 +471,9 @@ public class StreamingReaderTest {
       assertEquals(1, row.size());
       assertEquals("yeah", row.get(0).getStringCellValue());
       assertEquals("yeah", row.get(0).getRichStringCellValue().getString());
+
+      assertEquals(0, sheet.getCellComments().size());
+      assertNull("getCellComment should handle missing comments", sheet.getCellComment(new CellAddress(0, 0)));
     }
   }
 
