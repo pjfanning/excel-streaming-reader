@@ -1015,4 +1015,29 @@ public class StreamingReaderTest {
       assertEquals("semadmin", swb.getCoreProperties().getCreator());
     }
   }
+
+  @Test
+  public void testReadComments() throws Exception {
+    try (
+            InputStream inputStream = new FileInputStream("src/test/resources/commentTest.xlsx");
+            Workbook wb = StreamingReader.builder().open(inputStream)
+    ) {
+      assertEquals(0, wb.getSheetAt(0).getCellComments().size());
+    }
+    try (
+            InputStream inputStream = new FileInputStream("src/test/resources/commentTest.xlsx");
+            Workbook wb = StreamingReader.builder()
+                    .setReadComments(true)
+                    .open(inputStream)
+    ) {
+      Sheet sheet = wb.getSheetAt(0);
+      assertEquals(14, sheet.getCellComments().size());
+      Comment comment00 = sheet.getCellComment(new CellAddress(0, 0));
+      assertEquals("Shaun Kalley:\nComment A1", comment00.getString().getString());
+      assertEquals("Shaun Kalley", comment00.getAuthor());
+      Comment comment31 = sheet.getCellComment(new CellAddress(3, 1));
+      assertEquals("Shaun Kalley:\nComment B4", comment31.getString().getString());
+      assertEquals("Shaun Kalley", comment00.getAuthor());
+    }
+  }
 }
