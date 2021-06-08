@@ -171,7 +171,7 @@ public class StreamingWorkbook implements Workbook, AutoCloseable {
       List<PackagePart> mediaParts = reader.getOPCPackage().getPartsByName(Pattern.compile("/xl/media/.*?"));
       pictures = new ArrayList<>(mediaParts.size());
       for(PackagePart part : mediaParts){
-        pictures.add(new NonStreamingPictureData(part));
+        pictures.add(new XlsxPictureData(part));
       }
     }
     return Collections.unmodifiableList(pictures);
