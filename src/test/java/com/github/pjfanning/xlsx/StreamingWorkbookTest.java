@@ -2,15 +2,13 @@ package com.github.pjfanning.xlsx;
 
 import com.github.pjfanning.xlsx.exceptions.ParseException;
 import fi.iki.elonen.NanoHTTPD;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.*;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
 
@@ -193,7 +191,7 @@ public class StreamingWorkbookTest {
 
       expectType(B4, FORMULA);
 //      expectCachedType(B4, STRING); // this can't return FUNCTION as cached type as per javadoc ! fix in future work
-//      expectFormula(B4, "B2"); // returning wrong forumla type? this needs to be fixed in future work
+//      expectFormula(B4, "B2"); // returning wrong formula type? this needs to be fixed in future work
       expectSameStringContent(B2, B4);
       expectStringContent(B4, "\"a\"");
     }
@@ -233,6 +231,14 @@ public class StreamingWorkbookTest {
       assertEquals("15", row.getCell(4).getStringCellValue());
 
       assertFalse(rowIterator.hasNext());
+    }
+  }
+
+  @Test
+  public void testGetAllPictures() throws Exception {
+    try (Workbook workbook = openWorkbook("missing-r-attrs.xlsx")) {
+      List<? extends PictureData> pictureList = workbook.getAllPictures();
+      assertEquals(0, pictureList.size());
     }
   }
 
