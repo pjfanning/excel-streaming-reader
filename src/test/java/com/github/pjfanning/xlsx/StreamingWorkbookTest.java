@@ -1,7 +1,9 @@
 package com.github.pjfanning.xlsx;
 
 import com.github.pjfanning.xlsx.exceptions.ParseException;
+import com.github.pjfanning.xlsx.impl.XlsxPictureData;
 import fi.iki.elonen.NanoHTTPD;
+import org.apache.commons.io.IOUtils;
 import org.apache.poi.ss.usermodel.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -235,10 +237,23 @@ public class StreamingWorkbookTest {
   }
 
   @Test
-  public void testGetAllPictures() throws Exception {
+  public void testGetAllPicturesWorksWithNoPictures() throws Exception {
     try (Workbook workbook = openWorkbook("missing-r-attrs.xlsx")) {
       List<? extends PictureData> pictureList = workbook.getAllPictures();
       assertEquals(0, pictureList.size());
+    }
+  }
+
+  @Test
+  public void testGetAllPictures() throws Exception {
+    try (Workbook workbook = openWorkbook("WithDrawing.xlsx")) {
+      List<? extends PictureData> pictureList = workbook.getAllPictures();
+      assertEquals(5, pictureList.size());
+      for(PictureData picture : pictureList) {
+        XlsxPictureData xlsxPictureData = (XlsxPictureData)picture;
+        assertTrue("picture data is not empty", picture.getData().length > 0);
+        assertArrayEquals(picture.getData(), IOUtils.toByteArray(xlsxPictureData.getInputStream()));
+      }
     }
   }
 
