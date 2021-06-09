@@ -125,6 +125,28 @@ public class StreamingSheet implements Sheet {
     return map;
   }
 
+  /**
+   * Only works after sheet is fully read (because merged regions data is stored
+   * at the end of the sheet XML).
+   */
+  @Override
+  public CellRangeAddress getMergedRegion(int index) {
+    List<CellRangeAddress> regions = getMergedRegions();
+    if(index > regions.size()) {
+      throw new NoSuchElementException("index " + index + " is out of range");
+    }
+    return regions.get(index);
+  }
+
+  /**
+   * Only works after sheet is fully read (because merged regions data is stored
+   * at the end of the sheet XML).
+   */
+  @Override
+  public List<CellRangeAddress> getMergedRegions() {
+    return reader.getMergedCells();
+  }
+
   /* Unsupported */
 
   /**
@@ -340,22 +362,6 @@ public class StreamingSheet implements Sheet {
    */
   @Override
   public int getNumMergedRegions() {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Not supported
-   */
-  @Override
-  public CellRangeAddress getMergedRegion(int index) {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Not supported
-   */
-  @Override
-  public List<CellRangeAddress> getMergedRegions() {
     throw new UnsupportedOperationException();
   }
 

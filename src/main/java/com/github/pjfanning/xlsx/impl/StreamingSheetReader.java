@@ -481,6 +481,8 @@ public class StreamingSheetReader implements Iterable<Row> {
    */
   CommentsTable getCellComments() { return this.commentsTable; }
 
+  List<CellRangeAddress> getMergedCells() { return this.mergedCells; }
+
   public void close() {
     try {
       parser.close();
