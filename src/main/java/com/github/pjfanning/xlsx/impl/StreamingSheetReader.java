@@ -8,6 +8,7 @@ import org.apache.poi.ss.usermodel.BuiltinFormats;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.model.CommentsTable;
 import org.apache.poi.xssf.model.SharedStringsTable;
@@ -35,6 +36,7 @@ public class StreamingSheetReader implements Iterable<Row> {
   private final XMLEventReader parser;
   private final DataFormatter dataFormatter = new DataFormatter();
   private final Set<Integer> hiddenColumns = new HashSet<>();
+  private final List<CellRangeAddress> mergedCells = new ArrayList<>();
 
   private int firstRowNum = 0;
   private int lastRowNum;
@@ -225,6 +227,11 @@ public class StreamingSheetReader implements Iterable<Row> {
         insideFormulaElement = true;
         if (currentCell != null) {
           currentCell.setFormulaType(true);
+        }
+      } else if("mergeCell".equals(tagLocalName)) {
+        Attribute ref = startElement.getAttributeByName(QName.valueOf("ref"));
+        if(ref != null) {
+          mergedCells.add(CellRangeAddress.valueOf(ref.getValue()));
         }
       }
 
