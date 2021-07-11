@@ -159,6 +159,14 @@ public class StreamingSheet implements Sheet {
     return mergedCells == null ? 0 : mergedCells.size();
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Drawing getDrawingPatriarch() {
+    return reader.getDrawingPatriarch();
+  }
+
   /* Unsupported */
 
   /**
@@ -856,14 +864,6 @@ public class StreamingSheet implements Sheet {
   @Override
   public void autoSizeColumn(int column, boolean useMergedCells) {
     throw new UnsupportedOperationException("update operations are not supported");
-  }
-
-  /**
-   * Not supported
-   */
-  @Override
-  public Drawing getDrawingPatriarch() {
-    throw new UnsupportedOperationException();
   }
 
   /**

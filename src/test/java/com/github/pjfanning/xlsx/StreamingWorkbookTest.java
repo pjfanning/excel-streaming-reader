@@ -6,14 +6,12 @@ import fi.iki.elonen.NanoHTTPD;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFCell;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.usermodel.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -259,6 +257,21 @@ public class StreamingWorkbookTest {
         assertTrue("picture data is not empty", picture.getData().length > 0);
         assertArrayEquals(picture.getData(), IOUtils.toByteArray(xlsxPictureData.getInputStream()));
       }
+      Sheet sheet0 = workbook.getSheetAt(0);
+      sheet0.rowIterator().hasNext();
+      Drawing<?> drawingPatriarch = sheet0.getDrawingPatriarch();
+      assertNotNull("drawingPatriarch should not be null", drawingPatriarch);
+      Iterator<?> shapeIter = drawingPatriarch.iterator();
+      List<Shape> shapes = new ArrayList<>();
+      for (Shape shape : drawingPatriarch) {
+        shapes.add(shape);
+        assertTrue("shape is an XSSFShape", shape instanceof XSSFShape);
+        assertNotNull("shape has anchor", shape.getAnchor());
+      }
+      assertEquals(6, shapes.size());
+      Sheet sheet1 = workbook.getSheetAt(1);
+      sheet1.rowIterator().hasNext();
+      assertNull("sheet1 should have no drawing patriarch", sheet1.getDrawingPatriarch());
     }
   }
 

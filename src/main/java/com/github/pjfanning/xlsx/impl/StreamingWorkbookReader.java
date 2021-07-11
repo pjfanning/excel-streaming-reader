@@ -24,6 +24,7 @@ import org.apache.poi.xssf.model.CommentsTable;
 import org.apache.poi.xssf.model.SharedStringsTable;
 import org.apache.poi.xssf.model.StylesTable;
 import org.apache.poi.xssf.model.ThemesTable;
+import org.apache.poi.xssf.usermodel.XSSFShape;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
@@ -48,6 +49,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
 
   private final List<StreamingSheet> sheets;
   private final List<Map<String, String>> sheetProperties = new ArrayList<>();
+  private final Map<String, List<XSSFShape>> shapeMap = new HashMap<>();
   private final Builder builder;
   private File tmp;
   private OPCPackage pkg;
@@ -200,6 +202,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     Map<URI, CommentsTable> sheetComments = new HashMap<>();
     while(iter.hasNext()) {
       InputStream is = iter.next();
+      shapeMap.put(iter.getSheetName(), iter.getShapes());
       URI uri = iter.getSheetPart().getPartName().getURI();
       sheetStreams.put(uri, is);
       if (builder.readComments()) {
@@ -214,7 +217,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
       sheets.add(new StreamingSheet(
               workbook,
               sheetProperties.get(i++).get("name"),
-              new StreamingSheetReader(sst, stylesTable, sheetComments.get(uri), parser, use1904Dates, rowCacheSize)));
+              new StreamingSheetReader(this, sst, stylesTable, sheetComments.get(uri), parser, use1904Dates, rowCacheSize)));
     }
   }
 
@@ -278,6 +281,10 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
 
   OPCPackage getOPCPackage() {
     return pkg;
+  }
+
+  List<XSSFShape> getShapes(String sheetName) {
+    return shapeMap.get(sheetName);
   }
 
   static class StreamingSheetIterator implements Iterator<Sheet> {

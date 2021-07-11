@@ -41,6 +41,7 @@ import org.apache.poi.openxml4j.opc.PackageRelationship;
 import org.apache.poi.openxml4j.opc.PackageRelationshipCollection;
 import org.apache.poi.openxml4j.opc.PackageRelationshipTypes;
 import org.apache.poi.openxml4j.opc.PackagingURIHelper;
+import org.apache.poi.util.Internal;
 import org.apache.poi.util.POILogFactory;
 import org.apache.poi.util.POILogger;
 import org.apache.poi.util.XMLHelper;
@@ -68,6 +69,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * This is a forked copy of the POI XSSFReader class.
  */
 //TODO POI XSSFReader should be extended once POI 5.0.1 is available
+@Internal
 public class XSSFReader {
 
   private static final Set<String> WORKSHEET_RELS =
