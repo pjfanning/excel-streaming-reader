@@ -489,6 +489,9 @@ public class StreamingSheetReader implements Iterable<Row> {
   List<CellRangeAddress> getMergedCells() { return this.mergedCells; }
 
   XSSFDrawing getDrawingPatriarch() {
+    if (!streamingWorkbookReader.getBuilder().readShapes()) {
+      throw new IllegalStateException("getDrawingPatriarch() only works if StreamingWorking.Builder setReadShapes is set to true");
+    }
     if (sheet != null) {
       List<XSSFShape> shapes = streamingWorkbookReader.getShapes(sheet.getSheetName());
       if (shapes != null) {

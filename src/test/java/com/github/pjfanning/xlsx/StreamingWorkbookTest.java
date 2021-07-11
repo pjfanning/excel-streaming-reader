@@ -259,8 +259,12 @@ public class StreamingWorkbookTest {
       }
       Sheet sheet0 = workbook.getSheetAt(0);
       sheet0.rowIterator().hasNext();
-      Drawing<?> drawingPatriarch = sheet0.getDrawingPatriarch();
-      assertNull("drawingPatriarch should be null", drawingPatriarch);
+      try {
+        sheet0.getDrawingPatriarch();
+        fail("getDrawingPatriarch expected to fail with IllegalStateException");
+      } catch (IllegalStateException ise) {
+        //expected
+      }
     }
   }
 

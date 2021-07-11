@@ -281,6 +281,10 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     }
   }
 
+  Builder getBuilder() {
+    return builder;
+  }
+
   OPCPackage getOPCPackage() {
     return pkg;
   }

@@ -160,7 +160,10 @@ public class StreamingSheet implements Sheet {
   }
 
   /**
-   * {@inheritDoc}
+   * Return the sheet's existing drawing, or null if there isn't yet one.
+   *
+   * @return a SpreadsheetML drawing
+   * @throws IllegalStateException if StreamingWorkbook.Builder setReadShapes is not set to true
    */
   @Override
   public Drawing getDrawingPatriarch() {
