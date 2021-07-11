@@ -153,43 +153,43 @@ public class StreamingRow implements Row {
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void removeCell(Cell cell) {
-    throw new NotSupportedException();
+    throw new NotSupportedException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setRowNum(int rowNum) {
-    throw new NotSupportedException();
+    throw new NotSupportedException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setHeight(short height) {
-    throw new NotSupportedException();
+    throw new NotSupportedException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setZeroHeight(boolean zHeight) {
-    throw new NotSupportedException();
+    throw new NotSupportedException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setHeightInPoints(float height) {
-    throw new NotSupportedException();
+    throw new NotSupportedException("update operations are not supported");
   }
 
   /**
@@ -225,11 +225,11 @@ public class StreamingRow implements Row {
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setRowStyle(CellStyle style) {
-    throw new NotSupportedException();
+    throw new NotSupportedException("update operations are not supported");
   }
 
   /**
@@ -241,19 +241,19 @@ public class StreamingRow implements Row {
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void shiftCellsRight(int firstShiftColumnIndex, int lastShiftColumnIndex, int step) {
-    throw new NotSupportedException();
+    throw new NotSupportedException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void shiftCellsLeft(int firstShiftColumnIndex, int lastShiftColumnIndex, int step) {
-    throw new NotSupportedException();
+    throw new NotSupportedException("update operations are not supported");
   }
 
 }

@@ -174,7 +174,8 @@ public class StreamingSheet implements Sheet {
   }
 
   /**
-   * Not supported
+   * Not supported - use {@link #iterator()} or {@link #rowIterator()} to iterate over rows
+   * and count the rows
    */
   @Override
   public int getPhysicalNumberOfRows() {
@@ -310,19 +311,19 @@ public class StreamingSheet implements Sheet {
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setVerticallyCenter(boolean value) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setHorizontallyCenter(boolean value) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
@@ -342,19 +343,19 @@ public class StreamingSheet implements Sheet {
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void removeMergedRegion(int index) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void removeMergedRegions(Collection<Integer> collection) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
@@ -366,11 +367,11 @@ public class StreamingSheet implements Sheet {
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setForceFormulaRecalculation(boolean value) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
@@ -382,27 +383,27 @@ public class StreamingSheet implements Sheet {
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setAutobreaks(boolean value) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setDisplayGuts(boolean value) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setDisplayZeros(boolean value) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
@@ -414,27 +415,27 @@ public class StreamingSheet implements Sheet {
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setFitToPage(boolean value) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setRowSumsBelow(boolean value) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setRowSumsRight(boolean value) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
@@ -490,7 +491,7 @@ public class StreamingSheet implements Sheet {
    */
   @Override
   public void setPrintGridlines(boolean show) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
@@ -502,11 +503,11 @@ public class StreamingSheet implements Sheet {
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setPrintRowAndColumnHeadings(boolean b) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
@@ -534,11 +535,11 @@ public class StreamingSheet implements Sheet {
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setSelected(boolean value) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
@@ -550,11 +551,11 @@ public class StreamingSheet implements Sheet {
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setMargin(short margin, double size) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
@@ -582,11 +583,11 @@ public class StreamingSheet implements Sheet {
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setZoom(int i) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
@@ -614,27 +615,27 @@ public class StreamingSheet implements Sheet {
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void shiftRows(int startRow, int endRow, int n) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void shiftRows(int startRow, int endRow, int n, boolean copyRowHeight, boolean resetOriginalRowHeight) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void shiftColumns(int startColumn, int endColumn, final int n) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
@@ -670,11 +671,11 @@ public class StreamingSheet implements Sheet {
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setDisplayGridlines(boolean show) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
@@ -686,11 +687,11 @@ public class StreamingSheet implements Sheet {
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setDisplayFormulas(boolean show) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
@@ -702,11 +703,11 @@ public class StreamingSheet implements Sheet {
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setDisplayRowColHeadings(boolean show) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
@@ -718,11 +719,11 @@ public class StreamingSheet implements Sheet {
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setRowBreak(int row) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
@@ -734,11 +735,11 @@ public class StreamingSheet implements Sheet {
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void removeRowBreak(int row) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
@@ -758,11 +759,11 @@ public class StreamingSheet implements Sheet {
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setColumnBreak(int column) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
@@ -774,83 +775,83 @@ public class StreamingSheet implements Sheet {
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void removeColumnBreak(int column) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setColumnGroupCollapsed(int columnNumber, boolean collapsed) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void groupColumn(int fromColumn, int toColumn) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void ungroupColumn(int fromColumn, int toColumn) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void groupRow(int fromRow, int toRow) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void ungroupRow(int fromRow, int toRow) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setRowGroupCollapsed(int row, boolean collapse) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setDefaultColumnStyle(int column, CellStyle style) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void autoSizeColumn(int column) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void autoSizeColumn(int column, boolean useMergedCells) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
@@ -878,19 +879,19 @@ public class StreamingSheet implements Sheet {
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public CellRange<? extends Cell> setArrayFormula(String formula, CellRangeAddress range) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public CellRange<? extends Cell> removeArrayFormula(Cell cell) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
@@ -918,11 +919,11 @@ public class StreamingSheet implements Sheet {
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public AutoFilter setAutoFilter(CellRangeAddress range) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
@@ -950,19 +951,19 @@ public class StreamingSheet implements Sheet {
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setRepeatingRows(CellRangeAddress rowRangeRef) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setRepeatingColumns(CellRangeAddress columnRangeRef) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   /**
@@ -1010,6 +1011,6 @@ public class StreamingSheet implements Sheet {
    */
   @Override
   public void setActiveCell(CellAddress cellAddress) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("update operations are not supported");
   }
 }

@@ -643,6 +643,8 @@ public class StreamingReaderTest {
         for(Cell c : r) {
           assertNotNull("cell row is set", c.getRow());
           assertEquals(r, c.getRow());
+          assertNotNull("cell address is set", c.getAddress());
+          assertEquals(r.getRowNum(), c.getAddress().getRow());
         }
       }
     }
@@ -1216,9 +1218,17 @@ public class StreamingReaderTest {
       Comment comment00 = sheet.getCellComment(new CellAddress(0, 0));
       assertEquals("Shaun Kalley:\nComment A1", comment00.getString().getString());
       assertEquals("Shaun Kalley", comment00.getAuthor());
+      Comment comment10 = sheet.getCellComment(new CellAddress(1, 0));
+      assertEquals("Shaun Kalley:\nComment A2", comment10.getString().getString());
+      assertEquals("Shaun Kalley", comment10.getAuthor());
       Comment comment31 = sheet.getCellComment(new CellAddress(3, 1));
       assertEquals("Shaun Kalley:\nComment B4", comment31.getString().getString());
       assertEquals("Shaun Kalley", comment00.getAuthor());
+
+      Row firstRow = sheet.rowIterator().next();
+      Row secondRow = sheet.rowIterator().next();
+      Cell cellA2 = secondRow.cellIterator().next();
+      assertEquals(comment10, cellA2.getCellComment());
     }
   }
 }

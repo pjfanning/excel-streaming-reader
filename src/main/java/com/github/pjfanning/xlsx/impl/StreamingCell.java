@@ -340,156 +340,159 @@ public class StreamingCell implements Cell {
     return rawContents == null ? null : DateUtil.getLocalDateTime(getNumericCellValue(), use1904Dates);
   }
 
+  @Override
+  public byte getErrorCellValue() {
+    CellType cellType = getCellType();
+    if(cellType != CellType.ERROR) {
+      throw typeMismatch(CellType.ERROR, cellType, false);
+    }
+    String code = rawContents;
+    if (code == null) {
+      return 0;
+    }
+    try {
+      return FormulaError.forString(code).getCode();
+    } catch (final IllegalArgumentException e) {
+      throw new IllegalStateException("Unexpected error code", e);
+    }
+  }
+
+  @Override
+  public CellAddress getAddress() {
+    return new CellAddress(this);
+  }
+
+  @Override
+  public Comment getCellComment() {
+    return (sheet == null) ? null : sheet.getCellComment(getAddress());
+  }
+
   /* Not supported */
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setCellType(CellType cellType) {
-    throw new NotSupportedException();
+    throw new NotSupportedException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
-  public void setBlank() { throw new NotSupportedException(); }
+  public void setBlank() { throw new NotSupportedException("update operations are not supported"); }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setCellValue(double value) {
-    throw new NotSupportedException();
+    throw new NotSupportedException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setCellValue(Date value) {
-    throw new NotSupportedException();
+    throw new NotSupportedException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setCellValue(Calendar value) {
-    throw new NotSupportedException();
+    throw new NotSupportedException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setCellValue(LocalDate value) {
-    throw new NotSupportedException();
+    throw new NotSupportedException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setCellValue(LocalDateTime value) {
-    throw new NotSupportedException();
+    throw new NotSupportedException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setCellValue(RichTextString value) {
-    throw new NotSupportedException();
+    throw new NotSupportedException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setCellValue(String value) {
-    throw new NotSupportedException();
+    throw new NotSupportedException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setCellFormula(String formula) throws FormulaParseException {
-    throw new NotSupportedException();
+    throw new NotSupportedException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void removeFormula() throws IllegalStateException {
-    throw new NotSupportedException();
+    throw new NotSupportedException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setCellValue(boolean value) {
-    throw new NotSupportedException();
+    throw new NotSupportedException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setCellErrorValue(byte value) {
-    throw new NotSupportedException();
+    throw new NotSupportedException("update operations are not supported");
   }
 
   /**
-   * Not supported
-   */
-  @Override
-  public byte getErrorCellValue() {
-    throw new NotSupportedException();
-  }
-
-  /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setAsActiveCell() {
-    throw new NotSupportedException();
+    throw new NotSupportedException("update operations are not supported");
   }
 
   /**
-   * Not supported
-   */
-  @Override
-  public CellAddress getAddress() {
-    throw new NotSupportedException();
-  }
-
-  /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setCellComment(Comment comment) {
-    throw new NotSupportedException();
+    throw new NotSupportedException("update operations are not supported");
   }
 
   /**
-   * Not supported
-   */
-  @Override
-  public Comment getCellComment() {
-    throw new NotSupportedException();
-  }
-
-  /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void removeCellComment() {
-    throw new NotSupportedException();
+    throw new NotSupportedException("update operations are not supported");
   }
 
   /**
@@ -501,19 +504,19 @@ public class StreamingCell implements Cell {
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void setHyperlink(Hyperlink link) {
-    throw new NotSupportedException();
+    throw new NotSupportedException("update operations are not supported");
   }
 
   /**
-   * Not supported
+   * Update operations are not supported
    */
   @Override
   public void removeHyperlink() {
-    throw new NotSupportedException();
+    throw new NotSupportedException("update operations are not supported");
   }
 
   /**
