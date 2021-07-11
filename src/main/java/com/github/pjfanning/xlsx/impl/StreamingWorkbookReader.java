@@ -202,7 +202,9 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     Map<URI, CommentsTable> sheetComments = new HashMap<>();
     while(iter.hasNext()) {
       InputStream is = iter.next();
-      shapeMap.put(iter.getSheetName(), iter.getShapes());
+      if (builder.readShapes()) {
+        shapeMap.put(iter.getSheetName(), iter.getShapes());
+      }
       URI uri = iter.getSheetPart().getPartName().getURI();
       sheetStreams.put(uri, is);
       if (builder.readComments()) {

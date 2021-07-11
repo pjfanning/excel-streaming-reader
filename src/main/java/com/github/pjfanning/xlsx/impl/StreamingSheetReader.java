@@ -46,7 +46,6 @@ public class StreamingSheetReader implements Iterable<Row> {
   private int currentRowNum;
   private int firstColNum = 0;
   private int currentColNum;
-  private String drawingId;
   private int rowCacheSize;
   private List<Row> rowCache = new ArrayList<>();
   private Iterator<Row> rowCacheIterator;
@@ -238,15 +237,6 @@ public class StreamingSheetReader implements Iterable<Row> {
         Attribute ref = startElement.getAttributeByName(QName.valueOf("ref"));
         if(ref != null) {
           mergedCells.add(CellRangeAddress.valueOf(ref.getValue()));
-        }
-      } else if("drawing".equals(tagLocalName)) {
-        Iterator<Attribute> attIter = startElement.getAttributes();
-        while (attIter.hasNext()) {
-          Attribute att = attIter.next();
-          QName attName = att.getName();
-          if ("id".equals(attName.getLocalPart()) && attName.getNamespaceURI() != null && attName.getNamespaceURI().contains("relationships")) {
-            drawingId = att.getValue();
-          }
         }
       }
 
@@ -501,9 +491,11 @@ public class StreamingSheetReader implements Iterable<Row> {
   XSSFDrawing getDrawingPatriarch() {
     if (sheet != null) {
       List<XSSFShape> shapes = streamingWorkbookReader.getShapes(sheet.getSheetName());
-      Iterator<XSSFShape> shapesIter = shapes.iterator();
-      while (shapesIter.hasNext()) {
-        return shapesIter.next().getDrawing();
+      if (shapes != null) {
+        Iterator<XSSFShape> shapesIter = shapes.iterator();
+        while (shapesIter.hasNext()) {
+          return shapesIter.next().getDrawing();
+        }
       }
     }
     return null;

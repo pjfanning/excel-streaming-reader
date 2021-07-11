@@ -248,8 +248,28 @@ public class StreamingWorkbookTest {
   }
 
   @Test
-  public void testGetAllPictures() throws Exception {
+  public void testGetPicturesWithoutReadShapesEnabled() throws Exception {
     try (Workbook workbook = openWorkbook("WithDrawing.xlsx")) {
+      List<? extends PictureData> pictureList = workbook.getAllPictures();
+      assertEquals(5, pictureList.size());
+      for(PictureData picture : pictureList) {
+        XlsxPictureData xlsxPictureData = (XlsxPictureData)picture;
+        assertTrue("picture data is not empty", picture.getData().length > 0);
+        assertArrayEquals(picture.getData(), IOUtils.toByteArray(xlsxPictureData.getInputStream()));
+      }
+      Sheet sheet0 = workbook.getSheetAt(0);
+      sheet0.rowIterator().hasNext();
+      Drawing<?> drawingPatriarch = sheet0.getDrawingPatriarch();
+      assertNull("drawingPatriarch should be null", drawingPatriarch);
+    }
+  }
+
+  @Test
+  public void testGetPicturesWithReadShapesEnabled() throws Exception {
+    try (
+            InputStream stream = getInputStream("WithDrawing.xlsx");
+            Workbook workbook = StreamingReader.builder().setReadShapes(true).open(stream)
+    ) {
       List<? extends PictureData> pictureList = workbook.getAllPictures();
       assertEquals(5, pictureList.size());
       for(PictureData picture : pictureList) {
