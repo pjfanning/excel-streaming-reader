@@ -70,7 +70,7 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 //TODO POI XSSFReader should be extended once POI 5.0.1 is available
 @Internal
-public class XSSFReader {
+public class OoxmlReader {
 
   private static final Set<String> WORKSHEET_RELS =
           Collections.unmodifiableSet(new HashSet<>(
@@ -87,7 +87,7 @@ public class XSSFReader {
   /**
    * Creates a new XSSFReader, for the given package
    */
-  public XSSFReader(OPCPackage pkg) throws IOException, OpenXML4JException {
+  public OoxmlReader(OPCPackage pkg) throws IOException, OpenXML4JException {
     this.pkg = pkg;
 
     PackageRelationship coreDocRelationship = this.pkg.getRelationshipsByType(

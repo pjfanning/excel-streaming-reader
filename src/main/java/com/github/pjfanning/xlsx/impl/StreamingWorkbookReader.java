@@ -9,7 +9,7 @@ import com.github.pjfanning.xlsx.exceptions.ParseException;
 import com.github.pjfanning.xlsx.exceptions.ReadException;
 import com.github.pjfanning.xlsx.impl.ooxml.OoXmlStrictConverterInputStream;
 import com.github.pjfanning.xlsx.impl.ooxml.OoxmlStrictHelper;
-import com.github.pjfanning.xlsx.impl.ooxml.XSSFReader;
+import com.github.pjfanning.xlsx.impl.ooxml.OoxmlReader;
 import org.apache.poi.ooxml.POIXMLProperties;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
@@ -147,7 +147,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
   }
 
   private void loadPackage(OPCPackage pkg) throws IOException, OpenXML4JException, ParserConfigurationException, SAXException, XMLStreamException {
-    XSSFReader reader = new XSSFReader(pkg);
+    OoxmlReader reader = new OoxmlReader(pkg);
     boolean strictFormat = OoxmlStrictHelper.isStrictOoxmlFormat(pkg);
     if (strictFormat) {
       log.info("file is in strict OOXML format");
@@ -190,14 +190,14 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     workbook.setCoreProperties(coreProperties);
   }
 
-  void loadSheets(XSSFReader reader, SharedStringsTable sst, StylesTable stylesTable, int rowCacheSize) throws IOException, InvalidFormatException,
+  void loadSheets(OoxmlReader reader, SharedStringsTable sst, StylesTable stylesTable, int rowCacheSize) throws IOException, InvalidFormatException,
       XMLStreamException {
     lookupSheetNames(reader);
 
     //Some workbooks have multiple references to the same sheet. Need to filter
     //them out before creating the XMLEventReader by keeping track of their URIs.
     //The sheets are listed in order, so we must keep track of insertion order.
-    XSSFReader.SheetIterator iter = reader.getSheetsData();
+    OoxmlReader.SheetIterator iter = reader.getSheetsData();
     Map<URI, InputStream> sheetStreams = new LinkedHashMap<>();
     Map<URI, CommentsTable> sheetComments = new HashMap<>();
     while(iter.hasNext()) {
@@ -221,7 +221,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     }
   }
 
-  void lookupSheetNames(XSSFReader reader) throws IOException, InvalidFormatException {
+  void lookupSheetNames(OoxmlReader reader) throws IOException, InvalidFormatException {
     sheetProperties.clear();
     try {
       NodeList nl = searchForNodeList(XmlUtils.readDocument(reader.getWorkbookData()), "/ss:workbook/ss:sheets/ss:sheet");
