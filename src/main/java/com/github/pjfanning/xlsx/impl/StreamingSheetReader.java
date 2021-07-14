@@ -4,7 +4,7 @@ import com.github.pjfanning.xlsx.XmlUtils;
 import com.github.pjfanning.xlsx.exceptions.CloseException;
 import com.github.pjfanning.xlsx.exceptions.NotSupportedException;
 import com.github.pjfanning.xlsx.exceptions.ParseException;
-import com.github.pjfanning.xlsx.impl.ooxml.HyperLinkData;
+import com.github.pjfanning.xlsx.impl.ooxml.HyperlinkData;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
@@ -38,7 +38,7 @@ public class StreamingSheetReader implements Iterable<Row> {
   private final DataFormatter dataFormatter = new DataFormatter();
   private final Set<Integer> hiddenColumns = new HashSet<>();
   private final List<CellRangeAddress> mergedCells = new ArrayList<>();
-  private final List<HyperLinkData> hyperlinks = new ArrayList<>();
+  private final List<HyperlinkData> hyperlinks = new ArrayList<>();
 
   private int firstRowNum = 0;
   private int lastRowNum;
@@ -250,7 +250,7 @@ public class StreamingSheetReader implements Iterable<Row> {
         Attribute ref = startElement.getAttributeByName(QName.valueOf("ref"));
         Attribute location = startElement.getAttributeByName(QName.valueOf("location"));
         Attribute display = startElement.getAttributeByName(QName.valueOf("display"));
-        hyperlinks.add(new HyperLinkData(id, getAttributeValue(ref), getAttributeValue(location), getAttributeValue(display)));
+        hyperlinks.add(new HyperlinkData(id, getAttributeValue(ref), getAttributeValue(location), getAttributeValue(display)));
       }
 
       if (!insideIS) {

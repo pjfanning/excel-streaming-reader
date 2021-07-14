@@ -1,13 +1,13 @@
 package com.github.pjfanning.xlsx.impl.ooxml;
 
-public class HyperLinkData {
+public class HyperlinkData {
 
   private final String id;
   private final String ref;
   private final String location;
   private final String display;
 
-  public HyperLinkData(String id, String ref, String location, String display) {
+  public HyperlinkData(String id, String ref, String location, String display) {
     this.id = id;
     this.ref = ref;
     this.location = location;
