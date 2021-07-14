@@ -4,10 +4,8 @@ import com.github.pjfanning.xlsx.XmlUtils;
 import com.github.pjfanning.xlsx.exceptions.CloseException;
 import com.github.pjfanning.xlsx.exceptions.NotSupportedException;
 import com.github.pjfanning.xlsx.exceptions.ParseException;
-import org.apache.poi.ss.usermodel.BuiltinFormats;
-import org.apache.poi.ss.usermodel.DataFormatter;
-import org.apache.poi.ss.usermodel.DateUtil;
-import org.apache.poi.ss.usermodel.Row;
+import com.github.pjfanning.xlsx.impl.ooxml.HyperLinkData;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.model.CommentsTable;
@@ -40,6 +38,7 @@ public class StreamingSheetReader implements Iterable<Row> {
   private final DataFormatter dataFormatter = new DataFormatter();
   private final Set<Integer> hiddenColumns = new HashSet<>();
   private final List<CellRangeAddress> mergedCells = new ArrayList<>();
+  private final List<HyperLinkData> hyperlinks = new ArrayList<>();
 
   private int firstRowNum = 0;
   private int lastRowNum;
@@ -238,6 +237,20 @@ public class StreamingSheetReader implements Iterable<Row> {
         if(ref != null) {
           mergedCells.add(CellRangeAddress.valueOf(ref.getValue()));
         }
+      } else if("hyperlink".equals(tagLocalName)) {
+        String id = null;
+        Iterator<Attribute> attributeIterator = startElement.getAttributes();
+        while (attributeIterator.hasNext()) {
+          Attribute att = attributeIterator.next();
+          QName qn = att.getName();
+          if ("id".equals(qn.getLocalPart()) && qn.getNamespaceURI().endsWith("relationships")) {
+            id = att.getValue();
+          }
+        }
+        Attribute ref = startElement.getAttributeByName(QName.valueOf("ref"));
+        Attribute location = startElement.getAttributeByName(QName.valueOf("location"));
+        Attribute display = startElement.getAttributeByName(QName.valueOf("display"));
+        hyperlinks.add(new HyperLinkData(id, getAttributeValue(ref), getAttributeValue(location), getAttributeValue(display)));
       }
 
       if (!insideIS) {
@@ -516,6 +529,10 @@ public class StreamingSheetReader implements Iterable<Row> {
     } catch(XMLStreamException e) {
       throw new CloseException(e);
     }
+  }
+
+  private String getAttributeValue(Attribute att) {
+    return att == null ? null : att.getValue();
   }
 
   class StreamingRowIterator implements Iterator<Row> {
