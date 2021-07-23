@@ -213,8 +213,11 @@ public class StreamingSheet implements Sheet {
   public Hyperlink getHyperlink(CellAddress cellAddress) {
     String cellAddressText = cellAddress.formatAsString();
     for (Hyperlink hyperlink : getHyperlinkList()) {
-      if (cellAddressText.equalsIgnoreCase(hyperlink.getAddress())) {
-        return hyperlink;
+      if (hyperlink instanceof XlsxHyperlink) {
+        XlsxHyperlink xhp = (XlsxHyperlink)hyperlink;
+        if (cellAddressText.equalsIgnoreCase(xhp.getCellRef())) {
+          return hyperlink;
+        }
       }
     }
     return null;
