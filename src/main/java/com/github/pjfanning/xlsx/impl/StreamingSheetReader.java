@@ -44,7 +44,6 @@ public class StreamingSheetReader implements Iterable<Row> {
   private final List<CellRangeAddress> mergedCells = new ArrayList<>();
   private final List<HyperlinkData> hyperlinks = new ArrayList<>();
   private List<XlsxHyperlink> xlsxHyperlinks;
-  private boolean xlsxHyperlinksInitialised;
 
   private int firstRowNum = 0;
   private int lastRowNum;
@@ -562,30 +561,26 @@ public class StreamingSheetReader implements Iterable<Row> {
   }
 
   private void initHyperlinks() {
-    if (!xlsxHyperlinksInitialised) {
-      synchronized (this) {
-        if (!xlsxHyperlinksInitialised) {
-          xlsxHyperlinksInitialised = true;
-          xlsxHyperlinks = new ArrayList<>();
+    if (xlsxHyperlinks == null || xlsxHyperlinks.isEmpty()) {
+      ArrayList<XlsxHyperlink> links = new ArrayList<>();
 
-          try {
-            PackageRelationshipCollection hyperRels =
-                    packagePart.getRelationshipsByType(XSSFRelation.SHEET_HYPERLINKS.getRelation());
+      try {
+        PackageRelationshipCollection hyperRels =
+                packagePart.getRelationshipsByType(XSSFRelation.SHEET_HYPERLINKS.getRelation());
 
-            // Turn each one into a XSSFHyperlink
-            for(HyperlinkData hyperlink : hyperlinks) {
-              PackageRelationship hyperRel = null;
-              if(hyperlink.getId() != null) {
-                hyperRel = hyperRels.getRelationshipByID(hyperlink.getId());
-              }
-
-              xlsxHyperlinks.add( new XlsxHyperlink(hyperlink, hyperRel) );
-            }
-          } catch (InvalidFormatException e){
-            throw new POIXMLException(e);
+        // Turn each one into a XSSFHyperlink
+        for(HyperlinkData hyperlink : hyperlinks) {
+          PackageRelationship hyperRel = null;
+          if(hyperlink.getId() != null) {
+            hyperRel = hyperRels.getRelationshipByID(hyperlink.getId());
           }
+
+          links.add( new XlsxHyperlink(hyperlink, hyperRel) );
         }
+      } catch (InvalidFormatException e){
+        throw new POIXMLException(e);
       }
+      xlsxHyperlinks = links;
     }
   }
 
