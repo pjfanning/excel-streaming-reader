@@ -535,7 +535,7 @@ public class StreamingSheetReader implements Iterable<Row> {
   StreamingReader.Builder getBuilder() {
     return streamingWorkbookReader.getBuilder();
   }
-  
+
   private String getAttributeValue(Attribute att) {
     return att == null ? null : att.getValue();
   }
