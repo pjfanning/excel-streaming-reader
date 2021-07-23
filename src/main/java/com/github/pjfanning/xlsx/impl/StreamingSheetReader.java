@@ -6,16 +6,18 @@ import com.github.pjfanning.xlsx.exceptions.CloseException;
 import com.github.pjfanning.xlsx.exceptions.NotSupportedException;
 import com.github.pjfanning.xlsx.exceptions.ParseException;
 import com.github.pjfanning.xlsx.impl.ooxml.HyperlinkData;
+import org.apache.poi.ooxml.POIXMLException;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.openxml4j.opc.PackagePart;
+import org.apache.poi.openxml4j.opc.PackageRelationship;
+import org.apache.poi.openxml4j.opc.PackageRelationshipCollection;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.model.CommentsTable;
 import org.apache.poi.xssf.model.SharedStringsTable;
 import org.apache.poi.xssf.model.StylesTable;
-import org.apache.poi.xssf.usermodel.XSSFCellStyle;
-import org.apache.poi.xssf.usermodel.XSSFDrawing;
-import org.apache.poi.xssf.usermodel.XSSFRichTextString;
-import org.apache.poi.xssf.usermodel.XSSFShape;
+import org.apache.poi.xssf.usermodel.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -32,6 +34,7 @@ public class StreamingSheetReader implements Iterable<Row> {
   private static final Logger log = LoggerFactory.getLogger(StreamingSheetReader.class);
 
   private final StreamingWorkbookReader streamingWorkbookReader;
+  private final PackagePart packagePart;
   private final SharedStringsTable sst;
   private final StylesTable stylesTable;
   private final CommentsTable commentsTable;
@@ -40,6 +43,7 @@ public class StreamingSheetReader implements Iterable<Row> {
   private final Set<Integer> hiddenColumns = new HashSet<>();
   private final List<CellRangeAddress> mergedCells = new ArrayList<>();
   private final List<HyperlinkData> hyperlinks = new ArrayList<>();
+  private List<XlsxHyperlink> xlsxHyperlinks;
 
   private int firstRowNum = 0;
   private int lastRowNum;
@@ -61,9 +65,11 @@ public class StreamingSheetReader implements Iterable<Row> {
   private boolean insideIS = false;
 
   StreamingSheetReader(StreamingWorkbookReader streamingWorkbookReader,
+                       PackagePart packagePart,
                        SharedStringsTable sst, StylesTable stylesTable, CommentsTable commentsTable,
                        XMLEventReader parser, final boolean use1904Dates, int rowCacheSize) {
     this.streamingWorkbookReader = streamingWorkbookReader;
+    this.packagePart = packagePart;
     this.sst = sst;
     this.stylesTable = stylesTable;
     this.commentsTable = commentsTable;
@@ -251,7 +257,9 @@ public class StreamingSheetReader implements Iterable<Row> {
         Attribute ref = startElement.getAttributeByName(QName.valueOf("ref"));
         Attribute location = startElement.getAttributeByName(QName.valueOf("location"));
         Attribute display = startElement.getAttributeByName(QName.valueOf("display"));
-        hyperlinks.add(new HyperlinkData(id, getAttributeValue(ref), getAttributeValue(location), getAttributeValue(display)));
+        Attribute tooltip = startElement.getAttributeByName(QName.valueOf("tooltip"));
+        hyperlinks.add(new HyperlinkData(id, getAttributeValue(ref), getAttributeValue(location),
+                getAttributeValue(display), getAttributeValue(tooltip)));
       }
 
       if (!insideIS) {
@@ -538,6 +546,27 @@ public class StreamingSheetReader implements Iterable<Row> {
 
   private String getAttributeValue(Attribute att) {
     return att == null ? null : att.getValue();
+  }
+
+  private void initHyperlinks() {
+    xlsxHyperlinks = new ArrayList<>();
+
+    try {
+      PackageRelationshipCollection hyperRels =
+              packagePart.getRelationshipsByType(XSSFRelation.SHEET_HYPERLINKS.getRelation());
+
+      // Turn each one into a XSSFHyperlink
+      for(HyperlinkData hyperlink : hyperlinks) {
+        PackageRelationship hyperRel = null;
+        if(hyperlink.getId() != null) {
+          hyperRel = hyperRels.getRelationshipByID(hyperlink.getId());
+        }
+
+        xlsxHyperlinks.add( new XlsxHyperlink(hyperlink, hyperRel) );
+      }
+    } catch (InvalidFormatException e){
+      throw new POIXMLException(e);
+    }
   }
 
   class StreamingRowIterator implements Iterator<Row> {
