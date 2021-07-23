@@ -111,7 +111,11 @@ public class StreamingSheet implements Sheet {
       return null;
     }
 
-    return new XSSFComment(sheetComments, ctComment, null);
+    if (reader.getBuilder().adjustLegacyComments()) {
+      return new XlsxComment(sheetComments, ctComment);
+    } else {
+      return new XSSFComment(sheetComments, ctComment, null);
+    }
   }
 
   /**

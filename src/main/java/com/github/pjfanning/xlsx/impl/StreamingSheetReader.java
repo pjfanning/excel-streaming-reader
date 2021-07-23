@@ -1,5 +1,6 @@
 package com.github.pjfanning.xlsx.impl;
 
+import com.github.pjfanning.xlsx.StreamingReader;
 import com.github.pjfanning.xlsx.XmlUtils;
 import com.github.pjfanning.xlsx.exceptions.CloseException;
 import com.github.pjfanning.xlsx.exceptions.NotSupportedException;
@@ -531,6 +532,10 @@ public class StreamingSheetReader implements Iterable<Row> {
     }
   }
 
+  StreamingReader.Builder getBuilder() {
+    return streamingWorkbookReader.getBuilder();
+  }
+  
   private String getAttributeValue(Attribute att) {
     return att == null ? null : att.getValue();
   }
