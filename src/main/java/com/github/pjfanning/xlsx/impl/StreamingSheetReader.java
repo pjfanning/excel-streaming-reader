@@ -44,6 +44,7 @@ public class StreamingSheetReader implements Iterable<Row> {
   private final List<CellRangeAddress> mergedCells = new ArrayList<>();
   private final List<HyperlinkData> hyperlinks = new ArrayList<>();
   private List<XlsxHyperlink> xlsxHyperlinks;
+  private boolean xlsxHyperlinksInitialised;
 
   private int firstRowNum = 0;
   private int lastRowNum;
@@ -504,7 +505,7 @@ public class StreamingSheetReader implements Iterable<Row> {
   }
 
   /**
-   * @return the comments associated with this sheet (only feature is enabled on the Builder)
+   * @return the comments associated with this sheet (only if feature is enabled on the Builder)
    * @throws IllegalStateException if StreamingWorkbook.Builder setReadComments is not set to true
    */
   CommentsTable getCellComments() {
@@ -544,28 +545,47 @@ public class StreamingSheetReader implements Iterable<Row> {
     return streamingWorkbookReader.getBuilder();
   }
 
+  /**
+   * @return the hyperlinks associated with this sheet (only if feature is enabled on the Builder)
+   * @throws IllegalStateException if StreamingWorkbook.Builder setReadHyperlinks is not set to true
+   */
+  List<XlsxHyperlink> getHyperlinks() {
+    if (!getBuilder().readHyperlinks()) {
+      throw new IllegalStateException("getHyperlinks() only works if StreamingWorking.Builder setReadHyperlinks is set to true");
+    }
+    initHyperlinks();
+    return xlsxHyperlinks;
+  }
+
   private String getAttributeValue(Attribute att) {
     return att == null ? null : att.getValue();
   }
 
   private void initHyperlinks() {
-    xlsxHyperlinks = new ArrayList<>();
+    if (!xlsxHyperlinksInitialised) {
+      synchronized (this) {
+        if (!xlsxHyperlinksInitialised) {
+          xlsxHyperlinksInitialised = true;
+          xlsxHyperlinks = new ArrayList<>();
 
-    try {
-      PackageRelationshipCollection hyperRels =
-              packagePart.getRelationshipsByType(XSSFRelation.SHEET_HYPERLINKS.getRelation());
+          try {
+            PackageRelationshipCollection hyperRels =
+                    packagePart.getRelationshipsByType(XSSFRelation.SHEET_HYPERLINKS.getRelation());
 
-      // Turn each one into a XSSFHyperlink
-      for(HyperlinkData hyperlink : hyperlinks) {
-        PackageRelationship hyperRel = null;
-        if(hyperlink.getId() != null) {
-          hyperRel = hyperRels.getRelationshipByID(hyperlink.getId());
+            // Turn each one into a XSSFHyperlink
+            for(HyperlinkData hyperlink : hyperlinks) {
+              PackageRelationship hyperRel = null;
+              if(hyperlink.getId() != null) {
+                hyperRel = hyperRels.getRelationshipByID(hyperlink.getId());
+              }
+
+              xlsxHyperlinks.add( new XlsxHyperlink(hyperlink, hyperRel) );
+            }
+          } catch (InvalidFormatException e){
+            throw new POIXMLException(e);
+          }
         }
-
-        xlsxHyperlinks.add( new XlsxHyperlink(hyperlink, hyperRel) );
       }
-    } catch (InvalidFormatException e){
-      throw new POIXMLException(e);
     }
   }
 
