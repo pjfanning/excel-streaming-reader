@@ -16,38 +16,14 @@
 ==================================================================== */
 package com.github.pjfanning.xlsx.impl.ooxml;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.apache.poi.ooxml.POIXMLException;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
-import org.apache.poi.openxml4j.opc.OPCPackage;
-import org.apache.poi.openxml4j.opc.PackagePart;
-import org.apache.poi.openxml4j.opc.PackagePartName;
-import org.apache.poi.openxml4j.opc.PackageRelationship;
-import org.apache.poi.openxml4j.opc.PackageRelationshipCollection;
-import org.apache.poi.openxml4j.opc.PackageRelationshipTypes;
-import org.apache.poi.openxml4j.opc.PackagingURIHelper;
+import org.apache.poi.openxml4j.opc.*;
 import org.apache.poi.util.Internal;
 import org.apache.poi.util.XMLHelper;
 import org.apache.poi.xssf.eventusermodel.XSSFReader;
 import org.apache.poi.xssf.model.CommentsTable;
-import org.apache.poi.xssf.model.SharedStringsTable;
-import org.apache.poi.xssf.model.StylesTable;
-import org.apache.poi.xssf.model.ThemesTable;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
 import org.apache.poi.xssf.usermodel.XSSFRelation;
 import org.apache.poi.xssf.usermodel.XSSFShape;
@@ -59,6 +35,11 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
+
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
 
 @Internal
 public class OoxmlReader extends XSSFReader {
@@ -77,87 +58,6 @@ public class OoxmlReader extends XSSFReader {
    */
   public OoxmlReader(OPCPackage pkg) throws IOException, OpenXML4JException {
     super(pkg, true);
-  }
-
-  /**
-   * Opens up the Shared Strings Table, parses it, and
-   * returns a handy object for working with
-   * shared strings.
-   */
-  public SharedStringsTable getSharedStringsTable() throws IOException, InvalidFormatException {
-    ArrayList<PackagePart> parts = pkg.getPartsByContentType(XSSFRelation.SHARED_STRINGS.getContentType());
-    return parts.size() == 0 ? null : new SharedStringsTable(parts.get(0));
-  }
-
-  /**
-   * Opens up the Styles Table, parses it, and
-   * returns a handy object for working with cell styles
-   */
-  public StylesTable getStylesTable() throws IOException, InvalidFormatException {
-    ArrayList<PackagePart> parts = pkg.getPartsByContentType(XSSFRelation.STYLES.getContentType());
-    if (parts.size() == 0) return null;
-
-    // Create the Styles Table, and associate the Themes if present
-    StylesTable styles = new StylesTable(parts.get(0));
-    parts = pkg.getPartsByContentType(XSSFRelation.THEME.getContentType());
-    if (parts.size() != 0) {
-      styles.setTheme(new ThemesTable(parts.get(0)));
-    }
-    return styles;
-  }
-
-
-  /**
-   * Returns an InputStream to read the contents of the
-   * shared strings table.
-   */
-  public InputStream getSharedStringsData() throws IOException, InvalidFormatException {
-    return XSSFRelation.SHARED_STRINGS.getContents(workbookPart);
-  }
-
-  /**
-   * Returns an InputStream to read the contents of the
-   * styles table.
-   */
-  public InputStream getStylesData() throws IOException, InvalidFormatException {
-    return XSSFRelation.STYLES.getContents(workbookPart);
-  }
-
-  /**
-   * Returns an InputStream to read the contents of the
-   * themes table.
-   */
-  public InputStream getThemesData() throws IOException, InvalidFormatException {
-    return XSSFRelation.THEME.getContents(workbookPart);
-  }
-
-  /**
-   * Returns an InputStream to read the contents of the
-   * main Workbook, which contains key overall data for
-   * the file, including sheet definitions.
-   */
-  public InputStream getWorkbookData() throws IOException, InvalidFormatException {
-    return workbookPart.getInputStream();
-  }
-
-  /**
-   * Returns an InputStream to read the contents of the
-   * specified Sheet.
-   *
-   * @param relId The relationId of the sheet, from a r:id on the workbook
-   */
-  public InputStream getSheet(String relId) throws IOException, InvalidFormatException {
-    PackageRelationship rel = workbookPart.getRelationship(relId);
-    if (rel == null) {
-      throw new IllegalArgumentException("No Sheet found with r:id " + relId);
-    }
-
-    PackagePartName relName = PackagingURIHelper.createPartName(rel.getTargetURI());
-    PackagePart sheet = pkg.getPart(relName);
-    if (sheet == null) {
-      throw new IllegalArgumentException("No data found for Sheet with r:id " + relId);
-    }
-    return sheet.getInputStream();
   }
 
   /**
@@ -368,25 +268,6 @@ public class OoxmlReader extends XSSFReader {
     @Override
     public void remove() {
       throw new IllegalStateException("Not supported");
-    }
-  }
-
-  protected static final class XSSFSheetRef {
-    //do we need to store sheetId, too?
-    private final String id;
-    private final String name;
-
-    public XSSFSheetRef(String id, String name) {
-      this.id = id;
-      this.name = name;
-    }
-
-    public String getId() {
-      return id;
-    }
-
-    public String getName() {
-      return name;
     }
   }
 
