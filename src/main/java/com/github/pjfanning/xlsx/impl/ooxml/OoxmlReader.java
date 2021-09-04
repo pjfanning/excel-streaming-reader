@@ -42,9 +42,8 @@ import org.apache.poi.openxml4j.opc.PackageRelationshipCollection;
 import org.apache.poi.openxml4j.opc.PackageRelationshipTypes;
 import org.apache.poi.openxml4j.opc.PackagingURIHelper;
 import org.apache.poi.util.Internal;
-import org.apache.poi.util.POILogFactory;
-import org.apache.poi.util.POILogger;
 import org.apache.poi.util.XMLHelper;
+import org.apache.poi.xssf.eventusermodel.XSSFReader;
 import org.apache.poi.xssf.model.CommentsTable;
 import org.apache.poi.xssf.model.SharedStringsTable;
 import org.apache.poi.xssf.model.StylesTable;
@@ -53,62 +52,32 @@ import org.apache.poi.xssf.usermodel.XSSFDrawing;
 import org.apache.poi.xssf.usermodel.XSSFRelation;
 import org.apache.poi.xssf.usermodel.XSSFShape;
 import org.apache.xmlbeans.XmlException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 
-/**
- * This class makes it easy to get at individual parts
- * of an OOXML .xlsx file, suitable for low memory sax
- * parsing or similar.
- * It makes up the core part of the EventUserModel support
- * for XSSF.
- *
- * This is a forked copy of the POI XSSFReader class.
- */
-//TODO POI XSSFReader should be extended once POI 5.0.1 is available
 @Internal
-public class OoxmlReader {
+public class OoxmlReader extends XSSFReader {
 
-  private static final Set<String> WORKSHEET_RELS =
+  private static final Set<String> OVERRIDE_WORKSHEET_RELS =
           Collections.unmodifiableSet(new HashSet<>(
                   Arrays.asList(XSSFRelation.WORKSHEET.getRelation(),
                           "http://purl.oclc.org/ooxml/officeDocument/relationships/worksheet",
                           XSSFRelation.CHARTSHEET.getRelation(),
                           XSSFRelation.MACRO_SHEET_BIN.getRelation())
           ));
-  private static final POILogger LOGGER = POILogFactory.getLogger(org.apache.poi.xssf.eventusermodel.XSSFReader.class);
-
-  protected OPCPackage pkg;
-  protected PackagePart workbookPart;
+  private static final Logger LOGGER = LoggerFactory.getLogger(org.apache.poi.xssf.eventusermodel.XSSFReader.class);
 
   /**
    * Creates a new XSSFReader, for the given package
    */
   public OoxmlReader(OPCPackage pkg) throws IOException, OpenXML4JException {
-    this.pkg = pkg;
-
-    PackageRelationship coreDocRelationship = this.pkg.getRelationshipsByType(
-            PackageRelationshipTypes.CORE_DOCUMENT).getRelationship(0);
-
-    // strict OOXML likely not fully supported, see #57699
-    // this code is similar to POIXMLDocumentPart.getPartFromOPCPackage(), but I could not combine it
-    // easily due to different return values
-    if (coreDocRelationship == null) {
-      coreDocRelationship = this.pkg.getRelationshipsByType(
-              PackageRelationshipTypes.STRICT_CORE_DOCUMENT).getRelationship(0);
-
-      if (coreDocRelationship == null) {
-        throw new POIXMLException("OOXML file structure broken/invalid - no core document found!");
-      }
-    }
-
-    // Get the part that holds the workbook
-    workbookPart = this.pkg.getPart(coreDocRelationship);
+    super(pkg, true);
   }
-
 
   /**
    * Opens up the Shared Strings Table, parses it, and
@@ -290,7 +259,7 @@ public class OoxmlReader {
      * @return all relationships that are sheet-like
      */
     Set<String> getSheetRelationships() {
-      return WORKSHEET_RELS;
+      return OVERRIDE_WORKSHEET_RELS;
     }
 
     /**
@@ -348,7 +317,7 @@ public class OoxmlReader {
           return parseComments(commentsPart);
         }
       } catch (InvalidFormatException|IOException e) {
-        LOGGER.log(POILogger.WARN, e);
+        LOGGER.warn("issue getting sheet comments", e);
         return null;
       }
       return null;
@@ -375,14 +344,14 @@ public class OoxmlReader {
           PackagePart drawingsPart = sheetPkg.getPackage().getPart(drawingsName);
           if (drawingsPart == null) {
             //parts can go missing; Excel ignores them silently -- TIKA-2134
-            LOGGER.log(POILogger.WARN, "Missing drawing: " + drawingsName + ". Skipping it.");
+            LOGGER.warn("Missing drawing: " + drawingsName + ". Skipping it.");
             continue;
           }
           XSSFDrawing drawing = new XSSFDrawing(drawingsPart);
           shapes.addAll(drawing.getShapes());
         }
       } catch (XmlException|InvalidFormatException|IOException e) {
-        LOGGER.log(POILogger.WARN, e);
+        LOGGER.warn("issue getting shapes", e);
         return null;
       }
       return shapes;
