@@ -5,7 +5,11 @@
 
 name: Java CI
 
-on: [pull_request, push]
+on:
+  pull_request:
+    branches: ['**']
+  push:
+    branches: ['main']
 
 jobs:
   build:
