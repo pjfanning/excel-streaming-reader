@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/pjfanning/excel-streaming-reader.svg?branch=master)](https://travis-ci.com/pjfanning/excel-streaming-reader)
+![Build Status](https://github.com/pjfanning/excel-streaming-reader/actions/workflows/ci.yml/badge.svg)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.pjfanning/excel-streaming-reader/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.pjfanning/excel-streaming-reader)
 
 # Excel Streaming Reader
@@ -28,7 +28,7 @@ To use it, add this to your POM:
   <dependency>
     <groupId>com.github.pjfanning</groupId>
     <artifactId>excel-streaming-reader</artifactId>
-    <version>3.1.1</version>
+    <version>3.1.2</version>
   </dependency>
 </dependencies>  
 ```

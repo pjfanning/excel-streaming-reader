@@ -209,7 +209,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     //Some workbooks have multiple references to the same sheet. Need to filter
     //them out before creating the XMLEventReader by keeping track of their URIs.
     //The sheets are listed in order, so we must keep track of insertion order.
-    OoxmlReader.SheetIterator iter = reader.getSheetsData();
+    OoxmlReader.OoxmlSheetIterator iter = reader.getSheetsData();
     Map<PackagePart, InputStream> sheetStreams = new LinkedHashMap<>();
     Map<PackagePart, CommentsTable> sheetComments = new HashMap<>();
     while(iter.hasNext()) {
