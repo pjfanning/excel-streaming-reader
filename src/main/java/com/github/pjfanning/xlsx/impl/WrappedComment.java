@@ -7,11 +7,11 @@ import org.apache.poi.ss.util.CellAddress;
 import org.apache.poi.xssf.usermodel.XSSFComment;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 
-public class ReadOnlyComment implements Comment {
+public class WrappedComment implements Comment {
 
   private final XSSFComment xssfComment;
 
-  ReadOnlyComment(XSSFComment xssfComment) {
+  WrappedComment(XSSFComment xssfComment) {
     this.xssfComment = xssfComment;
   }
 
@@ -61,37 +61,37 @@ public class ReadOnlyComment implements Comment {
 
   @Override
   public void setAddress(CellAddress addr) {
-
+    xssfComment.setAddress(addr);
   }
 
   @Override
   public void setVisible(boolean visible) {
-
+    xssfComment.setVisible(visible);
   }
 
   @Override
   public void setAddress(int row, int col) {
-
+    xssfComment.setAddress(row, col);
   }
 
   @Override
   public void setRow(int row) {
-
+    xssfComment.setRow(row);
   }
 
   @Override
   public void setColumn(int col) {
-
+    xssfComment.setColumn(col);
   }
 
   @Override
   public void setAuthor(String author) {
-
+    xssfComment.setAuthor(author);
   }
 
   @Override
   public void setString(RichTextString string) {
-
+    xssfComment.setString(string);
   }
 
   private String ltrim(String s) {
