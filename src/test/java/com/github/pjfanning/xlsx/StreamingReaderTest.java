@@ -1254,7 +1254,7 @@ public class StreamingReaderTest {
       Row secondRow = sheet.rowIterator().next();
       Cell cellA2 = secondRow.cellIterator().next();
       Comment cellA2Comment = cellA2.getCellComment();
-      assertEquals(comment10.getString(), cellA2Comment.getString());
+      assertEquals(comment10.toString(), cellA2Comment.toString());
       assertEquals(comment10.getAddress(), cellA2Comment.getAddress());
       assertEquals(comment10.getAuthor(), cellA2Comment.getAuthor());
     }
