@@ -4,6 +4,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellAddress;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.PaneInformation;
+import org.apache.poi.xssf.model.Comments;
 import org.apache.poi.xssf.model.CommentsTable;
 import org.apache.poi.xssf.usermodel.XSSFComment;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTComment;
@@ -101,21 +102,15 @@ public class StreamingSheet implements Sheet {
    */
   @Override
   public Comment getCellComment(CellAddress cellAddress) {
-    CommentsTable sheetComments = reader.getCellComments();
+    Comments sheetComments = reader.getCellComments();
     if (sheetComments == null) {
       return null;
     }
-
-    CTComment ctComment = sheetComments.getCTComment(cellAddress);
-    if(ctComment == null) {
-      return null;
+    XSSFComment xssfComment = sheetComments.findCellComment(cellAddress);
+    if (xssfComment != null && reader.getBuilder().adjustLegacyComments()) {
+      return new ReadOnlyComment(xssfComment);
     }
-
-    if (reader.getBuilder().adjustLegacyComments()) {
-      return new XlsxComment(sheetComments, ctComment);
-    } else {
-      return new XSSFComment(sheetComments, ctComment, null);
-    }
+    return xssfComment;
   }
 
   /**
@@ -126,7 +121,7 @@ public class StreamingSheet implements Sheet {
    */
   @Override
   public Map<CellAddress, ? extends Comment> getCellComments() {
-    CommentsTable sheetComments = reader.getCellComments();
+    Comments sheetComments = reader.getCellComments();
     if (sheetComments == null) {
       return Collections.emptyMap();
     }
