@@ -134,23 +134,7 @@ public class OoxmlReader {
     }
     return styles;
   }
-
-  /**
-   * Returns an InputStream to read the contents of the
-   * styles table.
-   */
-  public InputStream getStylesData() throws IOException, InvalidFormatException {
-    return XSSFRelation.STYLES.getContents(workbookPart);
-  }
-
-  /**
-   * Returns an InputStream to read the contents of the
-   * themes table.
-   */
-  public InputStream getThemesData() throws IOException, InvalidFormatException {
-    return XSSFRelation.THEME.getContents(workbookPart);
-  }
-
+  
   /**
    * Returns an InputStream to read the contents of the
    * main Workbook, which contains key overall data for
