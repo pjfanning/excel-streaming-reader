@@ -31,6 +31,7 @@ import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import com.github.pjfanning.poi.xssf.streaming.TempFileCommentsTable;
 import org.apache.poi.ooxml.POIXMLException;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
@@ -132,15 +133,6 @@ public class OoxmlReader {
       styles.setTheme(new ThemesTable(parts.get(0)));
     }
     return styles;
-  }
-
-
-  /**
-   * Returns an InputStream to read the contents of the
-   * shared strings table.
-   */
-  public InputStream getSharedStringsData() throws IOException, InvalidFormatException {
-    return XSSFRelation.SHARED_STRINGS.getContents(workbookPart);
   }
 
   /**
@@ -353,7 +345,13 @@ public class OoxmlReader {
 
     //to allow subclassing
     protected Comments parseComments(PackagePart commentsPart) throws IOException {
-      return new CommentsTable(commentsPart);
+      //TODO config for CommentsTable or TempFileCommentsTable
+      //TODO get access to config for encrypting tmp files
+      try (InputStream is = commentsPart.getInputStream()) {
+        TempFileCommentsTable ct = new TempFileCommentsTable(false);
+        ct.readFrom(is);
+        return ct;
+      }
     }
 
     /**
