@@ -19,11 +19,35 @@ package com.github.pjfanning.xlsx.impl.ooxml;
 import org.apache.poi.ooxml.POIXMLException;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
-import org.apache.poi.openxml4j.opc.*;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.xml.parsers.ParserConfigurationException;
+
+import com.github.pjfanning.poi.xssf.streaming.TempFileCommentsTable;
+import com.github.pjfanning.xlsx.StreamingReader;
+import org.apache.poi.openxml4j.opc.OPCPackage;
+import org.apache.poi.openxml4j.opc.PackagePart;
+import org.apache.poi.openxml4j.opc.PackagePartName;
+import org.apache.poi.openxml4j.opc.PackageRelationship;
+import org.apache.poi.openxml4j.opc.PackageRelationshipCollection;
+import org.apache.poi.openxml4j.opc.PackageRelationshipTypes;
+import org.apache.poi.openxml4j.opc.PackagingURIHelper;
 import org.apache.poi.util.Internal;
 import org.apache.poi.util.XMLHelper;
 import org.apache.poi.xssf.eventusermodel.XSSFReader;
-import org.apache.poi.xssf.model.CommentsTable;
+import org.apache.poi.xssf.model.*;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
 import org.apache.poi.xssf.usermodel.XSSFRelation;
 import org.apache.poi.xssf.usermodel.XSSFShape;
@@ -35,11 +59,6 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
-
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.*;
 
 @Internal
 public class OoxmlReader extends XSSFReader {
@@ -58,6 +77,61 @@ public class OoxmlReader extends XSSFReader {
    */
   public OoxmlReader(OPCPackage pkg) throws IOException, OpenXML4JException {
     super(pkg, true);
+
+    PackageRelationship coreDocRelationship = this.pkg.getRelationshipsByType(
+            PackageRelationshipTypes.CORE_DOCUMENT).getRelationship(0);
+
+    // strict OOXML likely not fully supported, see #57699
+    // this code is similar to POIXMLDocumentPart.getPartFromOPCPackage(), but I could not combine it
+    // easily due to different return values
+    if (coreDocRelationship == null) {
+      coreDocRelationship = this.pkg.getRelationshipsByType(
+              PackageRelationshipTypes.STRICT_CORE_DOCUMENT).getRelationship(0);
+
+      if (coreDocRelationship == null) {
+        throw new POIXMLException("OOXML file structure broken/invalid - no core document found!");
+      }
+    }
+
+    // Get the part that holds the workbook
+    workbookPart = this.pkg.getPart(coreDocRelationship);
+  }
+
+
+  /**
+   * Opens up the Shared Strings Table, parses it, and
+   * returns a handy object for working with
+   * shared strings.
+   */
+  public SharedStringsTable getSharedStringsTable() throws IOException, InvalidFormatException {
+    ArrayList<PackagePart> parts = pkg.getPartsByContentType(XSSFRelation.SHARED_STRINGS.getContentType());
+    return parts.size() == 0 ? null : new SharedStringsTable(parts.get(0));
+  }
+
+  /**
+   * Opens up the Styles Table, parses it, and
+   * returns a handy object for working with cell styles
+   */
+  public StylesTable getStylesTable() throws IOException, InvalidFormatException {
+    ArrayList<PackagePart> parts = pkg.getPartsByContentType(XSSFRelation.STYLES.getContentType());
+    if (parts.size() == 0) return null;
+
+    // Create the Styles Table, and associate the Themes if present
+    StylesTable styles = new StylesTable(parts.get(0));
+    parts = pkg.getPartsByContentType(XSSFRelation.THEME.getContentType());
+    if (parts.size() != 0) {
+      styles.setTheme(new ThemesTable(parts.get(0)));
+    }
+    return styles;
+  }
+  
+  /**
+   * Returns an InputStream to read the contents of the
+   * main Workbook, which contains key overall data for
+   * the file, including sheet definitions.
+   */
+  public InputStream getWorkbookData() throws IOException, InvalidFormatException {
+    return workbookPart.getInputStream();
   }
 
   /**
@@ -67,14 +141,14 @@ public class OoxmlReader extends XSSFReader {
    * from the Iterator. It's up to you to close the
    * InputStreams when done with each one.
    */
-  public SheetIterator getSheetsData() throws IOException {
-    return new SheetIterator(workbookPart);
+  public OoxmlSheetIterator getSheetsData() throws IOException {
+    return new OoxmlSheetIterator(workbookPart);
   }
 
   /**
    * Iterator over sheet data.
    */
-  public static class SheetIterator implements Iterator<InputStream> {
+  public static class OoxmlSheetIterator implements Iterator<InputStream> {
 
     /**
      * Maps relId and the corresponding PackagePart
@@ -98,7 +172,7 @@ public class OoxmlReader extends XSSFReader {
      *
      * @param wb package part holding workbook.xml
      */
-    SheetIterator(PackagePart wb) throws IOException {
+    OoxmlSheetIterator(PackagePart wb) throws IOException {
 
       /*
        * The order of sheets is defined by the order of CTSheet elements in workbook.xml
@@ -203,7 +277,7 @@ public class OoxmlReader extends XSSFReader {
      * Returns the comments associated with this sheet,
      * or null if there aren't any
      */
-    public CommentsTable getSheetComments() {
+    public Comments getSheetComments(StreamingReader.Builder builder) {
       PackagePart sheetPkg = getSheetPart();
 
       // Do we have a comments relationship? (Only ever one if so)
@@ -214,7 +288,7 @@ public class OoxmlReader extends XSSFReader {
           PackageRelationship comments = commentsList.getRelationship(0);
           PackagePartName commentsName = PackagingURIHelper.createPartName(comments.getTargetURI());
           PackagePart commentsPart = sheetPkg.getPackage().getPart(commentsName);
-          return parseComments(commentsPart);
+          return parseComments(builder, commentsPart);
         }
       } catch (InvalidFormatException|IOException e) {
         LOGGER.warn("issue getting sheet comments", e);
@@ -223,9 +297,16 @@ public class OoxmlReader extends XSSFReader {
       return null;
     }
 
-    //to allow subclassing
-    protected CommentsTable parseComments(PackagePart commentsPart) throws IOException {
-      return new CommentsTable(commentsPart);
+    private Comments parseComments(StreamingReader.Builder builder, PackagePart commentsPart) throws IOException {
+      if (builder.useCommentsTempFile()) {
+        try (InputStream is = commentsPart.getInputStream()) {
+          TempFileCommentsTable ct = new TempFileCommentsTable(builder.encryptCommentsTempFile());
+          ct.readFrom(is);
+          return ct;
+        }
+      } else {
+        return new CommentsTable(commentsPart);
+      }
     }
 
     /**
