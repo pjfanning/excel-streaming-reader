@@ -7,7 +7,6 @@ import com.github.pjfanning.xlsx.exceptions.NotSupportedException;
 import com.github.pjfanning.xlsx.exceptions.OpenException;
 import com.github.pjfanning.xlsx.exceptions.ParseException;
 import com.github.pjfanning.xlsx.exceptions.ReadException;
-import com.github.pjfanning.xlsx.impl.ooxml.OoXmlStrictConverterInputStream;
 import com.github.pjfanning.xlsx.impl.ooxml.OoxmlStrictHelper;
 import com.github.pjfanning.xlsx.impl.ooxml.OoxmlReader;
 import org.apache.commons.io.IOUtils;
@@ -34,7 +33,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.GeneralSecurityException;
@@ -66,15 +64,9 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
       try {
         if(builder.getPassword() != null) {
           POIFSFileSystem poifs = new POIFSFileSystem(is);
-          decryptWorkbook(poifs);
+          pkg = decryptWorkbook(poifs);
         } else {
-          if (builder.convertFromOoXmlStrict()) {
-            try(InputStream stream = new OoXmlStrictConverterInputStream(is)) {
-              pkg = OPCPackage.open(stream);
-            }
-          } else {
-            pkg = OPCPackage.open(is);
-          }
+          pkg = OPCPackage.open(is);
         }
         loadPackage(pkg);
       } catch(SAXException | ParserConfigurationException e) {
@@ -115,15 +107,9 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     try {
       if(builder.getPassword() != null) {
         POIFSFileSystem poifs = new POIFSFileSystem(f);
-        decryptWorkbook(poifs);
+        pkg = decryptWorkbook(poifs);
       } else {
-        if (builder.convertFromOoXmlStrict()) {
-          try(InputStream stream = new OoXmlStrictConverterInputStream(new FileInputStream(f))) {
-            pkg = OPCPackage.open(stream);
-          }
-        } else {
-          pkg = OPCPackage.open(f);
-        }
+        pkg = OPCPackage.open(f);
       }
       loadPackage(pkg);
     } catch(SAXException | ParserConfigurationException e) {
@@ -141,23 +127,17 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     }
   }
 
-  private void decryptWorkbook(POIFSFileSystem poifs) throws IOException, GeneralSecurityException, InvalidFormatException {
+  private OPCPackage decryptWorkbook(POIFSFileSystem poifs) throws IOException, GeneralSecurityException, InvalidFormatException {
     // Based on: https://poi.apache.org/encryption.html
     EncryptionInfo info = new EncryptionInfo(poifs);
     Decryptor d = Decryptor.getInstance(info);
     d.verifyPassword(builder.getPassword());
-    if (builder.convertFromOoXmlStrict()) {
-      try(InputStream stream = new OoXmlStrictConverterInputStream(d.getDataStream(poifs))) {
-        pkg = OPCPackage.open(stream);
-      }
-    } else {
-      pkg = OPCPackage.open(d.getDataStream(poifs));
-    }
+    return OPCPackage.open(d.getDataStream(poifs));
   }
 
   private void loadPackage(OPCPackage pkg) throws IOException, OpenXML4JException, ParserConfigurationException, SAXException, XMLStreamException {
     OoxmlReader reader = new OoxmlReader(pkg);
-    boolean strictFormat = OoxmlStrictHelper.isStrictOoxmlFormat(pkg);
+    boolean strictFormat = pkg.isStrictOoxmlFormat();
     if (strictFormat) {
       log.info("file is in strict OOXML format");
     }

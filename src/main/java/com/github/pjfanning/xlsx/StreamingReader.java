@@ -48,7 +48,6 @@ public class StreamingReader implements AutoCloseable {
     private boolean readHyperlinks = false;
     private boolean readShapes = false;
     private String password;
-    private boolean convertFromOoXmlStrict;
 
     public int getRowCacheSize() {
       return rowCacheSize;
@@ -141,13 +140,6 @@ public class StreamingReader implements AutoCloseable {
     }
 
     /**
-     * @return Whether to convert the input from Strict OOXML (prevent "Strict OOXML isn't currently supported")
-     */
-    public boolean convertFromOoXmlStrict() {
-      return convertFromOoXmlStrict;
-    }
-
-    /**
      * The number of rows to keep in memory at any given point.
      * <p>
      * Defaults to 10
@@ -188,20 +180,6 @@ public class StreamingReader implements AutoCloseable {
      */
     public Builder password(String password) {
       this.password = password;
-      return this;
-    }
-
-    /**
-     * Convert the file from Strict OOXML to regular XLSX.
-     * Strict OOXML is not supported by POI. This is an experimental feature.
-     *
-     * @param convertFromOoXmlStrict whether to convert from OOXML
-     * @return reference to current {@code Builder}
-     * @deprecated this is no longer needed, OOXML strict format is handled automatically
-     */
-    @Deprecated
-    public Builder convertFromOoXmlStrict(boolean convertFromOoXmlStrict) {
-      this.convertFromOoXmlStrict = convertFromOoXmlStrict;
       return this;
     }
 

@@ -16,34 +16,12 @@
 ==================================================================== */
 package com.github.pjfanning.xlsx.impl.ooxml;
 
+import com.github.pjfanning.poi.xssf.streaming.TempFileCommentsTable;
+import com.github.pjfanning.xlsx.StreamingReader;
 import org.apache.poi.ooxml.POIXMLException;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.xml.parsers.ParserConfigurationException;
-
-import com.github.pjfanning.poi.xssf.streaming.TempFileCommentsTable;
-import com.github.pjfanning.xlsx.StreamingReader;
-import org.apache.poi.openxml4j.opc.OPCPackage;
-import org.apache.poi.openxml4j.opc.PackagePart;
-import org.apache.poi.openxml4j.opc.PackagePartName;
-import org.apache.poi.openxml4j.opc.PackageRelationship;
-import org.apache.poi.openxml4j.opc.PackageRelationshipCollection;
-import org.apache.poi.openxml4j.opc.PackageRelationshipTypes;
-import org.apache.poi.openxml4j.opc.PackagingURIHelper;
+import org.apache.poi.openxml4j.opc.*;
 import org.apache.poi.util.Internal;
 import org.apache.poi.util.XMLHelper;
 import org.apache.poi.xssf.eventusermodel.XSSFReader;
@@ -59,6 +37,11 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
+
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
 
 @Internal
 public class OoxmlReader extends XSSFReader {
