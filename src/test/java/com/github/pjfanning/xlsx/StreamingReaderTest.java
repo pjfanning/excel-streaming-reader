@@ -1248,8 +1248,18 @@ public class StreamingReaderTest {
   }
 
   @Test
+  public void testReadCommentsWithTempFileCommentsFullFormat() throws Exception {
+    testReadComments(true, false, true);
+  }
+
+  @Test
   public void testReadCommentsWithEncryptedTempFileComments() throws Exception {
     testReadComments(true, true, false);
+  }
+
+  @Test
+  public void testReadCommentsWithEncryptedTempFileCommentsFullFormat() throws Exception {
+    testReadComments(true, true, true);
   }
 
   private void testReadComments(boolean tempFileEnabled, boolean encrypt,
