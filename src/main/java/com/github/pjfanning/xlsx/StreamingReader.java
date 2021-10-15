@@ -371,11 +371,13 @@ public class StreamingReader implements AutoCloseable {
      * This only has an effect if temp file SST and/or Comments Table support is enabled. The default is false.
      * When you don't use temp file support, full formatting data is returned for the rich text anyway.
      * @param fullFormatRichText Whether to parse the full formatting data for rich text shared strings and comments.
+     * @return reference to current {@code Builder}
      * @see #setUseSstTempFile(boolean)
      * @see #setUseCommentsTempFile(boolean)
      */
-    public void setFullFormatRichText(boolean fullFormatRichText) {
+    public Builder setFullFormatRichText(boolean fullFormatRichText) {
       this.fullFormatRichText = fullFormatRichText;
+      return this;
     }
 
     /**
