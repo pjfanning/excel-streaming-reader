@@ -622,10 +622,10 @@ public class StreamingReaderTest {
     testBlankCellWithSstCacheSize(StreamingReader.builder().setUseSstTempFile(true).setEncryptSstTempFile(true));
   }
 
-  private void testBlankCellWithSstCacheSize(StreamingReader.Builder rb) throws Exception {
+  private void testBlankCellWithSstCacheSize(StreamingReader.Builder builder) throws Exception {
     File f = new File("src/test/resources/blank_cell_to_test_sst_size.xlsx");
     Map<Integer, List<Cell>> contents = new HashMap<>();
-    try (Workbook wb = StreamingReader.builder().setUseSstTempFile(true).open(f)) {
+    try (Workbook wb = builder.open(f)) {
       for (Row row : wb.getSheetAt(0)) {
         contents.put(row.getRowNum(), new ArrayList<>());
         for (Cell c : row) {
@@ -633,7 +633,7 @@ public class StreamingReaderTest {
         }
       }
     }
-    assertThat(contents.get(1).get(2).getStringCellValue(), equalTo(""));
+    assertEquals("", contents.get(1).get(2).getStringCellValue());
   }
 
   @Test
@@ -641,7 +641,7 @@ public class StreamingReaderTest {
     File f = new File("src/test/resources/data_types.xlsx");
     try (Workbook wb = StreamingReader.builder().open(f)) {
       Row row = wb.getSheetAt(0).iterator().next();
-      assertThat(row.getRowNum(), equalTo(0));
+      assertEquals(0, row.getRowNum());
     }
   }
 
@@ -649,7 +649,8 @@ public class StreamingReaderTest {
   public void testNoTypeCell() throws Exception {
     try (
             InputStream is = new FileInputStream("src/test/resources/no_type_cell.xlsx");
-            Workbook wb = StreamingReader.builder().open(is)) {
+            Workbook wb = StreamingReader.builder().open(is)
+    ) {
       for (Row r : wb.getSheetAt(0)) {
         for (Cell c : r) {
           assertEquals("1", c.getStringCellValue());
@@ -978,58 +979,12 @@ public class StreamingReaderTest {
 
   @Test
   public void testStrictOOMXLWithTempFileSST() throws Exception {
-    try (
-            InputStream inputStream = new FileInputStream("src/test/resources/sample.strict.xlsx");
-            Workbook wb = StreamingReader.builder().setUseSstTempFile(true).setReadCoreProperties(true)
-                    .open(inputStream)
-    ) {
-      StreamingWorkbook swb = (StreamingWorkbook) wb;
-      assertNotNull("CoreProperties should not be null", swb.getCoreProperties());
-      assertNull(swb.getCoreProperties().getCreator());
-      assertNotNull("created date set", swb.getCoreProperties().getCreated());
-      assertEquals(2007, swb.getCoreProperties().getCreated().toInstant().atZone(ZoneId.of("UTC")).getYear());
-      DataFormatter formatter = new DataFormatter();
+    testStrictOOMXLWithTempFileSST(false);
+  }
 
-      Sheet sheet1 = wb.getSheet("Sheet1");
-      assertEquals(9, sheet1.getLastRowNum());
-      Iterator<Row> rowIterator1 = sheet1.rowIterator();
-
-      assertTrue(rowIterator1.hasNext());
-      Row currentRow1 = rowIterator1.next();
-      assertNotNull(currentRow1);
-
-      List<String> expected1 = Arrays.asList(new String[]{
-              "Lorem", "111"
-      });
-
-      for (int i = 0; i < currentRow1.getLastCellNum(); i++) {
-        Cell cell = currentRow1.getCell(i, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
-
-        String value = formatter.formatCellValue(cell);
-
-        assertEquals(expected1.get(i), value);
-      }
-
-      Sheet sheet2 = wb.getSheet("rich test");
-      assertEquals(5, sheet2.getLastRowNum());
-      Iterator<Row> rowIterator2 = sheet2.rowIterator();
-
-      assertTrue(rowIterator2.hasNext());
-      Row currentRow2 = rowIterator2.next();
-      assertNotNull(currentRow2);
-
-      List<String> expected2 = Arrays.asList(new String[]{
-              "The quick brown fox jumps over the lazy dog"
-      });
-
-      for (int i = 0; i < currentRow2.getLastCellNum(); i++) {
-        Cell cell = currentRow2.getCell(i, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
-
-        String value = formatter.formatCellValue(cell);
-
-        assertEquals(expected2.get(i), value);
-      }
-    }
+  @Test
+  public void testStrictOOMXLWithTempFileSSTFullFormat() throws Exception {
+    testStrictOOMXLWithTempFileSST(true);
   }
 
   @Test
@@ -1108,38 +1063,54 @@ public class StreamingReaderTest {
 
   @Test
   public void testReadCommentsWithInMemoryComments() throws Exception {
-    testReadComments(false, false);
+    testReadComments(false, false, false);
   }
 
   @Test
   public void testReadCommentsWithTempFileComments() throws Exception {
-    testReadComments(true, false);
+    testReadComments(true, false, false);
+  }
+
+  @Test
+  public void testReadCommentsWithTempFileCommentsFullFormat() throws Exception {
+    testReadComments(true, false, true);
   }
 
   @Test
   public void testReadCommentsWithEncryptedTempFileComments() throws Exception {
-    testReadComments(true, true);
+    testReadComments(true, true, false);
   }
 
-  private void testReadComments(boolean tempFileEnabled, boolean encrypt) throws Exception {
+  @Test
+  public void testReadCommentsWithEncryptedTempFileCommentsFullFormat() throws Exception {
+    testReadComments(true, true, true);
+  }
+
+  private void testReadComments(boolean tempFileEnabled, boolean encrypt,
+                                boolean fullFormat) throws Exception {
     try(
             InputStream inputStream = new FileInputStream("src/test/resources/commentTest.xlsx");
             Workbook wb = StreamingReader.builder()
                     .setReadComments(true)
                     .setUseCommentsTempFile(tempFileEnabled)
                     .setEncryptCommentsTempFile(encrypt)
+                    .setFullFormatRichText(fullFormat)
                     .open(inputStream)
     ) {
+      int expectedRuns = tempFileEnabled && !fullFormat ? 0 : 2;
       Sheet sheet = wb.getSheetAt(0);
       assertEquals(14, sheet.getCellComments().size());
       Comment comment00 = sheet.getCellComment(new CellAddress(0, 0));
       assertEquals("Shaun Kalley:\nComment A1", comment00.getString().getString());
+      assertEquals(expectedRuns, comment00.getString().numFormattingRuns());
       assertEquals("Shaun Kalley", comment00.getAuthor());
       Comment comment10 = sheet.getCellComment(new CellAddress(1, 0));
       assertEquals("Shaun Kalley:\nComment A2", comment10.getString().getString());
+      assertEquals(expectedRuns, comment10.getString().numFormattingRuns());
       assertEquals("Shaun Kalley", comment10.getAuthor());
       Comment comment31 = sheet.getCellComment(new CellAddress(3, 1));
       assertEquals("Shaun Kalley:\nComment B4", comment31.getString().getString());
+      assertEquals(expectedRuns, comment31.getString().numFormattingRuns());
       assertEquals("Shaun Kalley", comment00.getAuthor());
 
       Row firstRow = sheet.rowIterator().next();
@@ -1149,6 +1120,62 @@ public class StreamingReaderTest {
       assertEquals(comment10.toString(), cellA2Comment.toString());
       assertEquals(comment10.getAddress(), cellA2Comment.getAddress());
       assertEquals(comment10.getAuthor(), cellA2Comment.getAuthor());
+    }
+  }
+
+  private void testStrictOOMXLWithTempFileSST(boolean fullFormat) throws Exception {
+    try (
+            InputStream inputStream = new FileInputStream("src/test/resources/sample.strict.xlsx");
+            Workbook wb = StreamingReader.builder().setUseSstTempFile(true)
+                    .setFullFormatRichText(fullFormat)
+                    .setReadCoreProperties(true)
+                    .open(inputStream)
+    ) {
+      StreamingWorkbook swb = (StreamingWorkbook) wb;
+      assertNotNull("CoreProperties should not be null", swb.getCoreProperties());
+      assertNull(swb.getCoreProperties().getCreator());
+      assertNotNull("created date set", swb.getCoreProperties().getCreated());
+      assertEquals(2007, swb.getCoreProperties().getCreated().toInstant().atZone(ZoneId.of("UTC")).getYear());
+      DataFormatter formatter = new DataFormatter();
+
+      Sheet sheet1 = wb.getSheet("Sheet1");
+      assertEquals(9, sheet1.getLastRowNum());
+      Iterator<Row> rowIterator1 = sheet1.rowIterator();
+
+      assertTrue(rowIterator1.hasNext());
+      Row currentRow1 = rowIterator1.next();
+      assertNotNull(currentRow1);
+
+      List<String> expected1 = Arrays.asList(new String[]{
+              "Lorem", "111"
+      });
+
+      for (int i = 0; i < currentRow1.getLastCellNum(); i++) {
+        Cell cell = currentRow1.getCell(i, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+
+        String value = formatter.formatCellValue(cell);
+
+        assertEquals(expected1.get(i), value);
+      }
+
+      Sheet sheet2 = wb.getSheet("rich test");
+      assertEquals(5, sheet2.getLastRowNum());
+      Iterator<Row> rowIterator2 = sheet2.rowIterator();
+
+      assertTrue(rowIterator2.hasNext());
+      Row currentRow2 = rowIterator2.next();
+      assertNotNull(currentRow2);
+
+      String expected2 = "The quick brown fox jumps over the lazy dog";
+
+      Cell cell = currentRow2.getCell(0, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+
+      String value = formatter.formatCellValue(cell);
+
+      assertEquals(expected2, value);
+      assertEquals(expected2, cell.getRichStringCellValue().getString());
+      int expectedRuns = fullFormat ? 11 : 0;
+      assertEquals(expectedRuns, cell.getRichStringCellValue().numFormattingRuns());
     }
   }
 }

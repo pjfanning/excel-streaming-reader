@@ -5,7 +5,6 @@ import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.openxml4j.opc.PackagePart;
 import org.apache.poi.openxml4j.opc.internal.MemoryPackagePart;
-import org.apache.poi.util.TempFile;
 import org.apache.poi.xssf.model.SharedStringsTable;
 import org.apache.poi.xssf.model.StylesTable;
 import org.apache.poi.xssf.model.ThemesTable;
@@ -22,7 +21,6 @@ public class OoxmlStrictHelper {
       return null;
     } else {
       PackagePart part = parts.get(0);
-      File tempFile = TempFile.createTempFile("ooxml-strict-themes", ".xml");
       try(TempDataStore tempData = createTempDataStore(builder)) {
         try(
                 InputStream is = part.getInputStream();
@@ -58,6 +56,7 @@ public class OoxmlStrictHelper {
             //continue
           }
         }
+        //TODO when POI 5.1.0 is ready, support using TempFilePackagePart
         MemoryPackagePart newPart = new MemoryPackagePart(pkg, part.getPartName(), part.getContentType());
         try(InputStream is = tempData.getInputStream()) {
           newPart.load(is);
@@ -83,6 +82,7 @@ public class OoxmlStrictHelper {
             //continue
           }
         }
+        //TODO when POI 5.1.0 is ready, support using TempFilePackagePart
         MemoryPackagePart newPart = new MemoryPackagePart(pkg, part.getPartName(), part.getContentType());
         try(InputStream is = tempData.getInputStream()) {
           newPart.load(is);

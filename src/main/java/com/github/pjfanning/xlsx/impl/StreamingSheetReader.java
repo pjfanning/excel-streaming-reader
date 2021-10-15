@@ -409,12 +409,12 @@ public class StreamingSheetReader implements Iterable<Row> {
       case "s":           //string stored in shared table
         if (!lastContents.isEmpty()) {
             int idx = Integer.parseInt(lastContents);
-            return new StringSupplier(sst.getItemAt(idx).toString());
+            return new RichTextStringSupplier(sst.getItemAt(idx));
         }
         return new StringSupplier(lastContents);
       case "inlineStr":   //inline string (not in sst)
       case "str":
-        return new StringSupplier(new XSSFRichTextString(lastContents).toString());
+        return new StringSupplier(lastContents);
       case "e":           //error type
         return new StringSupplier("ERROR:  " + lastContents);
       case "n":           //numeric type

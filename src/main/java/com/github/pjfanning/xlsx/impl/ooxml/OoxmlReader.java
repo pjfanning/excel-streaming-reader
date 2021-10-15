@@ -283,7 +283,9 @@ public class OoxmlReader extends XSSFReader {
     private Comments parseComments(StreamingReader.Builder builder, PackagePart commentsPart) throws IOException {
       if (builder.useCommentsTempFile()) {
         try (InputStream is = commentsPart.getInputStream()) {
-          TempFileCommentsTable ct = new TempFileCommentsTable(builder.encryptCommentsTempFile());
+          TempFileCommentsTable ct = new TempFileCommentsTable(
+                  builder.encryptCommentsTempFile(),
+                  builder.fullFormatRichText());
           ct.readFrom(is);
           return ct;
         }
