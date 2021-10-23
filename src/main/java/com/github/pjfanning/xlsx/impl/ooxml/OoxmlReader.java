@@ -204,18 +204,5 @@ public class OoxmlReader extends XSSFReader {
       }
       return shapes;
     }
-
-    public PackagePart getSheetPart() {
-      String sheetId = xssfSheetRef.getId();
-      return sheetMap.get(sheetId);
-    }
-
-    /**
-     * We're read only, so remove isn't supported
-     */
-    @Override
-    public void remove() {
-      throw new IllegalStateException("Not supported");
-    }
   }
 }
