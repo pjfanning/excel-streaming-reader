@@ -105,15 +105,6 @@ public class OoxmlReader extends XSSFReader {
     }
     return styles;
   }
-  
-  /**
-   * Returns an InputStream to read the contents of the
-   * main Workbook, which contains key overall data for
-   * the file, including sheet definitions.
-   */
-  public InputStream getWorkbookData() throws IOException, InvalidFormatException {
-    return workbookPart.getInputStream();
-  }
 
   /**
    * Returns an Iterator which will let you get at all the
