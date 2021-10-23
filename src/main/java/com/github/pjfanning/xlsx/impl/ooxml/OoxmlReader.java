@@ -51,7 +51,7 @@ public class OoxmlReader extends XSSFReader {
                           XSSFRelation.CHARTSHEET.getRelation(),
                           XSSFRelation.MACRO_SHEET_BIN.getRelation())
           ));
-  private static final Logger LOGGER = LoggerFactory.getLogger(org.apache.poi.xssf.eventusermodel.XSSFReader.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(OoxmlReader.class);
 
   /**
    * Creates a new XSSFReader, for the given package
