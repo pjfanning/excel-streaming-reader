@@ -86,7 +86,7 @@ public class OoxmlReader extends XSSFReader {
    * returns a handy object for working with
    * shared strings.
    */
-  public SharedStringsTable getSharedStringsTable() throws IOException, InvalidFormatException {
+  public SharedStringsTable getSharedStringsTable() throws IOException {
     ArrayList<PackagePart> parts = pkg.getPartsByContentType(XSSFRelation.SHARED_STRINGS.getContentType());
     return parts.size() == 0 ? null : new SharedStringsTable(parts.get(0));
   }
@@ -334,41 +334,6 @@ public class OoxmlReader extends XSSFReader {
     @Override
     public void remove() {
       throw new IllegalStateException("Not supported");
-    }
-  }
-
-  //scrapes sheet reference info and order from workbook.xml
-  private static class XMLSheetRefReader extends DefaultHandler {
-    private static final String SHEET = "sheet";
-    private static final String ID = "id";
-    private static final String NAME = "name";
-
-    private final List<XSSFSheetRef> sheetRefs = new LinkedList<>();
-
-    // read <sheet name="Sheet6" sheetId="4" r:id="rId6"/>
-    // and add XSSFSheetRef(id="rId6", name="Sheet6") to sheetRefs
-    @Override
-    public void startElement(String uri, String localName, String qName, Attributes attrs) throws SAXException {
-      if (localName.equalsIgnoreCase(SHEET)) {
-        String name = null;
-        String id = null;
-        for (int i = 0; i < attrs.getLength(); i++) {
-          final String attrName = attrs.getLocalName(i);
-          if (attrName.equalsIgnoreCase(NAME)) {
-            name = attrs.getValue(i);
-          } else if (attrName.equalsIgnoreCase(ID)) {
-            id = attrs.getValue(i);
-          }
-          if (name != null && id != null) {
-            sheetRefs.add(new XSSFSheetRef(id, name));
-            break;
-          }
-        }
-      }
-    }
-
-    List<XSSFSheetRef> getSheetRefs() {
-      return Collections.unmodifiableList(sheetRefs);
     }
   }
 }

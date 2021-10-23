@@ -12,15 +12,13 @@ sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
-    maven {
-        url "https://dist.apache.org/repos/dist/dev/poi/5.1.0-RC1/maven"
-    }
+    mavenLocal()
 }
 
 dependencies {
-    api 'org.apache.poi:poi:5.1.0'
-    api 'org.apache.poi:poi-ooxml:5.1.0'
-    implementation 'com.github.pjfanning:poi-shared-strings:2.1.0'
+    api 'org.apache.poi:poi:5.1.1-SNAPSHOT'
+    api 'org.apache.poi:poi-ooxml:5.1.1-SNAPSHOT'
+    implementation 'com.github.pjfanning:poi-shared-strings:2.2.0-SNAPSHOT'
     implementation 'org.slf4j:slf4j-api:1.7.32'
     implementation 'commons-io:commons-io:2.11.0'
     testImplementation 'junit:junit:4.13.2'
