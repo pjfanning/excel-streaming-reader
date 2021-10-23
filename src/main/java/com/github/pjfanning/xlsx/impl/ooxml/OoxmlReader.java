@@ -23,7 +23,6 @@ import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
 import org.apache.poi.openxml4j.opc.*;
 import org.apache.poi.util.Internal;
-import org.apache.poi.util.XMLHelper;
 import org.apache.poi.xssf.eventusermodel.XSSFReader;
 import org.apache.poi.xssf.model.*;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
@@ -32,11 +31,7 @@ import org.apache.poi.xssf.usermodel.XSSFShape;
 import org.apache.xmlbeans.XmlException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
 
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
@@ -120,24 +115,7 @@ public class OoxmlReader extends XSSFReader {
   /**
    * Iterator over sheet data.
    */
-  public static class OoxmlSheetIterator implements Iterator<InputStream> {
-
-    /**
-     * Maps relId and the corresponding PackagePart
-     */
-    private final Map<String, PackagePart> sheetMap;
-
-    /**
-     * Current sheet reference
-     */
-    XSSFSheetRef xssfSheetRef;
-
-    /**
-     * Iterator over CTSheet objects, returns sheets in <tt>logical</tt> order.
-     * We can't rely on the Ooxml4J's relationship iterator because it returns objects in physical order,
-     * i.e. as they are stored in the underlying package
-     */
-    final Iterator<XSSFSheetRef> sheetIterator;
+  public static class OoxmlSheetIterator extends SheetIterator {
 
     /**
      * Construct a new SheetIterator
@@ -145,55 +123,7 @@ public class OoxmlReader extends XSSFReader {
      * @param wb package part holding workbook.xml
      */
     OoxmlSheetIterator(PackagePart wb) throws IOException {
-
-      /*
-       * The order of sheets is defined by the order of CTSheet elements in workbook.xml
-       */
-      try {
-        //step 1. Map sheet's relationship Id and the corresponding PackagePart
-        sheetMap = new HashMap<>();
-        OPCPackage pkg = wb.getPackage();
-        Set<String> worksheetRels = getSheetRelationships();
-        for (PackageRelationship rel : wb.getRelationships()) {
-          String relType = rel.getRelationshipType();
-          if (worksheetRels.contains(relType)) {
-            PackagePartName relName = PackagingURIHelper.createPartName(rel.getTargetURI());
-            sheetMap.put(rel.getId(), pkg.getPart(relName));
-          }
-        }
-        //step 2. Read array of CTSheet elements, wrap it in a LinkedList
-        //and construct an iterator
-        sheetIterator = createSheetIteratorFromWB(wb);
-      } catch (InvalidFormatException e) {
-        throw new POIXMLException(e);
-      }
-    }
-
-    Iterator<XSSFSheetRef> createSheetIteratorFromWB(PackagePart wb) throws IOException {
-
-      XMLSheetRefReader xmlSheetRefReader = new XMLSheetRefReader();
-      XMLReader xmlReader;
-      try {
-        xmlReader = XMLHelper.newXMLReader();
-      } catch (ParserConfigurationException | SAXException e) {
-        throw new POIXMLException(e);
-      }
-      xmlReader.setContentHandler(xmlSheetRefReader);
-      try {
-        xmlReader.parse(new InputSource(wb.getInputStream()));
-      } catch (SAXException e) {
-        throw new POIXMLException(e);
-      }
-
-      List<XSSFSheetRef> validSheets = new ArrayList<>();
-      for (XSSFSheetRef xssfSheetRef : xmlSheetRefReader.getSheetRefs()) {
-        //if there's no relationship id, silently skip the sheet
-        String sheetId = xssfSheetRef.getId();
-        if (sheetId != null && sheetId.length() > 0) {
-          validSheets.add(xssfSheetRef);
-        }
-      }
-      return validSheets.iterator();
+      super(wb);
     }
 
     /**
@@ -204,45 +134,8 @@ public class OoxmlReader extends XSSFReader {
      *
      * @return all relationships that are sheet-like
      */
-    Set<String> getSheetRelationships() {
+    protected Set<String> getSheetRelationships() {
       return OVERRIDE_WORKSHEET_RELS;
-    }
-
-    /**
-     * Returns <tt>true</tt> if the iteration has more elements.
-     *
-     * @return <tt>true</tt> if the iterator has more elements.
-     */
-    @Override
-    public boolean hasNext() {
-      return sheetIterator.hasNext();
-    }
-
-    /**
-     * Returns input stream of the next sheet in the iteration
-     *
-     * @return input stream of the next sheet in the iteration
-     */
-    @Override
-    public InputStream next() {
-      xssfSheetRef = sheetIterator.next();
-
-      String sheetId = xssfSheetRef.getId();
-      try {
-        PackagePart sheetPkg = sheetMap.get(sheetId);
-        return sheetPkg.getInputStream();
-      } catch (IOException e) {
-        throw new POIXMLException(e);
-      }
-    }
-
-    /**
-     * Returns name of the current sheet
-     *
-     * @return name of the current sheet
-     */
-    public String getSheetName() {
-      return xssfSheetRef.getName();
     }
 
     /**
