@@ -10,7 +10,6 @@ import org.junit.Test;
 import javax.xml.stream.XMLEventReader;
 import java.io.FileInputStream;
 import java.time.LocalDate;
-import java.util.Date;
 
 public class StreamingSheetReaderTest {
   @Test
