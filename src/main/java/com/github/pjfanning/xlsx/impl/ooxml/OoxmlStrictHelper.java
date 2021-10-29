@@ -5,6 +5,7 @@ import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.openxml4j.opc.PackagePart;
 import org.apache.poi.openxml4j.opc.internal.MemoryPackagePart;
+import org.apache.poi.openxml4j.opc.internal.TempFilePackagePart;
 import org.apache.poi.xssf.model.SharedStringsTable;
 import org.apache.poi.xssf.model.StylesTable;
 import org.apache.poi.xssf.model.ThemesTable;
@@ -31,7 +32,7 @@ public class OoxmlStrictHelper {
             //continue
           }
         }
-        MemoryPackagePart newPart = new MemoryPackagePart(pkg, part.getPartName(), part.getContentType());
+        PackagePart newPart = createTempPackagePart(builder, pkg, part);
         try(InputStream is = tempData.getInputStream()) {
           newPart.load(is);
         }
@@ -56,8 +57,7 @@ public class OoxmlStrictHelper {
             //continue
           }
         }
-        //TODO when POI 5.1.0 is ready, support using TempFilePackagePart
-        MemoryPackagePart newPart = new MemoryPackagePart(pkg, part.getPartName(), part.getContentType());
+        PackagePart newPart = createTempPackagePart(builder, pkg, part);
         try(InputStream is = tempData.getInputStream()) {
           newPart.load(is);
         }
@@ -82,8 +82,7 @@ public class OoxmlStrictHelper {
             //continue
           }
         }
-        //TODO when POI 5.1.0 is ready, support using TempFilePackagePart
-        MemoryPackagePart newPart = new MemoryPackagePart(pkg, part.getPartName(), part.getContentType());
+        PackagePart newPart = createTempPackagePart(builder, pkg, part);
         try(InputStream is = tempData.getInputStream()) {
           newPart.load(is);
         }
@@ -97,6 +96,15 @@ public class OoxmlStrictHelper {
       return new TempMemoryDataStore();
     } else {
       return new TempFileDataStore();
+    }
+  }
+
+  private static PackagePart createTempPackagePart(StreamingReader.Builder builder, OPCPackage pkg,
+                                                   PackagePart part) throws IOException, InvalidFormatException {
+    if (builder.avoidTempFiles()) {
+      return new MemoryPackagePart(pkg, part.getPartName(), part.getContentType());
+    } else {
+      return new TempFilePackagePart(pkg, part.getPartName(), part.getContentType());
     }
   }
 }
