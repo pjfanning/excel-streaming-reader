@@ -33,6 +33,7 @@ import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.IOException;
@@ -44,6 +45,7 @@ import static com.github.pjfanning.xlsx.XmlUtils.searchForNodeList;
 
 public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support, AutoCloseable {
   private static final Logger log = LoggerFactory.getLogger(StreamingWorkbookReader.class);
+  private static final XMLInputFactory xmlInputFactory = XMLHelper.newXMLInputFactory();
 
   private final List<StreamingSheet> sheets;
   private final List<Map<String, String>> sheetProperties = new ArrayList<>();
@@ -207,7 +209,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     //Iterate over the loaded streams
     int i = 0;
     for(PackagePart packagePart : sheetStreams.keySet()) {
-      XMLEventReader parser = XMLHelper.newXMLInputFactory().createXMLEventReader(sheetStreams.get(packagePart));
+      XMLEventReader parser = xmlInputFactory.createXMLEventReader(sheetStreams.get(packagePart));
       sheets.add(new StreamingSheet(
               workbook,
               sheetProperties.get(i++).get("name"),
