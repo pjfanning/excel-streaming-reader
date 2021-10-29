@@ -32,12 +32,16 @@ import org.apache.xmlbeans.XmlException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
 @Internal
 public class OoxmlReader extends XSSFReader {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(OoxmlReader.class);
+  static final String PURL_COMMENTS_RELATIONSHIP_URL = "http://purl.oclc.org/ooxml/officeDocument/relationships/comments";
 
   private static final Set<String> OVERRIDE_WORKSHEET_RELS =
           Collections.unmodifiableSet(new HashSet<>(
@@ -46,13 +50,19 @@ public class OoxmlReader extends XSSFReader {
                           XSSFRelation.CHARTSHEET.getRelation(),
                           XSSFRelation.MACRO_SHEET_BIN.getRelation())
           ));
-  private static final Logger LOGGER = LoggerFactory.getLogger(OoxmlReader.class);
+
+  protected OPCPackage pkg;
+  protected PackagePart workbookPart;
+  private final boolean strictOoxmlChecksNeeded;
 
   /**
    * Creates a new XSSFReader, for the given package
    */
-  public OoxmlReader(OPCPackage pkg) throws IOException, OpenXML4JException {
+  @Internal
+  public OoxmlReader(OPCPackage pkg, boolean strictOoxmlChecksNeeded) throws IOException, OpenXML4JException {
     super(pkg, true);
+    this.pkg = pkg;
+    this.strictOoxmlChecksNeeded = strictOoxmlChecksNeeded;
 
     PackageRelationship coreDocRelationship = this.pkg.getRelationshipsByType(
             PackageRelationshipTypes.CORE_DOCUMENT).getRelationship(0);
@@ -109,7 +119,7 @@ public class OoxmlReader extends XSSFReader {
    * InputStreams when done with each one.
    */
   public OoxmlSheetIterator getSheetsData() throws IOException {
-    return new OoxmlSheetIterator(workbookPart);
+    return new OoxmlSheetIterator(workbookPart, strictOoxmlChecksNeeded);
   }
 
   /**
@@ -117,13 +127,16 @@ public class OoxmlReader extends XSSFReader {
    */
   public static class OoxmlSheetIterator extends SheetIterator {
 
+    final boolean strictOoxmlChecksNeeded;
+
     /**
      * Construct a new SheetIterator
      *
      * @param wb package part holding workbook.xml
      */
-    OoxmlSheetIterator(PackagePart wb) throws IOException {
+    OoxmlSheetIterator(PackagePart wb, boolean strictOoxmlChecksNeeded) throws IOException {
       super(wb);
+      this.strictOoxmlChecksNeeded = strictOoxmlChecksNeeded;
     }
 
     /**
@@ -149,20 +162,24 @@ public class OoxmlReader extends XSSFReader {
       try {
         PackageRelationshipCollection commentsList =
                 sheetPkg.getRelationshipsByType(XSSFRelation.SHEET_COMMENTS.getRelation());
+        if (commentsList.size() == 0 && strictOoxmlChecksNeeded) {
+          commentsList =
+                  sheetPkg.getRelationshipsByType(OoxmlReader.PURL_COMMENTS_RELATIONSHIP_URL);
+        }
         if (commentsList.size() > 0) {
           PackageRelationship comments = commentsList.getRelationship(0);
           PackagePartName commentsName = PackagingURIHelper.createPartName(comments.getTargetURI());
           PackagePart commentsPart = sheetPkg.getPackage().getPart(commentsName);
           return parseComments(builder, commentsPart);
         }
-      } catch (InvalidFormatException|IOException e) {
+      } catch (InvalidFormatException|IOException|XMLStreamException e) {
         LOGGER.warn("issue getting sheet comments", e);
         return null;
       }
       return null;
     }
 
-    private Comments parseComments(StreamingReader.Builder builder, PackagePart commentsPart) throws IOException {
+    private Comments parseComments(StreamingReader.Builder builder, PackagePart commentsPart) throws IOException, XMLStreamException, InvalidFormatException {
       if (builder.useCommentsTempFile()) {
         try (InputStream is = commentsPart.getInputStream()) {
           TempFileCommentsTable ct = new TempFileCommentsTable(
@@ -171,6 +188,8 @@ public class OoxmlReader extends XSSFReader {
           ct.readFrom(is);
           return ct;
         }
+      } else if (strictOoxmlChecksNeeded) {
+        return OoxmlStrictHelper.getCommentsTable(builder, commentsPart);
       } else {
         return new CommentsTable(commentsPart);
       }
