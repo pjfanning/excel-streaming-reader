@@ -1047,6 +1047,11 @@ public class StreamingReaderTest {
   }
 
   @Test
+  public void testStrictNumbersFileCommentsWithoutTempFilesFullFormat() throws Exception {
+    testStrictNumbersFileComments(false, true);
+  }
+
+  @Test
   public void testStrictNumbersFileCommentsWithTempFilesFullFormat() throws Exception {
     testStrictNumbersFileComments(true, true);
   }
@@ -1209,7 +1214,9 @@ public class StreamingReaderTest {
                     .open(inputStream)
     ) {
       Sheet sheet2 = wb.getSheet("SecondSheet");
-      assertEquals("date", sheet2.getCellComment(new CellAddress("A1")).getString().getString());
+      RichTextString richTextString = sheet2.getCellComment(new CellAddress("A1")).getString();
+      assertEquals("date", richTextString.getString());
+      assertEquals(0, richTextString.numFormattingRuns());
     }
   }
 
