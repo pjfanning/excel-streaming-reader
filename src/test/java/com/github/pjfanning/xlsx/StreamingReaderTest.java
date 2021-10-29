@@ -994,7 +994,7 @@ public class StreamingReaderTest {
             Workbook wb = StreamingReader.builder()
                     .setReadCoreProperties(true)
                     .setReadComments(true)
-                    .setUseCommentsTempFile(true)
+                    //.setUseCommentsTempFile(true)
                     .setAdjustLegacyComments(true)
                     .open(inputStream)
     ) {

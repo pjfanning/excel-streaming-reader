@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.stream.XMLStreamException;
 
 import com.github.pjfanning.poi.xssf.streaming.TempFileCommentsTable;
 import com.github.pjfanning.xlsx.StreamingReader;
@@ -83,13 +84,15 @@ public class OoxmlReader {
 
   protected OPCPackage pkg;
   protected PackagePart workbookPart;
-  private boolean strictOoxmlChecksNeeded = false;
+  private final boolean strictOoxmlChecksNeeded;
 
   /**
    * Creates a new XSSFReader, for the given package
    */
-  public OoxmlReader(OPCPackage pkg) {
+  @Internal
+  public OoxmlReader(OPCPackage pkg, boolean strictOoxmlChecksNeeded) {
     this.pkg = pkg;
+    this.strictOoxmlChecksNeeded = strictOoxmlChecksNeeded;
 
     PackageRelationship coreDocRelationship = this.pkg.getRelationshipsByType(
             PackageRelationshipTypes.CORE_DOCUMENT).getRelationship(0);
@@ -104,7 +107,6 @@ public class OoxmlReader {
       if (coreDocRelationship == null) {
         throw new POIXMLException("OOXML file structure broken/invalid - no core document found!");
       }
-      strictOoxmlChecksNeeded = true;
     }
 
     // Get the part that holds the workbook
@@ -311,14 +313,14 @@ public class OoxmlReader {
           PackagePart commentsPart = sheetPkg.getPackage().getPart(commentsName);
           return parseComments(builder, commentsPart);
         }
-      } catch (InvalidFormatException|IOException e) {
+      } catch (InvalidFormatException|IOException|XMLStreamException e) {
         LOGGER.log(POILogger.WARN, e);
         return null;
       }
       return null;
     }
 
-    private Comments parseComments(StreamingReader.Builder builder, PackagePart commentsPart) throws IOException {
+    private Comments parseComments(StreamingReader.Builder builder, PackagePart commentsPart) throws IOException, XMLStreamException, InvalidFormatException {
       if (builder.useCommentsTempFile()) {
         try (InputStream is = commentsPart.getInputStream()) {
           TempFileCommentsTable ct = new TempFileCommentsTable(
@@ -327,6 +329,8 @@ public class OoxmlReader {
           ct.readFrom(is);
           return ct;
         }
+      } else if (strictOoxmlChecksNeeded) {
+        return OoxmlStrictHelper.getCommentsTable(builder, commentsPart);
       } else {
         return new CommentsTable(commentsPart);
       }
