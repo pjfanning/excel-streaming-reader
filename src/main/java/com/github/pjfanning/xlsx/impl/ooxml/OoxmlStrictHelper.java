@@ -16,7 +16,8 @@ import java.io.*;
 import java.util.List;
 
 public class OoxmlStrictHelper {
-  public static ThemesTable getThemesTable(StreamingReader.Builder builder, OPCPackage pkg) throws IOException, XMLStreamException, InvalidFormatException {
+  public static ResourceWithTrackedCloseable<ThemesTable> getThemesTable(StreamingReader.Builder builder, OPCPackage pkg)
+          throws IOException, XMLStreamException, InvalidFormatException {
     List<PackagePart> parts = pkg.getPartsByContentType(XSSFRelation.THEME.getContentType());
     if (parts.isEmpty()) {
       return null;
@@ -36,12 +37,13 @@ public class OoxmlStrictHelper {
         try(InputStream is = tempData.getInputStream()) {
           newPart.load(is);
         }
-        return new ThemesTable(newPart);
+        return new ResourceWithTrackedCloseable(new ThemesTable(newPart), () -> newPart.close() );
       }
     }
   }
 
-  public static StylesTable getStylesTable(StreamingReader.Builder builder, OPCPackage pkg) throws IOException, XMLStreamException, InvalidFormatException {
+  public static ResourceWithTrackedCloseable<StylesTable> getStylesTable(StreamingReader.Builder builder, OPCPackage pkg)
+          throws IOException, XMLStreamException, InvalidFormatException {
     List<PackagePart> parts = pkg.getPartsByContentType(XSSFRelation.STYLES.getContentType());
     if (parts.isEmpty()) {
       return null;
@@ -61,7 +63,7 @@ public class OoxmlStrictHelper {
         try(InputStream is = tempData.getInputStream()) {
           newPart.load(is);
         }
-        return new StylesTable(newPart);
+        return new ResourceWithTrackedCloseable(new StylesTable(newPart), () -> newPart.close() );
       }
     }
   }
@@ -86,7 +88,16 @@ public class OoxmlStrictHelper {
         try(InputStream is = tempData.getInputStream()) {
           newPart.load(is);
         }
-        return new SharedStringsTable(newPart);
+        return new SharedStringsTable(newPart) {
+          @Override
+          public void close() throws IOException {
+            try {
+              super.close();
+            } finally {
+              newPart.close();
+            }
+          }
+        };
       }
     }
   }
