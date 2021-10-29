@@ -18,6 +18,7 @@ package com.github.pjfanning.xlsx.impl.ooxml;
 
 import com.github.pjfanning.poi.xssf.streaming.TempFileCommentsTable;
 import com.github.pjfanning.xlsx.StreamingReader;
+import com.github.pjfanning.xlsx.impl.StreamingWorkbookReader;
 import org.apache.poi.ooxml.POIXMLException;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
@@ -51,17 +52,18 @@ public class OoxmlReader extends XSSFReader {
                           XSSFRelation.MACRO_SHEET_BIN.getRelation())
           ));
 
-  protected OPCPackage pkg;
   protected PackagePart workbookPart;
   private final boolean strictOoxmlChecksNeeded;
+  private final StreamingWorkbookReader streamingWorkbookReader;
 
   /**
    * Creates a new XSSFReader, for the given package
    */
   @Internal
-  public OoxmlReader(OPCPackage pkg, boolean strictOoxmlChecksNeeded) throws IOException, OpenXML4JException {
+  public OoxmlReader(StreamingWorkbookReader streamingWorkbookReader,
+                     OPCPackage pkg, boolean strictOoxmlChecksNeeded) throws IOException, OpenXML4JException {
     super(pkg, true);
-    this.pkg = pkg;
+    this.streamingWorkbookReader = streamingWorkbookReader;
     this.strictOoxmlChecksNeeded = strictOoxmlChecksNeeded;
 
     PackageRelationship coreDocRelationship = this.pkg.getRelationshipsByType(
@@ -119,24 +121,21 @@ public class OoxmlReader extends XSSFReader {
    * InputStreams when done with each one.
    */
   public OoxmlSheetIterator getSheetsData() throws IOException {
-    return new OoxmlSheetIterator(workbookPart, strictOoxmlChecksNeeded);
+    return new OoxmlSheetIterator(workbookPart);
   }
 
   /**
    * Iterator over sheet data.
    */
-  public static class OoxmlSheetIterator extends SheetIterator {
-
-    final boolean strictOoxmlChecksNeeded;
+  public class OoxmlSheetIterator extends SheetIterator {
 
     /**
      * Construct a new SheetIterator
      *
      * @param wb package part holding workbook.xml
      */
-    OoxmlSheetIterator(PackagePart wb, boolean strictOoxmlChecksNeeded) throws IOException {
+    OoxmlSheetIterator(PackagePart wb) throws IOException {
       super(wb);
-      this.strictOoxmlChecksNeeded = strictOoxmlChecksNeeded;
     }
 
     /**
@@ -189,9 +188,10 @@ public class OoxmlReader extends XSSFReader {
           return ct;
         }
       } else if (strictOoxmlChecksNeeded) {
-        ResourceWithTrackedCloseable<CommentsTable> wc =
+        ResourceWithTrackedCloseable<CommentsTable> trackableResource =
                 OoxmlStrictHelper.getCommentsTable(builder, commentsPart);
-        return wc.getResource();
+        streamingWorkbookReader.addTrackableCloseable(trackableResource);
+        return trackableResource.getResource();
       } else {
         return new CommentsTable(commentsPart);
       }

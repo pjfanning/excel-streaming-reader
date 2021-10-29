@@ -21,6 +21,7 @@ import org.apache.poi.poifs.crypt.EncryptionInfo;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.Date1904Support;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.util.Internal;
 import org.apache.poi.util.XMLHelper;
 import org.apache.poi.xssf.model.*;
 import org.apache.poi.xssf.usermodel.XSSFShape;
@@ -139,7 +140,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
 
   private void loadPackage(OPCPackage pkg) throws IOException, OpenXML4JException, ParserConfigurationException, SAXException, XMLStreamException {
     boolean strictFormat = pkg.isStrictOoxmlFormat();
-    OoxmlReader reader = new OoxmlReader(pkg, strictFormat);
+    OoxmlReader reader = new OoxmlReader(this, pkg, strictFormat);
     if (strictFormat) {
       log.info("file is in strict OOXML format");
     }
@@ -286,6 +287,15 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
 
   List<XSSFShape> getShapes(String sheetName) {
     return shapeMap.get(sheetName);
+  }
+
+  /**
+   * Internal use only. To track resources that should be closed when this reader instance is closed.
+   * @param trackedCloseable resource to close (later)
+   */
+  @Internal
+  public void addTrackableCloseable(ResourceWithTrackedCloseable<?> trackedCloseable) {
+    this.trackedCloseables.add(trackedCloseable);
   }
 
   static class StreamingSheetIterator implements Iterator<Sheet> {
