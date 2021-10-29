@@ -1214,7 +1214,7 @@ public class StreamingReaderTest {
     }
   }
 
-  public void testStrictNumbersFileComments(boolean tempFile, boolean fullFormat) throws Exception {
+  private void testStrictNumbersFileComments(boolean tempFile, boolean fullFormat) throws Exception {
     try (
             InputStream inputStream = new FileInputStream("src/test/resources/numbers.strict.xlsx");
             Workbook wb = StreamingReader.builder()

@@ -43,6 +43,7 @@ public class OoxmlReader extends XSSFReader {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(OoxmlReader.class);
   static final String PURL_COMMENTS_RELATIONSHIP_URL = "http://purl.oclc.org/ooxml/officeDocument/relationships/comments";
+  static final String PURL_DRAWING_RELATIONSHIP_URL = "http://purl.oclc.org/ooxml/officeDocument/relationships/drawing";
 
   private static final Set<String> OVERRIDE_WORKSHEET_RELS =
           Collections.unmodifiableSet(new HashSet<>(
@@ -204,9 +205,11 @@ public class OoxmlReader extends XSSFReader {
     public List<XSSFShape> getShapes() {
       PackagePart sheetPkg = getSheetPart();
       List<XSSFShape> shapes = new LinkedList<>();
-      // Do we have a comments relationship? (Only ever one if so)
       try {
         PackageRelationshipCollection drawingsList = sheetPkg.getRelationshipsByType(XSSFRelation.DRAWINGS.getRelation());
+        if (drawingsList.size() == 0 && strictOoxmlChecksNeeded) {
+          drawingsList = sheetPkg.getRelationshipsByType(PURL_DRAWING_RELATIONSHIP_URL);
+        }
         for (int i = 0; i < drawingsList.size(); i++) {
           PackageRelationship drawings = drawingsList.getRelationship(i);
           PackagePartName drawingsName = PackagingURIHelper.createPartName(drawings.getTargetURI());
