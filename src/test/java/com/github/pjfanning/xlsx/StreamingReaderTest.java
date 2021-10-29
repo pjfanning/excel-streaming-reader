@@ -994,6 +994,7 @@ public class StreamingReaderTest {
             Workbook wb = StreamingReader.builder()
                     .setReadCoreProperties(true)
                     .setReadComments(true)
+                    //.setUseCommentsTempFile(true)
                     .open(inputStream)
     ) {
       StreamingWorkbook swb = (StreamingWorkbook) wb;
@@ -1022,7 +1023,7 @@ public class StreamingReaderTest {
       }
 
       //this shows a bug - there is a comment on this cell - https://github.com/pjfanning/excel-streaming-reader/issues/37
-      assertNull("123", sheet2.getCellComment(new CellAddress("A1")));
+      assertEquals("123", sheet2.getCellComment(new CellAddress("A1")));
 
       Cell cell1 = currentRow1.getCell(0, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
       assertEquals(LocalDate.parse("2021-02-28").atStartOfDay(), cell1.getLocalDateTimeCellValue());

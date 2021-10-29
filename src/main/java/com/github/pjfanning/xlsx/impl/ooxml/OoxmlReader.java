@@ -70,6 +70,8 @@ import org.xml.sax.helpers.DefaultHandler;
 @Internal
 public class OoxmlReader {
 
+  static final String PURL_COMMENTS_RELATIONSHIP_URL = "http://purl.oclc.org/ooxml/officeDocument/relationships/comments";
+
   private static final Set<String> WORKSHEET_RELS =
           Collections.unmodifiableSet(new HashSet<>(
                   Arrays.asList(XSSFRelation.WORKSHEET.getRelation(),
@@ -81,6 +83,7 @@ public class OoxmlReader {
 
   protected OPCPackage pkg;
   protected PackagePart workbookPart;
+  private boolean strictOoxmlChecksNeeded = false;
 
   /**
    * Creates a new XSSFReader, for the given package
@@ -101,6 +104,7 @@ public class OoxmlReader {
       if (coreDocRelationship == null) {
         throw new POIXMLException("OOXML file structure broken/invalid - no core document found!");
       }
+      strictOoxmlChecksNeeded = true;
     }
 
     // Get the part that holds the workbook
@@ -152,7 +156,7 @@ public class OoxmlReader {
    * InputStreams when done with each one.
    */
   public SheetIterator getSheetsData() throws IOException {
-    return new SheetIterator(workbookPart);
+    return new SheetIterator(workbookPart, strictOoxmlChecksNeeded);
   }
 
   /**
@@ -177,12 +181,15 @@ public class OoxmlReader {
      */
     final Iterator<XSSFSheetRef> sheetIterator;
 
+    final boolean strictOoxmlChecksNeeded;
+
     /**
      * Construct a new SheetIterator
      *
      * @param wb package part holding workbook.xml
      */
-    SheetIterator(PackagePart wb) throws IOException {
+    SheetIterator(PackagePart wb, boolean strictOoxmlChecksNeeded) throws IOException {
+      this.strictOoxmlChecksNeeded = strictOoxmlChecksNeeded;
 
       /*
        * The order of sheets is defined by the order of CTSheet elements in workbook.xml
@@ -294,6 +301,10 @@ public class OoxmlReader {
       try {
         PackageRelationshipCollection commentsList =
                 sheetPkg.getRelationshipsByType(XSSFRelation.SHEET_COMMENTS.getRelation());
+        if (commentsList.size() == 0 && strictOoxmlChecksNeeded) {
+          commentsList =
+                  sheetPkg.getRelationshipsByType(OoxmlReader.PURL_COMMENTS_RELATIONSHIP_URL);
+        }
         if (commentsList.size() > 0) {
           PackageRelationship comments = commentsList.getRelationship(0);
           PackagePartName commentsName = PackagingURIHelper.createPartName(comments.getTargetURI());
