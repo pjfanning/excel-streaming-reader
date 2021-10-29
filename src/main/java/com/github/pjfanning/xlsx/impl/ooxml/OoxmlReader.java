@@ -189,7 +189,9 @@ public class OoxmlReader extends XSSFReader {
           return ct;
         }
       } else if (strictOoxmlChecksNeeded) {
-        return OoxmlStrictHelper.getCommentsTable(builder, commentsPart);
+        ResourceWithTrackedCloseable<CommentsTable> wc =
+                OoxmlStrictHelper.getCommentsTable(builder, commentsPart);
+        return wc.getResource();
       } else {
         return new CommentsTable(commentsPart);
       }

@@ -103,8 +103,8 @@ public class OoxmlStrictHelper {
     }
   }
 
-  public static CommentsTable getCommentsTable(StreamingReader.Builder builder,
-                                               PackagePart part) throws IOException, XMLStreamException, InvalidFormatException {
+  public static ResourceWithTrackedCloseable getCommentsTable(StreamingReader.Builder builder, PackagePart part)
+          throws IOException, XMLStreamException, InvalidFormatException {
     try(TempDataStore tempData = createTempDataStore(builder)) {
       try(
               InputStream is = part.getInputStream();
@@ -115,12 +115,11 @@ public class OoxmlStrictHelper {
           //continue
         }
       }
-      //TODO when POI 5.1.0 is ready, support using TempFilePackagePart
-      MemoryPackagePart newPart = new MemoryPackagePart(part.getPackage(), part.getPartName(), part.getContentType());
+      PackagePart newPart = createTempPackagePart(builder, part.getPackage(), part);
       try(InputStream is = tempData.getInputStream()) {
         newPart.load(is);
       }
-      return new CommentsTable(newPart);
+      return new ResourceWithTrackedCloseable(new CommentsTable(newPart), () -> newPart.close() );
     }
   }
 
