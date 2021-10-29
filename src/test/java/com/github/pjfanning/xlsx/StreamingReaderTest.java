@@ -993,8 +993,6 @@ public class StreamingReaderTest {
             InputStream inputStream = new FileInputStream("src/test/resources/numbers.strict.xlsx");
             Workbook wb = StreamingReader.builder()
                     .setReadCoreProperties(true)
-                    .setReadComments(true)
-                    //.setUseCommentsTempFile(true)
                     .setAdjustLegacyComments(true)
                     .open(inputStream)
     ) {
@@ -1023,7 +1021,12 @@ public class StreamingReaderTest {
         assertEquals(expected1.get(i), value);
       }
 
-      assertEquals("date", sheet2.getCellComment(new CellAddress("A1")).getString().getString());
+      try {
+        sheet2.getCellComment(new CellAddress("A1"));
+        fail("readComments is not enabled");
+      } catch (IllegalStateException ise) {
+        //expected
+      }
 
       Cell cell1 = currentRow1.getCell(0, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
       assertEquals(LocalDate.parse("2021-02-28").atStartOfDay(), cell1.getLocalDateTimeCellValue());
@@ -1031,6 +1034,21 @@ public class StreamingReaderTest {
       Cell cell2 = currentRow1.getCell(1, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
       assertEquals("12:00:00 PM", cell2.getStringCellValue());
     }
+  }
+
+  @Test
+  public void testStrictNumbersFileCommentsWithoutTempFiles() throws Exception {
+    testStrictNumbersFileComments(false, false);
+  }
+
+  @Test
+  public void testStrictNumbersFileCommentsWithTempFiles() throws Exception {
+    testStrictNumbersFileComments(true, false);
+  }
+
+  @Test
+  public void testStrictNumbersFileCommentsWithTempFilesFullFormat() throws Exception {
+    testStrictNumbersFileComments(true, true);
   }
 
   @Test
@@ -1179,4 +1197,20 @@ public class StreamingReaderTest {
       assertEquals(expectedRuns, cell.getRichStringCellValue().numFormattingRuns());
     }
   }
+
+  public void testStrictNumbersFileComments(boolean tempFile, boolean fullFormat) throws Exception {
+    try (
+            InputStream inputStream = new FileInputStream("src/test/resources/numbers.strict.xlsx");
+            Workbook wb = StreamingReader.builder()
+                    .setReadComments(true)
+                    .setUseCommentsTempFile(tempFile)
+                    .setFullFormatRichText(fullFormat)
+                    .setAdjustLegacyComments(true)
+                    .open(inputStream)
+    ) {
+      Sheet sheet2 = wb.getSheet("SecondSheet");
+      assertEquals("date", sheet2.getCellComment(new CellAddress("A1")).getString().getString());
+    }
+  }
+
 }
