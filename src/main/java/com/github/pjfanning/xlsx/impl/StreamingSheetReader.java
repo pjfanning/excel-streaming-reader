@@ -18,6 +18,7 @@ import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.model.Comments;
 import org.apache.poi.xssf.model.SharedStringsTable;
 import org.apache.poi.xssf.model.StylesTable;
+import org.apache.poi.xssf.streaming.SXSSFFormulaEvaluator;
 import org.apache.poi.xssf.usermodel.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +46,7 @@ public class StreamingSheetReader implements Iterable<Row> {
   private final List<CellRangeAddress> mergedCells = new ArrayList<>();
   private final List<HyperlinkData> hyperlinks = new ArrayList<>();
   private List<XlsxHyperlink> xlsxHyperlinks;
+  private Map<String, SharedFormula> sharedFormulaMap;
 
   private int firstRowNum = 0;
   private int lastRowNum;
@@ -307,7 +309,16 @@ public class StreamingSheetReader implements Iterable<Row> {
       } else if("f".equals(tagLocalName)) {
         insideFormulaElement = false;
         if (currentCell != null) {
-          currentCell.setFormula(formulaBuilder.toString());
+          final String formula = formulaBuilder.toString();
+          currentCell.setFormula(formula);
+          if (currentCell.isSharedFormula() && currentCell.getFormulaSI() != null) {
+            if (sharedFormulaMap == null) {
+              sharedFormulaMap = new HashMap<>();
+            }
+            if (!sharedFormulaMap.containsKey(currentCell.getFormulaSI()) && !formula.isEmpty()) {
+              sharedFormulaMap.put(currentCell.getFormulaSI(), new SharedFormula(currentCell.getAddress(), formula));
+            }
+          }
         }
       }
 
