@@ -46,11 +46,11 @@ public class StreamingCell implements Cell {
     this.use1904Dates = use1904Dates;
   }
 
-  public void setContentSupplier(Supplier contentsSupplier) {
+  void setContentSupplier(Supplier contentsSupplier) {
     this.contentsSupplier = contentsSupplier;
   }
 
-  public void setRawContents(String rawContents) {
+  void setRawContents(String rawContents) {
     this.rawContents = rawContents;
   }
 
@@ -58,35 +58,35 @@ public class StreamingCell implements Cell {
     return numericFormat;
   }
 
-  public void setNumericFormat(String numericFormat) {
+  void setNumericFormat(String numericFormat) {
     this.numericFormat = numericFormat;
   }
 
-  public Short getNumericFormatIndex() {
+  Short getNumericFormatIndex() {
     return numericFormatIndex;
   }
 
-  public void setNumericFormatIndex(Short numericFormatIndex) {
+  void setNumericFormatIndex(Short numericFormatIndex) {
     this.numericFormatIndex = numericFormatIndex;
   }
 
-  public void setFormula(String formula) {
+  void setFormula(String formula) {
     this.formula = formula;
   }
 
-  public String getType() {
+  String getType() {
     return type;
   }
 
-  public void setType(String type) {
+  void setType(String type) {
     this.type = type;
   }
 
-  public boolean isFormulaType() {
+  boolean isFormulaType() {
     return formulaType;
   }
 
-  public void setFormulaType(boolean formulaType) {
+  void setFormulaType(boolean formulaType) {
     this.formulaType = formulaType;
   }
 
