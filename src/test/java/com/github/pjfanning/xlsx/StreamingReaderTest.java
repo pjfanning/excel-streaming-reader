@@ -1146,7 +1146,12 @@ public class StreamingReaderTest {
       assertNotNull("v17 found", v17);
       assertEquals("U15/R15", v15.getCellFormula());
       assertEquals("U16/R16", v16.getCellFormula());
-      //assertEquals("U17/R17", v17.getCellFormula());
+      try {
+        v17.getCellFormula();
+        fail("expected cell with shared formula to fail");
+      } catch (IllegalStateException ise) {
+        assertTrue(ise.getMessage().contains("shared formula"));
+      }
     }
   }
 

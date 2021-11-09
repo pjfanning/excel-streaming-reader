@@ -31,6 +31,8 @@ public class StreamingCell implements Cell {
   private String type;
   private CellStyle cellStyle;
   private boolean formulaType;
+  private boolean sharedFormula;
+  private String formulaSI;
 
   public StreamingCell(Sheet sheet, int columnIndex, int rowIndex, boolean use1904Dates) {
     this.sheet = sheet;
@@ -88,6 +90,14 @@ public class StreamingCell implements Cell {
 
   void setFormulaType(boolean formulaType) {
     this.formulaType = formulaType;
+  }
+
+  void setSharedFormula(boolean sharedFormula) {
+    this.sharedFormula = sharedFormula;
+  }
+
+  void setFormulaSI(String formulaSI) {
+    this.formulaSI = formulaSI;
   }
 
   @Override
@@ -272,6 +282,8 @@ public class StreamingCell implements Cell {
   public String getCellFormula() {
     if (!formulaType)
       throw new IllegalStateException("This cell does not have a formula");
+    if ((formula == null || formula.isEmpty()) && sharedFormula)
+      throw new IllegalStateException("This cell has a shared formula and excel-streaming-reader does not support this yet");
     return formula;
   }
 
