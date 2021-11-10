@@ -11,6 +11,12 @@ import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.opc.PackagePart;
 import org.apache.poi.openxml4j.opc.PackageRelationship;
 import org.apache.poi.openxml4j.opc.PackageRelationshipCollection;
+import org.apache.poi.ss.SpreadsheetVersion;
+import org.apache.poi.ss.formula.FormulaParser;
+import org.apache.poi.ss.formula.FormulaRenderer;
+import org.apache.poi.ss.formula.FormulaShifter;
+import org.apache.poi.ss.formula.FormulaType;
+import org.apache.poi.ss.formula.ptg.Ptg;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellAddress;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -317,6 +323,30 @@ public class StreamingSheetReader implements Iterable<Row> {
             }
             if (!sharedFormulaMap.containsKey(currentCell.getFormulaSI()) && !formula.isEmpty()) {
               sharedFormulaMap.put(currentCell.getFormulaSI(), new SharedFormula(currentCell.getAddress(), formula));
+            } else if (formula.isEmpty()) {
+              Workbook wb = streamingWorkbookReader.getWorkbook();
+              if (wb != null) {
+                SharedFormula sf = sharedFormulaMap.get(currentCell.getFormulaSI());
+                if (sf == null) {
+                  log.error("No SharedFormula found for si={}", currentCell.getFormulaSI());
+                } else {
+                  CurrentRowEvaluationWorkbook evaluationWorkbook =
+                          new CurrentRowEvaluationWorkbook(wb, currentRow);
+                  int sheetIndex = 0; //TODO find right index
+                  Ptg[] ptgs = FormulaParser.parse(sf.getFormula(), evaluationWorkbook, FormulaType.CELL, sheetIndex, currentRow.getRowNum());
+                  String shiftedFmla = null;
+                  final int rowsToMove = currentRowNum - sf.getCellAddress().getRow();
+                  FormulaShifter formulaShifter = FormulaShifter.createForRowShift(sheetIndex, sheet.getSheetName(),
+                          0, SpreadsheetVersion.EXCEL2007.getLastRowIndex(), rowsToMove, SpreadsheetVersion.EXCEL2007);
+                  if (formulaShifter.adjustFormula(ptgs, sheetIndex)) {
+                    shiftedFmla = FormulaRenderer.toFormulaString(evaluationWorkbook, ptgs);
+                  }
+                  log.info("cell {} should have formula {} based on shared formula {} (rowsToMove={})",
+                          currentCell.getAddress(), shiftedFmla, sf.getFormula(), rowsToMove);
+                }
+              }
+            } else {
+              log.error("No eval workbook found");
             }
           }
         }

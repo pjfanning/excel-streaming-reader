@@ -18,6 +18,10 @@ final class OoxmlEvaluationCell implements EvaluationCell {
     _evalSheet = evaluationSheet;
   }
 
+  Cell getCell() {
+    return _cell;
+  }
+
   @Override
   public Object getIdentityKey() {
     // save memory by just using the cell itself as the identity key

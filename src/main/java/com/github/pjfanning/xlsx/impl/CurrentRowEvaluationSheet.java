@@ -8,17 +8,19 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.util.Internal;
 
 /**
- * wrapper for a sheet under evaluation
+ * wrapper for a sheet under evaluation (only supports current row)
  */
 @Internal
-final class OoxmlEvaluationSheet implements EvaluationSheet {
+final class CurrentRowEvaluationSheet implements EvaluationSheet {
   private final Sheet _xs;
+  private final Row _row;
 
-  OoxmlEvaluationSheet(Sheet sheet) {
+  CurrentRowEvaluationSheet(Sheet sheet, Row row) {
     _xs = sheet;
+    _row = row;
   }
 
-  Sheet getSXSSFSheet() {
+  Sheet getSheet() {
     return _xs;
   }
 
@@ -37,18 +39,16 @@ final class OoxmlEvaluationSheet implements EvaluationSheet {
    */
   @Override
   public boolean isRowHidden(int rowIndex) {
-    Row row = _xs.getRow(rowIndex);
-    if (row == null) return false;
-    return row.getZeroHeight();
+    if (_row == null) return false;
+    return _row.getZeroHeight();
   }
 
   @Override
   public EvaluationCell getCell(int rowIndex, int columnIndex) {
-    Row row = _xs.getRow(rowIndex);
-    if (row == null) {
+    if (_row == null) {
       return null;
     }
-    Cell cell = row.getCell(columnIndex);
+    Cell cell = _row.getCell(columnIndex);
     if (cell == null) {
       return null;
     }
