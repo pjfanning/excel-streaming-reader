@@ -353,7 +353,7 @@ public class StreamingSheetReader implements Iterable<Row> {
                 } else {
                   CurrentRowEvaluationWorkbook evaluationWorkbook =
                           new CurrentRowEvaluationWorkbook(wb, currentRow);
-                  int sheetIndex = streamingWorkbookReader.getSheetIndex(sheet);
+                  int sheetIndex = streamingWorkbookReader.getWorkbook().getSheetIndex(sheet);
                   if (sheetIndex < 0) {
                     log.warn("Failed to find correct sheet index; defaulting to zero");
                     sheetIndex = 0;
