@@ -92,6 +92,27 @@ public class StreamingSheetReader implements Iterable<Row> {
     this.sheet = sheet;
   }
 
+  Map<String, SharedFormula> getSharedFormulaMap() {
+    if (sharedFormulaMap == null) {
+      return Collections.emptyMap();
+    }
+    return Collections.unmodifiableMap(sharedFormulaMap);
+  }
+
+  void addSharedFormula(String siValue, SharedFormula sharedFormula) {
+    if (sharedFormulaMap == null) {
+      sharedFormulaMap = new HashMap<>();
+    }
+    sharedFormulaMap.put(siValue, sharedFormula);
+  }
+
+  SharedFormula removeSharedFormula(String siValue) {
+    if (sharedFormulaMap != null) {
+      return sharedFormulaMap.remove(siValue);
+    }
+    return null;
+  }
+
   /**
    * Read through a number of rows equal to the rowCacheSize field or until there is no more data to read
    *
