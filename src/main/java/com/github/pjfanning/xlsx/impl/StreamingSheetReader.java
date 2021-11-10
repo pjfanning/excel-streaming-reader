@@ -1,5 +1,6 @@
 package com.github.pjfanning.xlsx.impl;
 
+import com.github.pjfanning.xlsx.SharedFormula;
 import com.github.pjfanning.xlsx.StreamingReader;
 import com.github.pjfanning.xlsx.XmlUtils;
 import com.github.pjfanning.xlsx.exceptions.CloseException;
@@ -327,7 +328,7 @@ public class StreamingSheetReader implements Iterable<Row> {
               if (wb != null) {
                 SharedFormula sf = sharedFormulaMap.get(currentCell.getFormulaSI());
                 if (sf == null) {
-                  log.error("No SharedFormula found for si={}", currentCell.getFormulaSI());
+                  log.warn("No SharedFormula found for si={}", currentCell.getFormulaSI());
                 } else {
                   CurrentRowEvaluationWorkbook evaluationWorkbook =
                           new CurrentRowEvaluationWorkbook(wb, currentRow);
@@ -340,8 +341,9 @@ public class StreamingSheetReader implements Iterable<Row> {
                   if (formulaShifter.adjustFormula(ptgs, sheetIndex)) {
                     shiftedFmla = FormulaRenderer.toFormulaString(evaluationWorkbook, ptgs);
                   }
-                  log.info("cell {} should have formula {} based on shared formula {} (rowsToMove={})",
+                  log.debug("cell {} should have formula {} based on shared formula {} (rowsToMove={})",
                           currentCell.getAddress(), shiftedFmla, sf.getFormula(), rowsToMove);
+                  currentCell.setFormula(shiftedFmla);
                 }
               }
             } else {
