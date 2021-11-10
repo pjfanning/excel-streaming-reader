@@ -353,7 +353,11 @@ public class StreamingSheetReader implements Iterable<Row> {
                 } else {
                   CurrentRowEvaluationWorkbook evaluationWorkbook =
                           new CurrentRowEvaluationWorkbook(wb, currentRow);
-                  int sheetIndex = 0; //TODO find right index
+                  int sheetIndex = streamingWorkbookReader.getSheetIndex(sheet);
+                  if (sheetIndex < 0) {
+                    log.warn("Failed to find correct sheet index; defaulting to zero");
+                    sheetIndex = 0;
+                  }
                   Ptg[] ptgs = FormulaParser.parse(sf.getFormula(), evaluationWorkbook, FormulaType.CELL, sheetIndex, currentRow.getRowNum());
                   String shiftedFmla = null;
                   final int rowsToMove = currentRowNum - sf.getCellAddress().getRow();

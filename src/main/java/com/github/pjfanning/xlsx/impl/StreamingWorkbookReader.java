@@ -133,6 +133,17 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     }
   }
 
+  int getSheetIndex(StreamingSheet sheet) {
+    int counter = 0;
+    for (StreamingSheet ss : sheets) {
+      if (sheet == ss) {
+        return counter;
+      }
+      counter++;
+    }
+    return -1;
+  }
+
   private OPCPackage decryptWorkbook(POIFSFileSystem poifs) throws IOException, GeneralSecurityException, InvalidFormatException {
     // Based on: https://poi.apache.org/encryption.html
     EncryptionInfo info = new EncryptionInfo(poifs);
