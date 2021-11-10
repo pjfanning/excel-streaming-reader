@@ -237,7 +237,7 @@ public class StreamingSheet implements Sheet {
    * @param siValue the ID for the shared formula (appears in Excel sheet XML as an <code>si</code> attribute
    * @param sharedFormula maps the base cell and formula for the shared formula
    */
-  void addSharedFormula(String siValue, SharedFormula sharedFormula) {
+  public void addSharedFormula(String siValue, SharedFormula sharedFormula) {
     reader.addSharedFormula(siValue, sharedFormula);
   }
 
@@ -245,7 +245,7 @@ public class StreamingSheet implements Sheet {
    * @param siValue the ID for the shared formula (appears in Excel sheet XML as an <code>si</code> attribute
    * @return the shared formula that was removed (can be null if no existing shared formula is found)
    */
-  SharedFormula removeSharedFormula(String siValue) {
+  public SharedFormula removeSharedFormula(String siValue) {
     return reader.removeSharedFormula(siValue);
   }
 
