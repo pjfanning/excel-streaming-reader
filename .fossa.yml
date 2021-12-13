@@ -5,7 +5,7 @@ version: 2
 cli:
   server: https://app.fossa.com
   fetcher: custom
-  project: https://github.com/pjfanning/excel-streaming-reader.git
+  project: https://github.com/mirakl/excel-streaming-reader.git
 analyze:
   modules:
   - name: .

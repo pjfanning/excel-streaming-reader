@@ -5,7 +5,7 @@ plugins {
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 }
 
-group = 'com.github.pjfanning'
+group = 'com.mirakl'
 version = '3.2.5-SNAPSHOT'
 
 sourceCompatibility = 1.8
@@ -51,7 +51,7 @@ publishing {
             pom {
                 name = 'excel-streaming-reader'
                 description = 'Streaming Excel reader'
-                url = 'https://github.com/pjfanning/excel-streaming-reader'
+                url = 'https://github.com/mirahbo/excel-streaming-reader.git'
                 licenses {
                     license {
                         name = 'The Apache License, Version 2.0'
@@ -70,9 +70,9 @@ publishing {
                     }
                 }
                 scm {
-                    url = 'https://github.com/pjfanning/excel-streaming-reader'
-                    connection = 'scm:git://github.com/pjfanning/excel-streaming-reader.git'
-                    developerConnection = 'scm:git://github.com/pjfanning/excel-streaming-reader.git'
+                    url = 'https://github.com/mirakl/excel-streaming-reader'
+                    connection = 'scm:git://github.com/mirakl/excel-streaming-reader.git'
+                    developerConnection = 'scm:git://github.com/mirakl/excel-streaming-reader.git'
                 }
             }
         }

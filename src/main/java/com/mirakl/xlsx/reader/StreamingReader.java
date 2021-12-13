@@ -1,7 +1,5 @@
 package com.mirakl.xlsx.reader;
 
-import com.github.pjfanning.xlsx.exceptions.*;
-import com.github.pjfanning.xlsx.impl.*;
 import com.mirakl.xlsx.reader.exceptions.CloseException;
 import com.mirakl.xlsx.reader.exceptions.OpenException;
 import com.mirakl.xlsx.reader.exceptions.ReadException;
@@ -25,6 +23,10 @@ public class StreamingReader implements AutoCloseable {
     this.workbook = workbook;
   }
 
+  public static Builder builder() {
+    return new Builder();
+  }
+
   /**
    * Closes the streaming resource, attempting to clean up any temporary files created.
    *
@@ -35,16 +37,11 @@ public class StreamingReader implements AutoCloseable {
     workbook.close();
   }
 
-  public static Builder builder() {
-    return new Builder();
-  }
-
   public static class Builder {
     private int rowCacheSize = 10;
     private int bufferSize = 1024;
+    private int sstCacheSizeBytes = -1;
     private boolean avoidTempFiles = false;
-    private boolean useSstTempFile = false;
-    private boolean encryptSstTempFile = false;
     private boolean useCommentsTempFile = false;
     private boolean encryptCommentsTempFile = false;
     private boolean adjustLegacyComments = false;
@@ -79,19 +76,11 @@ public class StreamingReader implements AutoCloseable {
     }
 
     /**
-     * @return Whether to use a temp file for the Shared Strings data. If false, no
-     * temp file will be used and the entire table will be loaded into memory.
+     * @return The size of the shared string table cache. If less than 0, no
+     * cache will be used and the entire table will be loaded into memory.
      */
-    public boolean useSstTempFile() {
-      return useSstTempFile;
-    }
-
-    /**
-     * @return Whether to encrypt the temp file for the Shared Strings data. Only applies if <code>useSstTempFile()</code>
-     * is true.
-     */
-    public boolean encryptSstTempFile() {
-      return encryptSstTempFile;
+    public int getSstCacheSizeBytes() {
+      return sstCacheSizeBytes;
     }
 
     /**
@@ -156,10 +145,9 @@ public class StreamingReader implements AutoCloseable {
 
     /**
      * Whether to parse the full formatting data for rich text shared strings and comments.
-     * This only has an effect if temp file SST and/or Comments Table support is enabled. The default is false.
+     * This only has an effect if temp file Comments Table support is enabled. The default is false.
      * When you don't use temp file support, full formatting data is returned for the rich text anyway.
      * @return Whether to parse the full formatting data for rich text shared strings and comments.
-     * @see #useSstTempFile()
      * @see #useCommentsTempFile()
      */
     public boolean fullFormatRichText() {
@@ -225,40 +213,21 @@ public class StreamingReader implements AutoCloseable {
     }
 
     /**
-     * Enables use of Shared Strings Table temp file. This option exists to accommodate
-     * extremely large workbooks with millions of unique strings. Normally, the SST is entirely
+     * Set the size of the Shared Strings Table cache. This option exists to accommodate
+     * extremely large workbooks with millions of unique strings. Normally the SST is entirely
      * loaded into memory, but with large workbooks with high cardinality (i.e., very few
      * duplicate values) the SST may not fit entirely into memory.
      * <p>
-     * By default, the entire SST *will* be loaded into memory. <strong>However</strong>,
-     * enabling this option at all will have some noticeable performance degradation as you are
+     * By default, the entire SST *will* be loaded into memory. Setting a value greater than
+     * 0 for this option will only cache up to this many entries in memory. <strong>However</strong>,
+     * enabling this option at all will have some noticeable performance degredation as you are
      * trading memory for disk space.
-     * <p>
-     * If you enable this feature, you also want to enable <code>fullFormatRichText</code>.
      *
-     * @param useSstTempFile whether to use a temp file to store the Shared Strings Table data
+     * @param sstCacheSizeBytes size of SST cache
      * @return reference to current {@code Builder}
-     * @see #setEncryptSstTempFile(boolean)
-     * @see #setFullFormatRichText(boolean) 
      */
-    public Builder setUseSstTempFile(boolean useSstTempFile) {
-      this.useSstTempFile = useSstTempFile;
-      return this;
-    }
-
-    /**
-     * Enables use of encryption in Shared Strings Table temp file. This only applies if <code>setUseSstTempFile</code>
-     * is set to true.
-     * <p>
-     * By default, the temp file is not encrypted. <strong>However</strong>,
-     * enabling this option could slow down the processing of Shared Strings data.
-     *
-     * @param encryptSstTempFile whether to encrypt the temp file used to store the Shared Strings Table data
-     * @return reference to current {@code Builder}
-     * @see #setUseSstTempFile(boolean) 
-     */
-    public Builder setEncryptSstTempFile(boolean encryptSstTempFile) {
-      this.encryptSstTempFile = encryptSstTempFile;
+    public Builder sstCacheSizeBytes(int sstCacheSizeBytes) {
+      this.sstCacheSizeBytes = sstCacheSizeBytes;
       return this;
     }
 
@@ -277,7 +246,7 @@ public class StreamingReader implements AutoCloseable {
      * @return reference to current {@code Builder}
      * @see #setReadComments(boolean)
      * @see #setEncryptCommentsTempFile(boolean)
-     * @see #setFullFormatRichText(boolean) 
+     * @see #setFullFormatRichText(boolean)
      */
     public Builder setUseCommentsTempFile(boolean useCommentsTempFile) {
       this.useCommentsTempFile = useCommentsTempFile;
@@ -371,11 +340,10 @@ public class StreamingReader implements AutoCloseable {
 
     /**
      * Whether to parse the full formatting data for rich text shared strings and comments.
-     * This only has an effect if temp file SST and/or Comments Table support is enabled. The default is false.
+     * This only has an effect if temp file Comments Table support is enabled. The default is false.
      * When you don't use temp file support, full formatting data is returned for the rich text anyway.
      * @param fullFormatRichText Whether to parse the full formatting data for rich text shared strings and comments.
      * @return reference to current {@code Builder}
-     * @see #setUseSstTempFile(boolean)
      * @see #setUseCommentsTempFile(boolean)
      */
     public Builder setFullFormatRichText(boolean fullFormatRichText) {

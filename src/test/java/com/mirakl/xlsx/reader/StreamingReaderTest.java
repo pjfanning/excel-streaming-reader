@@ -9,6 +9,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellAddress;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -628,8 +629,7 @@ public class StreamingReaderTest {
   @Test
   public void testBlankCellWithSstCacheSize() throws Exception {
     testBlankCellWithSstCacheSize(StreamingReader.builder());
-    testBlankCellWithSstCacheSize(StreamingReader.builder().setUseSstTempFile(true));
-    testBlankCellWithSstCacheSize(StreamingReader.builder().setUseSstTempFile(true).setEncryptSstTempFile(true));
+    testBlankCellWithSstCacheSize(StreamingReader.builder().sstCacheSizeBytes(10 * 1024 * 1024));
   }
 
   private void testBlankCellWithSstCacheSize(StreamingReader.Builder builder) throws Exception {
@@ -995,6 +995,7 @@ public class StreamingReaderTest {
   }
 
   @Test
+  @Ignore("Ignoring since we don't support full format with SST anymore")
   public void testStrictOOMXLWithTempFileSSTFullFormat() throws Exception {
     testStrictOOMXLWithTempFileSST(true);
   }
@@ -1323,7 +1324,8 @@ public class StreamingReaderTest {
   private void testStrictOOMXLWithTempFileSST(boolean fullFormat) throws Exception {
     try (
             InputStream inputStream = new FileInputStream("src/test/resources/sample.strict.xlsx");
-            Workbook wb = StreamingReader.builder().setUseSstTempFile(true)
+            Workbook wb = StreamingReader.builder()
+                    .sstCacheSizeBytes(10 * 1024 * 1024)
                     .setFullFormatRichText(fullFormat)
                     .setReadCoreProperties(true)
                     .open(inputStream)

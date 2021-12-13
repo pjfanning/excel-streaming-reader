@@ -10,6 +10,7 @@ import com.mirakl.xlsx.reader.impl.ooxml.OoxmlStrictHelper;
 import com.mirakl.xlsx.reader.impl.ooxml.OoxmlReader;
 import com.mirakl.xlsx.reader.impl.ooxml.ResourceWithTrackedCloseable;
 import com.mirakl.xlsx.reader.StreamingReader;
+import com.mirakl.xlsx.reader.impl.sst.BufferedStringsTable;
 import org.apache.commons.io.IOUtils;
 import org.apache.poi.ooxml.POIXMLProperties;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
@@ -39,6 +40,7 @@ import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.security.GeneralSecurityException;
 import java.util.*;
 
@@ -52,6 +54,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
   private final StreamingReader.Builder builder;
   private File tmp;
   private OPCPackage pkg;
+  private File sstCache;
   private SharedStringsTable sst;
   private boolean use1904Dates = false;
   private StreamingWorkbook workbook = null;
@@ -145,10 +148,13 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     if (strictFormat) {
       log.info("file is in strict OOXML format");
     }
-    if(builder.useSstTempFile()) {
-      log.debug("Created sst cache file");
-      sst = new TempFileSharedStringsTable(pkg, builder.encryptSstTempFile(), builder.fullFormatRichText());
+
+    if(builder.getSstCacheSizeBytes() > 0) {
+      sstCache = Files.createTempFile("", "").toFile();
+      log.debug("Created sst cache file [" + sstCache.getAbsolutePath() + "]");
+      sst = BufferedStringsTable.getSharedStringsTable(sstCache, builder.getSstCacheSizeBytes(), pkg);
     } else if(strictFormat) {
+      // TODO check if performance are OK with strict OOXML files
       sst = OoxmlStrictHelper.getSharedStringsTable(builder, pkg);
     } else {
       sst = reader.getSharedStringsTable();
