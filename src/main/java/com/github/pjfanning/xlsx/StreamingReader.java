@@ -265,7 +265,10 @@ public class StreamingReader implements AutoCloseable {
     }
 
     /**
-     * If you use in memory Shared String Table (default), this controls which in memory implementation to use.
+     * If you use an in memory Shared String Table (default), this controls which in memory implementation to use.
+     * {@link org.apache.poi.xssf.eventusermodel.ReadOnlySharedStringsTable} is a simpler implementation than
+     * the default {@link org.apache.poi.xssf.model.SharedStringsTable} and uses less memory - but may not support formatted
+     * text as well.
      *
      * @param useSstReadOnly Whether to use {@link org.apache.poi.xssf.eventusermodel.ReadOnlySharedStringsTable} instead
      *                       of {@link org.apache.poi.xssf.model.SharedStringsTable}. If you use {@link #setUseSstTempFile(boolean)

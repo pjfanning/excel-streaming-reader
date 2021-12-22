@@ -94,6 +94,7 @@ public class OoxmlStrictHelper {
           if (builder.useSstReadOnly()) {
             PackagePart newPart = createTempPackagePart(builder, pkg, part);
             try {
+              newPart.load(is);
               return new ReadOnlySharedStringsTable(newPart);
             } finally {
               newPart.close();

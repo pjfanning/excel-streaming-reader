@@ -53,7 +53,7 @@ public class OoxmlStrictHelperTest {
     StreamingReader.Builder builder4 = StreamingReader.builder()
             .setUseSstReadOnly(true)
             .setAvoidTempFiles(true);
-    for (StreamingReader.Builder builder : new StreamingReader.Builder[]{builder1, builder2}) {
+    for (StreamingReader.Builder builder : new StreamingReader.Builder[]{builder1, builder2, builder3, builder4}) {
       try (OPCPackage pkg = OPCPackage.open(new File("src/test/resources/sample.strict.xlsx"), PackageAccess.READ)) {
         SharedStrings sst = OoxmlStrictHelper.getSharedStringsTable(builder, pkg);
         assertEquals("has right count", 15, sst.getUniqueCount());
