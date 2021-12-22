@@ -47,6 +47,7 @@ public class StreamingReader implements AutoCloseable {
     private boolean readCoreProperties = false;
     private boolean readHyperlinks = false;
     private boolean readShapes = false;
+    private boolean readStyles = true;
     private boolean readSharedFormulas = false;
     private boolean fullFormatRichText = false;
     private String password;
@@ -90,7 +91,7 @@ public class StreamingReader implements AutoCloseable {
     }
 
     /**
-     * @return Whether to adjust comments to remove boiler-plate text (related to threaded comments).
+     * @return Whether to adjust comments to remove boilerplate text (related to threaded comments).
      * See https://github.com/pjfanning/excel-streaming-reader/issues/57
      */
     public boolean adjustLegacyComments() {
@@ -147,6 +148,13 @@ public class StreamingReader implements AutoCloseable {
      */
     public boolean readSharedFormulas() {
       return readSharedFormulas;
+    }
+
+    /**
+     * @return Whether to read the styles (associated with cells). Defaults to true.
+     */
+    public boolean readStyles() {
+      return readStyles;
     }
 
     /**
@@ -311,7 +319,7 @@ public class StreamingReader implements AutoCloseable {
      * Enables adjustments to comments to remove boiler-plate text (related to threaded comments).
      * See https://github.com/pjfanning/excel-streaming-reader/issues/57.
      *
-     * @param adjustLegacyComments whether to adjust legacy comments to remove boiler-plate comments
+     * @param adjustLegacyComments whether to adjust legacy comments to remove boilerplate comments
      * @return reference to current {@code Builder}
      */
     public Builder setAdjustLegacyComments(boolean adjustLegacyComments) {
@@ -331,7 +339,7 @@ public class StreamingReader implements AutoCloseable {
     }
 
     /**
-     * Enables the reading of hyperlink data associated wit sheets).
+     * Enables the reading of hyperlink data associated with sheets).
      *
      * @param readHyperlinks whether to read hyperlink data (associated with sheets)
      * @return reference to current {@code Builder}
@@ -361,6 +369,22 @@ public class StreamingReader implements AutoCloseable {
      */
     public Builder setReadSharedFormulas(boolean readSharedFormulas) {
       this.readSharedFormulas = readSharedFormulas;
+      return this;
+    }
+
+    /**
+     * Enables/disables the reading of styles data. Enabled, by default.
+     * It is recommended that you only disable this if you need to absolutely maximise performance.
+     * The styles data is very useful for formatting numbers in particular because the raw numbers in the
+     * Excel file are in double precision format and may not match exactly what you see in the Excel cell.
+     * With date and timestamp data, the raw data is also numeric and without the styles data, the reader
+     * will treat the data as numeric.
+     *
+     * @param readStyles Whether to read the styles (associated with cells)
+     * @return reference to current {@code Builder}
+     */
+    public Builder setReadStyles(boolean readStyles) {
+      this.readStyles = readStyles;
       return this;
     }
 
