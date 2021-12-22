@@ -237,7 +237,7 @@ public class StreamingReader implements AutoCloseable {
      * enabling this option at all will have some noticeable performance degradation as you are
      * trading memory for disk space.
      * <p>
-     * If you enable this feature, you also want to enable <code>fullFormatRichText</code>.
+     * If you enable this feature, you may also want to enable <code>fullFormatRichText</code>.
      *
      * @param useSstTempFile whether to use a temp file to store the Shared Strings Table data
      * @return reference to current {@code Builder}
@@ -375,10 +375,16 @@ public class StreamingReader implements AutoCloseable {
     /**
      * Enables/disables the reading of styles data. Enabled, by default.
      * It is recommended that you only disable this if you need to absolutely maximise performance.
-     * The styles data is very useful for formatting numbers in particular because the raw numbers in the
+     * <p>
+     * The style data is very useful for formatting numbers in particular because the raw numbers in the
      * Excel file are in double precision format and may not match exactly what you see in the Excel cell.
-     * With date and timestamp data, the raw data is also numeric and without the styles data, the reader
-     * will treat the data as numeric.
+     * </p>
+     * <p>
+     * With date and timestamp data, the raw data is also numeric and without the style data, the reader
+     * will treat the data as numeric. If you already know if certain cells hold date or timestamp data,
+     * the the <code>getLocalDateTimeCellValue</code> and <code>getDateCellValue</code> methods will work
+     * even if you have disabled the reading of style data.
+     * </p>
      *
      * @param readStyles Whether to read the styles (associated with cells)
      * @return reference to current {@code Builder}
