@@ -271,8 +271,8 @@ public class StreamingReader implements AutoCloseable {
      * text as well.
      *
      * @param useSstReadOnly Whether to use {@link org.apache.poi.xssf.eventusermodel.ReadOnlySharedStringsTable} instead
-     *                       of {@link org.apache.poi.xssf.model.SharedStringsTable}. If you use {@link #setUseSstTempFile(boolean)
-     *                       and set to `true`, then this setting is ignored.
+     *                       of {@link org.apache.poi.xssf.model.SharedStringsTable}. If you use {@link #setUseSstTempFile(boolean)}
+     *                       and set to <code>true</code>, then this setting is ignored.
      * @return reference to current {@code Builder}
      * @see #setUseSstTempFile(boolean)
      * @since v3.3.0
