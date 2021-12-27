@@ -591,7 +591,6 @@ public class StreamingSheetReader implements Iterable<Row> {
         }
         return lastContents;
       case "inlineStr":   //inline string (not in sst)
-        return new XSSFRichTextString(lastContents).toString();
       default:
         return lastContents;
     }
