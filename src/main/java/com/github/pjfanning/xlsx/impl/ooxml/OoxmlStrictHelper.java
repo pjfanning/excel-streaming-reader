@@ -86,13 +86,7 @@ public class OoxmlStrictHelper {
         }
         try(InputStream is = tempData.getInputStream()) {
           if (builder.useSstReadOnly()) {
-            PackagePart newPart = createTempPackagePart(builder, pkg, part);
-            try {
-              newPart.load(is);
-              return new ReadOnlySharedStringsTable(newPart);
-            } finally {
-              newPart.close();
-            }
+            return new ReadOnlySharedStringsTable(is);
           } else {
             SharedStringsTable sst = new SharedStringsTable();
             try {
