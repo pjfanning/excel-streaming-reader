@@ -60,12 +60,8 @@ public class OoxmlStrictHelper {
             //continue
           }
         }
-        PackagePart newPart = createTempPackagePart(builder, pkg, part);
         try(InputStream is = tempData.getInputStream()) {
-          newPart.load(is);
-          return new StylesTable(newPart);
-        } finally {
-          newPart.close();
+          return new StylesTable(is);
         }
       }
     }
