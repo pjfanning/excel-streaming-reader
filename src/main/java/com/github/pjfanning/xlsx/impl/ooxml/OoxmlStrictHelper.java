@@ -1,11 +1,8 @@
 package com.github.pjfanning.xlsx.impl.ooxml;
 
 import com.github.pjfanning.xlsx.StreamingReader;
-import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.openxml4j.opc.PackagePart;
-import org.apache.poi.openxml4j.opc.internal.MemoryPackagePart;
-import org.apache.poi.openxml4j.opc.internal.TempFilePackagePart;
 import org.apache.poi.xssf.eventusermodel.ReadOnlySharedStringsTable;
 import org.apache.poi.xssf.model.*;
 import org.apache.poi.xssf.usermodel.XSSFRelation;
@@ -20,7 +17,7 @@ public class OoxmlStrictHelper {
   private OoxmlStrictHelper() {}
 
   public static ThemesTable getThemesTable(StreamingReader.Builder builder, OPCPackage pkg)
-          throws IOException, XMLStreamException, InvalidFormatException {
+          throws IOException, XMLStreamException {
     List<PackagePart> parts = pkg.getPartsByContentType(XSSFRelation.THEME.getContentType());
     if (parts.isEmpty()) {
       return null;
@@ -44,7 +41,7 @@ public class OoxmlStrictHelper {
   }
 
   public static StylesTable getStylesTable(StreamingReader.Builder builder, OPCPackage pkg)
-          throws IOException, XMLStreamException, InvalidFormatException {
+          throws IOException, XMLStreamException {
     List<PackagePart> parts = pkg.getPartsByContentType(XSSFRelation.STYLES.getContentType());
     if (parts.isEmpty()) {
       return null;
@@ -68,7 +65,7 @@ public class OoxmlStrictHelper {
   }
 
   public static SharedStrings getSharedStringsTable(StreamingReader.Builder builder, OPCPackage pkg)
-          throws IOException, XMLStreamException, SAXException, InvalidFormatException {
+          throws IOException, XMLStreamException, SAXException {
     List<PackagePart> parts = pkg.getPartsByContentType(XSSFRelation.SHARED_STRINGS.getContentType());
     if (parts.isEmpty()) {
       return null;
@@ -103,7 +100,7 @@ public class OoxmlStrictHelper {
   }
 
   public static CommentsTable getCommentsTable(StreamingReader.Builder builder, PackagePart part)
-          throws IOException, XMLStreamException, InvalidFormatException {
+          throws IOException, XMLStreamException {
     try(TempDataStore tempData = createTempDataStore(builder)) {
       try(
               InputStream is = part.getInputStream();
@@ -127,15 +124,6 @@ public class OoxmlStrictHelper {
       return new TempMemoryDataStore();
     } else {
       return new TempFileDataStore();
-    }
-  }
-
-  private static PackagePart createTempPackagePart(StreamingReader.Builder builder, OPCPackage pkg,
-                                                   PackagePart part) throws IOException, InvalidFormatException {
-    if (builder.avoidTempFiles()) {
-      return new MemoryPackagePart(pkg, part.getPartName(), part.getContentType());
-    } else {
-      return new TempFilePackagePart(pkg, part.getPartName(), part.getContentType());
     }
   }
 }
