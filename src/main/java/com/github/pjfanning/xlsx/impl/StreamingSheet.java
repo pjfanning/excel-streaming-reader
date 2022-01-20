@@ -56,7 +56,8 @@ public class StreamingSheet implements Sheet {
    */
   @Override
   public Spliterator<Row> spliterator() {
-    return Spliterators.spliterator(rowIterator(), -1, Spliterator.ORDERED);
+    // Long.MAX_VALUE is the documented value to use if the size is unknown
+    return Spliterators.spliterator(rowIterator(),  Long.MAX_VALUE, Spliterator.ORDERED);
   }
 
   /**
