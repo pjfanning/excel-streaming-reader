@@ -55,6 +55,14 @@ public class StreamingSheet implements Sheet {
    * {@inheritDoc}
    */
   @Override
+  public Spliterator<Row> spliterator() {
+    return Spliterators.spliterator(rowIterator(), -1, Spliterator.ORDERED);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public String getSheetName() {
     return name;
   }
