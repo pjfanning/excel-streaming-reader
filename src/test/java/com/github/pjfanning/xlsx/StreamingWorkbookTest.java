@@ -1,28 +1,20 @@
 package com.github.pjfanning.xlsx;
 
+import com.github.pjfanning.xlsx.exceptions.ParseException;
+import fi.iki.elonen.NanoHTTPD;
 import org.apache.poi.ss.usermodel.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.util.Iterator;
 import java.util.Locale;
+import java.util.function.Consumer;
 
-import static com.github.pjfanning.xlsx.TestUtils.expectCachedType;
-import static com.github.pjfanning.xlsx.TestUtils.expectFormula;
-import static com.github.pjfanning.xlsx.TestUtils.expectSameStringContent;
-import static com.github.pjfanning.xlsx.TestUtils.expectStringContent;
-import static com.github.pjfanning.xlsx.TestUtils.expectType;
-import static com.github.pjfanning.xlsx.TestUtils.getCellFromNextRow;
-import static com.github.pjfanning.xlsx.TestUtils.nextRow;
-import static com.github.pjfanning.xlsx.TestUtils.openWorkbook;
+import static com.github.pjfanning.xlsx.TestUtils.*;
 import static org.apache.poi.ss.usermodel.CellType.FORMULA;
 import static org.apache.poi.ss.usermodel.CellType.NUMERIC;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class StreamingWorkbookTest {
   @BeforeClass
@@ -160,6 +152,55 @@ public class StreamingWorkbookTest {
 //      expectFormula(B4, "B2"); // returning wrong forumla type? this needs to be fixed in future work
       expectSameStringContent(B2, B4);
       expectStringContent(B4, "\"a\"");
+    }
+  }
+
+  @Test(expected = ParseException.class)
+  public void testEntityExpansion() throws Exception {
+    ExploitServer.withServer(s -> fail("Should not have made request"), () -> {
+      try (
+              InputStream stream = getInputStream("entity-expansion-exploit-poc-file.xlsx");
+              Workbook workbook = StreamingReader.builder()
+                      .open(stream)
+      ) {
+        Sheet sheet = workbook.getSheetAt(0);
+        for(Row row : sheet) {
+          for(Cell cell : row) {
+            System.out.println(cell.getStringCellValue());
+          }
+        }
+      } catch(IOException e) {
+        throw new UncheckedIOException(e);
+      }
+    });
+  }
+
+  private static class ExploitServer extends NanoHTTPD implements AutoCloseable {
+    private final Consumer<IHTTPSession> onRequest;
+
+    public ExploitServer(Consumer<IHTTPSession> onRequest) throws IOException {
+      super(61932);
+      this.onRequest = onRequest;
+    }
+
+    @Override
+    public Response serve(IHTTPSession session) {
+      onRequest.accept(session);
+      return newFixedLengthResponse("<!ENTITY % data SYSTEM \"file://pom.xml\">\n");
+    }
+
+    public static void withServer(Consumer<IHTTPSession> onRequest, Runnable func) {
+      try(ExploitServer server = new ExploitServer(onRequest)) {
+        server.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
+        func.run();
+      } catch(IOException e) {
+        throw new UncheckedIOException(e);
+      }
+    }
+
+    @Override
+    public void close() {
+      this.stop();
     }
   }
 

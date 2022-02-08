@@ -14,6 +14,10 @@ import static org.junit.Assert.assertEquals;
 
 final class TestUtils {
 
+  static InputStream getInputStream(String fileName) throws IOException {
+    return TestUtils.class.getResourceAsStream("/" + fileName);
+  }
+
   static Workbook openWorkbook(String fileName) throws IOException {
       try (InputStream stream = TestUtils.class.getResourceAsStream("/" + fileName)) {
           return StreamingReader.builder()
