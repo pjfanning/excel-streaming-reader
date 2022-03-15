@@ -271,20 +271,14 @@ public class StreamingSheetTest {
       assertNotNull(row0);
       assertNotNull(row1);
       assertNotNull(row2);
-      /*
       assertEquals(750, row0.getHeight());
       assertEquals(37.5, row0.getHeightInPoints(), 0.00001);
-      */
       assertFalse(row0.getZeroHeight());
-      /*
       assertEquals(300, row1.getHeight());
       assertEquals(15.0, row1.getHeightInPoints(), 0.00001);
-      */
       assertFalse(row1.getZeroHeight());
-      /*
       assertEquals(15, row2.getHeight());
       assertEquals(0.75, row2.getHeightInPoints(), 0.00001);
-      */
       assertTrue(row2.getZeroHeight());
     }
   }
