@@ -6,7 +6,6 @@ import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellAddress;
 import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.AfterClass;
@@ -275,14 +274,18 @@ public class StreamingSheetTest {
       /*
       assertEquals(750, row0.getHeight());
       assertEquals(37.5, row0.getHeightInPoints(), 0.00001);
+      */
       assertFalse(row0.getZeroHeight());
+      /*
       assertEquals(300, row1.getHeight());
       assertEquals(15.0, row1.getHeightInPoints(), 0.00001);
+      */
       assertFalse(row1.getZeroHeight());
+      /*
       assertEquals(15, row2.getHeight());
       assertEquals(0.75, row2.getHeightInPoints(), 0.00001);
-      assertTrue(row2.getZeroHeight());
       */
+      assertTrue(row2.getZeroHeight());
     }
   }
 }
