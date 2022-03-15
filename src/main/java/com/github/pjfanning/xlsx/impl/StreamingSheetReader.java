@@ -63,6 +63,8 @@ public class StreamingSheetReader implements Iterable<Row> {
   private int firstColNum = 0;
   private int currentColNum;
   private int rowCacheSize;
+  private float defaultRowHeight = 0.0f;
+  private int baseColWidth = 8; //POI XSSFSheet default
   private List<Row> rowCache = new ArrayList<>();
   private Iterator<Row> rowCacheIterator;
 
@@ -124,6 +126,14 @@ public class StreamingSheetReader implements Iterable<Row> {
 
   boolean isUse1904Dates() {
     return use1904Dates;
+  }
+
+  float getDefaultRowHeight() {
+    return defaultRowHeight;
+  }
+
+  int getBaseColWidth() {
+    return baseColWidth;
   }
 
   /**
@@ -298,6 +308,23 @@ public class StreamingSheetReader implements Iterable<Row> {
         Attribute tooltip = startElement.getAttributeByName(QName.valueOf("tooltip"));
         hyperlinks.add(new HyperlinkData(id, getAttributeValue(ref), getAttributeValue(location),
                 getAttributeValue(display), getAttributeValue(tooltip)));
+      } else if ("sheetFormatPr".equals(tagLocalName)) {
+        Attribute defaultRowHeightAtt = startElement.getAttributeByName(QName.valueOf("defaultRowHeight"));
+        if (defaultRowHeightAtt != null) {
+          try {
+            defaultRowHeight = Float.parseFloat(defaultRowHeightAtt.getValue());
+          } catch (Exception e) {
+            log.warn("unable to parse defaultRowHeight {}", defaultRowHeightAtt.getValue());
+          }
+        }
+        Attribute baseColWidthAtt = startElement.getAttributeByName(QName.valueOf("baseColWidth"));
+        if (baseColWidthAtt != null) {
+          try {
+            baseColWidth = Integer.parseInt(baseColWidthAtt.getValue());
+          } catch (Exception e) {
+            log.warn("unable to parse baseColWidth {}", baseColWidthAtt.getValue());
+          }
+        }
       }
 
       if (!insideIS) {
