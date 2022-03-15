@@ -5,6 +5,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellAddress;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.PaneInformation;
+import org.apache.poi.util.Units;
 import org.apache.poi.xssf.model.Comments;
 import org.apache.poi.xssf.usermodel.XSSFComment;
 
@@ -281,6 +282,17 @@ public class StreamingSheet implements Sheet {
     return reader.getDefaultRowHeight();
   }
 
+  @Override
+  public int getColumnWidth(final int columnIndex) {
+    return Math.round(reader.getColumnWidth(columnIndex)*256);
+  }
+
+  @Override
+  public float getColumnWidthInPixels(final int columnIndex) {
+    float widthIn256 = getColumnWidth(columnIndex);
+    return (float)(widthIn256/256.0 * Units.DEFAULT_CHARACTER_WIDTH);
+  }
+
   /**
    * @return immutable copy of the shared formula map for this sheet
    */
@@ -369,22 +381,6 @@ public class StreamingSheet implements Sheet {
   @Override
   public void setColumnWidth(int columnIndex, int width) {
     throw new UnsupportedOperationException("update operations are not supported");
-  }
-
-  /**
-   * Not supported
-   */
-  @Override
-  public int getColumnWidth(int columnIndex) {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Not supported
-   */
-  @Override
-  public float getColumnWidthInPixels(int columnIndex) {
-    throw new UnsupportedOperationException();
   }
 
   /**

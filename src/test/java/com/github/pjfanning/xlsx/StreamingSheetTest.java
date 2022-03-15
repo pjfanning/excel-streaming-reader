@@ -257,14 +257,12 @@ public class StreamingSheetTest {
       assertEquals(8, sheet.getDefaultColumnWidth());
       assertEquals(300, sheet.getDefaultRowHeight());
       assertEquals(15.0, sheet.getDefaultRowHeightInPoints(), 0.00001);
-      /*
       assertEquals(5120, sheet.getColumnWidth(0));
       assertEquals(2048, sheet.getColumnWidth(1));
       assertEquals(0, sheet.getColumnWidth(2));
       assertEquals(140.034, sheet.getColumnWidthInPixels(0), 0.00001);
       assertEquals(56.0136, sheet.getColumnWidthInPixels(1), 0.00001);
       assertEquals(0.0, sheet.getColumnWidthInPixels(2), 0.00001);
-      */
       assertFalse(sheet.isColumnHidden(0));
       assertFalse(sheet.isColumnHidden(1));
       assertTrue(sheet.isColumnHidden(2));

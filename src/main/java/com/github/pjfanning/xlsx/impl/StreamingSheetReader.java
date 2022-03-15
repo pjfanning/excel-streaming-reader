@@ -51,6 +51,7 @@ public class StreamingSheetReader implements Iterable<Row> {
   private static final QName QNAME_REF = QName.valueOf("ref");
   private static final QName QNAME_S = QName.valueOf("s");
   private static final QName QNAME_T = QName.valueOf("t");
+  private static final QName QNAME_WIDTH = QName.valueOf("width");
 
   private final StreamingWorkbookReader streamingWorkbookReader;
   private final PackagePart packagePart;
@@ -60,6 +61,7 @@ public class StreamingSheetReader implements Iterable<Row> {
   private final XMLEventReader parser;
   private final DataFormatter dataFormatter = new DataFormatter();
   private final Set<Integer> hiddenColumns = new HashSet<>();
+  private final Map<Integer, Float> columnWidths = new HashMap<>();
   private final List<CellRangeAddress> mergedCells = new ArrayList<>();
   private final List<HyperlinkData> hyperlinks = new ArrayList<>();
   private List<XlsxHyperlink> xlsxHyperlinks;
@@ -199,14 +201,25 @@ public class StreamingSheetReader implements Iterable<Row> {
         currentColNum = firstColNum;
       } else if ("col".equals(tagLocalName)) {
         Attribute isHiddenAttr = startElement.getAttributeByName(QNAME_HIDDEN);
+        Attribute widthAttr = startElement.getAttributeByName(QNAME_WIDTH);
+        float width = -1;
+        if (widthAttr != null) {
+          try {
+            width = Float.parseFloat(widthAttr.getValue());
+          } catch (Exception e) {
+            LOG.warn("Failed to parse column width {}", width);
+          }
+        }
         boolean isHidden = isHiddenAttr != null && XmlUtils.evaluateBoolean(isHiddenAttr.getValue());
-        if (isHidden) {
+        if (isHidden || width >= 0) {
           Attribute minAttr = startElement.getAttributeByName(QNAME_MIN);
           Attribute maxAttr = startElement.getAttributeByName(QNAME_MAX);
           int min = Integer.parseInt(minAttr.getValue()) - 1;
           int max = Integer.parseInt(maxAttr.getValue()) - 1;
-          for (int columnIndex = min; columnIndex <= max; columnIndex++)
-            hiddenColumns.add(columnIndex);
+          for (int columnIndex = min; columnIndex <= max; columnIndex++) {
+            if (isHidden) hiddenColumns.add(columnIndex);
+            if (width >= 0) columnWidths.put(columnIndex, width);
+          }
         }
       } else if ("c".equals(tagLocalName)) {
         Attribute ref = startElement.getAttributeByName(QNAME_R);
@@ -448,6 +461,14 @@ public class StreamingSheetReader implements Iterable<Row> {
       getRow();
     }
     return hiddenColumns.contains(columnIndex);
+  }
+
+  float getColumnWidth(int columnIndex) {
+    if(rowCacheIterator == null) {
+      getRow();
+    }
+    Float width = columnWidths.get(columnIndex);
+    return width == null ? getBaseColWidth() : width;
   }
 
   /**
