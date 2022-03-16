@@ -591,7 +591,12 @@ public class StreamingSheetReader implements Iterable<Row> {
     return activeCell;
   }
 
-  PaneInformation getPane() { return pane; }
+  PaneInformation getPane() {
+    if(rowCacheIterator == null) {
+      getRow();
+    }
+    return pane;
+  }
 
   /**
    * Tries to format the contents of the last contents appropriately based on

@@ -319,10 +319,6 @@ public class StreamingSheetTest {
 
       try (Workbook wb = StreamingReader.builder().open(bos.toInputStream())) {
         Sheet sheet = wb.getSheetAt(0);
-        Iterator<Row> rowIterator = sheet.rowIterator();
-        if (rowIterator.hasNext()) {
-          rowIterator.next();
-        }
         PaneInformation streamPane = sheet.getPaneInformation();
         assertEquals(4, streamPane.getVerticalSplitPosition());
         assertEquals(0, streamPane.getHorizontalSplitPosition());
@@ -330,6 +326,10 @@ public class StreamingSheetTest {
         assertEquals(0, streamPane.getHorizontalSplitTopRow());
         assertTrue(streamPane.isFreezePane());
         assertEquals(1, streamPane.getActivePane());
+        Iterator<Row> rowIterator = sheet.rowIterator();
+        if (rowIterator.hasNext()) {
+          rowIterator.next();
+        }
       }
     }
   }
