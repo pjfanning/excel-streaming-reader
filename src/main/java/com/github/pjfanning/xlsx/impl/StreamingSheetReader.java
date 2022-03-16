@@ -444,7 +444,8 @@ public class StreamingSheetReader implements Iterable<Row> {
     final short x = xValue == null ? 0 : xValue.shortValue();
     final Float yValue = parseAttValueAsFloat("ySplit", startElement);
     final short y = yValue == null ? 0 : yValue.shortValue();
-    short row = 0, col = 0;
+    short row = 0;
+    short col = 0;
     if (topLeftCellAtt != null) {
       try {
         final CellReference cellRef = new CellReference(topLeftCellAtt.getValue());

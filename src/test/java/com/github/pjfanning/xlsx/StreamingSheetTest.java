@@ -288,8 +288,6 @@ public class StreamingSheetTest {
             XSSFWorkbook xssfWorkbook = new XSSFWorkbook();
             UnsynchronizedByteArrayOutputStream bos = new UnsynchronizedByteArrayOutputStream()
     ) {
-      int colSplit = 1;
-      int rowSplit = 2;
       int leftmostColumn = 3;
       int topRow = 4;
 
