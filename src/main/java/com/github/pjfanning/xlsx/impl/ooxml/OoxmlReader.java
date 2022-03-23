@@ -212,15 +212,53 @@ public class OoxmlReader extends XSSFReader {
     }
 
     /**
-     * Gets string representations of relationships
-     * that are sheet-like.  Added to allow subclassing
-     * by XSSFBReader.  This is used to decide what
-     * relationships to load into the sheetRefs
+     * Returns {@code true} if the iteration has more elements.
      *
-     * @return all relationships that are sheet-like
+     * @return {@code true} if the iterator has more elements.
      */
-    protected Set<String> getSheetRelationships() {
-      return OVERRIDE_WORKSHEET_RELS;
+    @Override
+    public boolean hasNext() {
+      return sheetIterator.hasNext();
+    }
+
+    /**
+     * Returns input stream of the next sheet in the iteration
+     *
+     * @return input stream of the next sheet in the iteration
+     */
+    @Override
+    public InputStream next() {
+      xssfSheetRef = sheetIterator.next();
+
+      String sheetId = xssfSheetRef.getId();
+      try {
+        PackagePart sheetPkg = sheetMap.get(sheetId);
+        return sheetPkg.getInputStream();
+      } catch (IOException e) {
+        throw new POIXMLException(e);
+      }
+    }
+
+    /**
+     * Returns name of the current sheet
+     *
+     * @return name of the current sheet
+     */
+    public String getSheetName() {
+      return xssfSheetRef.getName();
+    }
+
+    public PackagePart getSheetPart() {
+      String sheetId = xssfSheetRef.getId();
+      return sheetMap.get(sheetId);
+    }
+
+    /**
+     * We're read only, so remove isn't supported
+     */
+    @Override
+    public void remove() {
+      throw new IllegalStateException("Not supported");
     }
 
     /**
@@ -310,53 +348,15 @@ public class OoxmlReader extends XSSFReader {
     }
 
     /**
-     * Returns {@code true} if the iteration has more elements.
+     * Gets string representations of relationships
+     * that are sheet-like.  Added to allow subclassing
+     * by XSSFBReader.  This is used to decide what
+     * relationships to load into the sheetRefs
      *
-     * @return {@code true} if the iterator has more elements.
+     * @return all relationships that are sheet-like
      */
-    @Override
-    public boolean hasNext() {
-      return sheetIterator.hasNext();
-    }
-
-    /**
-     * Returns input stream of the next sheet in the iteration
-     *
-     * @return input stream of the next sheet in the iteration
-     */
-    @Override
-    public InputStream next() {
-      xssfSheetRef = sheetIterator.next();
-
-      String sheetId = xssfSheetRef.getId();
-      try {
-        PackagePart sheetPkg = sheetMap.get(sheetId);
-        return sheetPkg.getInputStream();
-      } catch (IOException e) {
-        throw new POIXMLException(e);
-      }
-    }
-
-    /**
-     * Returns name of the current sheet
-     *
-     * @return name of the current sheet
-     */
-    public String getSheetName() {
-      return xssfSheetRef.getName();
-    }
-
-    public PackagePart getSheetPart() {
-      String sheetId = xssfSheetRef.getId();
-      return sheetMap.get(sheetId);
-    }
-
-    /**
-     * We're read only, so remove isn't supported
-     */
-    @Override
-    public void remove() {
-      throw new IllegalStateException("Not supported");
+    private Set<String> getSheetRelationships() {
+      return OVERRIDE_WORKSHEET_RELS;
     }
 
     private Comments parseComments(StreamingReader.Builder builder, PackagePart commentsPart) throws IOException, XMLStreamException, InvalidFormatException {
