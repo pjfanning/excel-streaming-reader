@@ -414,7 +414,7 @@ public class OoxmlReader extends XSSFReader {
   private static Comments parseComments(final StreamingReader.Builder builder,
                                         final PackagePart commentsPart,
                                         final boolean strictOoxmlChecksNeeded)
-          throws IOException, XMLStreamException, InvalidFormatException {
+          throws IOException, XMLStreamException {
     if (builder.getCommentsImplementationType() == CommentsImplementationType.TEMP_FILE_BACKED) {
       try (InputStream is = commentsPart.getInputStream()) {
         TempFileCommentsTable ct = new TempFileCommentsTable(
