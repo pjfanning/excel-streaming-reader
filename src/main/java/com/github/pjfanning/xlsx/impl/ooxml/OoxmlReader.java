@@ -153,13 +153,10 @@ public class OoxmlReader extends XSSFReader {
    */
   @Override
   public OoxmlSheetIterator getSheetsData() throws IOException {
-    return new OoxmlSheetIterator(workbookPart, strictOoxmlChecksNeeded);
+    return new OoxmlSheetReader(workbookPart, strictOoxmlChecksNeeded).iterator();
   }
 
-  /**
-   * Iterator over sheet data.
-   */
-  public static class OoxmlSheetIterator implements Iterator<InputStream> {
+  public static class OoxmlSheetReader {
 
     /**
      * Maps relId and the corresponding PackagePart
@@ -175,16 +172,12 @@ public class OoxmlReader extends XSSFReader {
 
     private final boolean strictOoxmlChecksNeeded;
 
-    private int sheetRefPosition;
-    private PackagePart sheetPart;
-    private String sheetName;
-
     /**
      * Construct a new SheetIterator
      *
      * @param wb package part holding workbook.xml
      */
-    OoxmlSheetIterator(final PackagePart wb, final boolean strictOoxmlChecksNeeded) throws IOException {
+    OoxmlSheetReader(final PackagePart wb, final boolean strictOoxmlChecksNeeded) throws IOException {
       this.strictOoxmlChecksNeeded = strictOoxmlChecksNeeded;
       /*
        * The order of sheets is defined by the order of CTSheet elements in workbook.xml
@@ -208,112 +201,8 @@ public class OoxmlReader extends XSSFReader {
       }
     }
 
-    /**
-     * Returns {@code true} if the iteration has more elements.
-     *
-     * @return {@code true} if the iterator has more elements.
-     */
-    @Override
-    public boolean hasNext() {
-      return sheetRefPosition < sheetRefList.size();
-    }
-
-    /**
-     * Returns input stream of the next sheet in the iteration
-     *
-     * @return input stream of the next sheet in the iteration
-     */
-    @Override
-    public InputStream next() {
-      XSSFSheetRef xssfSheetRef = sheetRefList.get(sheetRefPosition++);
-
-      try {
-        sheetName = xssfSheetRef.getName();
-        sheetPart = sheetMap.get(xssfSheetRef.getId());
-        return sheetPart.getInputStream();
-      } catch (IOException e) {
-        throw new POIXMLException(e);
-      }
-    }
-
-    /**
-     * Returns name of the current sheet
-     *
-     * @return name of the current sheet
-     */
-    public String getSheetName() {
-      return sheetName;
-    }
-
-    public PackagePart getSheetPart() {
-      return sheetPart;
-    }
-
-    /**
-     * We're read only, so remove isn't supported
-     */
-    @Override
-    public void remove() {
-      throw new IllegalStateException("Not supported");
-    }
-
-    /**
-     * Returns the comments associated with this sheet,
-     * or null if there aren't any
-     */
-    public Comments getSheetComments(StreamingReader.Builder builder) {
-      PackagePart sheetPkg = getSheetPart();
-
-      // Do we have a comments relationship? (Only ever one if so)
-      try {
-        PackageRelationshipCollection commentsList =
-                sheetPkg.getRelationshipsByType(XSSFRelation.SHEET_COMMENTS.getRelation());
-        if (commentsList.size() == 0 && strictOoxmlChecksNeeded) {
-          commentsList =
-                  sheetPkg.getRelationshipsByType(OoxmlReader.PURL_COMMENTS_RELATIONSHIP_URL);
-        }
-        if (commentsList.size() > 0) {
-          PackageRelationship comments = commentsList.getRelationship(0);
-          PackagePartName commentsName = PackagingURIHelper.createPartName(comments.getTargetURI());
-          PackagePart commentsPart = sheetPkg.getPackage().getPart(commentsName);
-          return parseComments(builder, commentsPart);
-        }
-      } catch (InvalidFormatException|IOException|XMLStreamException e) {
-        LOGGER.warn("issue getting sheet comments", e);
-        return null;
-      }
-      return null;
-    }
-
-    /**
-     * Returns the shapes associated with this sheet,
-     * an empty list or null if there is an exception
-     */
-    public List<XSSFShape> getShapes() {
-      PackagePart sheetPkg = getSheetPart();
-      List<XSSFShape> shapes = new LinkedList<>();
-      try {
-        PackageRelationshipCollection drawingsList = sheetPkg.getRelationshipsByType(XSSFRelation.DRAWINGS.getRelation());
-        if (drawingsList.size() == 0 && strictOoxmlChecksNeeded) {
-          drawingsList = sheetPkg.getRelationshipsByType(PURL_DRAWING_RELATIONSHIP_URL);
-        }
-        for (int i = 0; i < drawingsList.size(); i++) {
-          PackageRelationship drawings = drawingsList.getRelationship(i);
-          PackagePartName drawingsName = PackagingURIHelper.createPartName(drawings.getTargetURI());
-          PackagePart drawingsPart = sheetPkg.getPackage().getPart(drawingsName);
-          if (drawingsPart == null) {
-            //parts can go missing; Excel ignores them silently -- TIKA-2134
-            LOGGER.warn("Missing drawing: {}. Skipping it.", drawingsName);
-            continue;
-          }
-          XSSFDrawing drawing = new XSSFDrawing(drawingsPart);
-          shapes.addAll(drawing.getShapes());
-        }
-      } catch (XmlException|InvalidFormatException|IOException e) {
-        LOGGER.warn("issue getting shapes", e);
-        return null;
-      }
-      return shapes;
+    public OoxmlSheetIterator iterator() {
+      return new OoxmlSheetIterator(sheetMap, sheetRefList, strictOoxmlChecksNeeded);
     }
 
     private ArrayList<XSSFSheetRef> createSheetListFromWB(PackagePart wb) throws IOException {
@@ -354,38 +243,182 @@ public class OoxmlReader extends XSSFReader {
     private Set<String> getSheetRelationships() {
       return OVERRIDE_WORKSHEET_RELS;
     }
+  }
 
-    private Comments parseComments(StreamingReader.Builder builder, PackagePart commentsPart) throws IOException, XMLStreamException, InvalidFormatException {
-      if (builder.getCommentsImplementationType() == CommentsImplementationType.TEMP_FILE_BACKED) {
-        try (InputStream is = commentsPart.getInputStream()) {
-          TempFileCommentsTable ct = new TempFileCommentsTable(
-                  builder.encryptCommentsTempFile(),
-                  builder.fullFormatRichText());
-          try {
-            ct.readFrom(is);
-          } catch (IOException | RuntimeException e) {
-            ct.close();
-            throw e;
-          }
-          return ct;
-        }
-      } else if (builder.getCommentsImplementationType() == CommentsImplementationType.CUSTOM_MAP_BACKED) {
-        try (InputStream is = commentsPart.getInputStream()) {
-          MapBackedCommentsTable ct = new MapBackedCommentsTable(
-                  builder.fullFormatRichText());
-          try {
-            ct.readFrom(is);
-          } catch (IOException|RuntimeException e) {
-            ct.close();
-            throw e;
-          }
-          return ct;
-        }
-      } else if (strictOoxmlChecksNeeded) {
-        return OoxmlStrictHelper.getCommentsTable(builder, commentsPart);
-      } else {
-        return new CommentsTable(commentsPart);
+  /**
+   * Iterator over sheet data.
+   */
+  public static class OoxmlSheetIterator implements Iterator<InputStream> {
+
+    /**
+     * Maps relId and the corresponding PackagePart
+     */
+    private final Map<String, PackagePart> sheetMap;
+
+    /**
+     * List over CTSheet objects, returns sheets in {@code logical} order.
+     * We can't rely on the Ooxml4J's relationship iterator because it returns objects in physical order,
+     * i.e. as they are stored in the underlying package
+     */
+    private final ArrayList<XSSFSheetRef> sheetRefList;
+
+    private final boolean strictOoxmlChecksNeeded;
+
+    private int sheetRefPosition;
+    private PackagePart sheetPart;
+    private String sheetName;
+
+    OoxmlSheetIterator(final Map<String, PackagePart> sheetMap,
+                       final ArrayList<XSSFSheetRef> sheetRefList,
+                       final boolean strictOoxmlChecksNeeded) {
+      this.sheetMap = sheetMap;
+      this.sheetRefList = sheetRefList;
+      this.strictOoxmlChecksNeeded = strictOoxmlChecksNeeded;
+    }
+
+    /**
+     * Returns {@code true} if the iteration has more elements.
+     *
+     * @return {@code true} if the iterator has more elements.
+     */
+    @Override
+    public boolean hasNext() {
+      return sheetRefPosition < sheetRefList.size();
+    }
+
+    /**
+     * Returns input stream of the next sheet in the iteration
+     *
+     * @return input stream of the next sheet in the iteration
+     */
+    @Override
+    public InputStream next() {
+      XSSFSheetRef xssfSheetRef = sheetRefList.get(sheetRefPosition++);
+
+      try {
+        sheetName = xssfSheetRef.getName();
+        sheetPart = sheetMap.get(xssfSheetRef.getId());
+        return sheetPart.getInputStream();
+      } catch (IOException e) {
+        throw new POIXMLException(e);
       }
     }
+
+    /**
+     * We're read only, so remove isn't supported
+     */
+    @Override
+    public void remove() {
+      throw new IllegalStateException("Not supported");
+    }
+
+    /**
+     * Returns name of the current sheet
+     *
+     * @return name of the current sheet
+     */
+    public String getSheetName() {
+      return sheetName;
+    }
+
+    public PackagePart getSheetPart() {
+      return sheetPart;
+    }
+
+    /**
+     * Returns the comments associated with this sheet,
+     * or null if there aren't any
+     */
+    public Comments getSheetComments(StreamingReader.Builder builder) {
+      PackagePart sheetPkg = getSheetPart();
+
+      // Do we have a comments relationship? (Only ever one if so)
+      try {
+        PackageRelationshipCollection commentsList =
+                sheetPkg.getRelationshipsByType(XSSFRelation.SHEET_COMMENTS.getRelation());
+        if (commentsList.size() == 0 && strictOoxmlChecksNeeded) {
+          commentsList =
+                  sheetPkg.getRelationshipsByType(OoxmlReader.PURL_COMMENTS_RELATIONSHIP_URL);
+        }
+        if (commentsList.size() > 0) {
+          PackageRelationship comments = commentsList.getRelationship(0);
+          PackagePartName commentsName = PackagingURIHelper.createPartName(comments.getTargetURI());
+          PackagePart commentsPart = sheetPkg.getPackage().getPart(commentsName);
+          return parseComments(builder, commentsPart, strictOoxmlChecksNeeded);
+        }
+      } catch (InvalidFormatException | IOException | XMLStreamException e) {
+        LOGGER.warn("issue getting sheet comments", e);
+        return null;
+      }
+      return null;
+    }
+
+    /**
+     * Returns the shapes associated with this sheet,
+     * an empty list or null if there is an exception
+     */
+    public List<XSSFShape> getShapes() {
+      PackagePart sheetPkg = getSheetPart();
+      List<XSSFShape> shapes = new LinkedList<>();
+      try {
+        PackageRelationshipCollection drawingsList = sheetPkg.getRelationshipsByType(XSSFRelation.DRAWINGS.getRelation());
+        if (drawingsList.size() == 0 && strictOoxmlChecksNeeded) {
+          drawingsList = sheetPkg.getRelationshipsByType(PURL_DRAWING_RELATIONSHIP_URL);
+        }
+        for (int i = 0; i < drawingsList.size(); i++) {
+          PackageRelationship drawings = drawingsList.getRelationship(i);
+          PackagePartName drawingsName = PackagingURIHelper.createPartName(drawings.getTargetURI());
+          PackagePart drawingsPart = sheetPkg.getPackage().getPart(drawingsName);
+          if (drawingsPart == null) {
+            //parts can go missing; Excel ignores them silently -- TIKA-2134
+            LOGGER.warn("Missing drawing: {}. Skipping it.", drawingsName);
+            continue;
+          }
+          XSSFDrawing drawing = new XSSFDrawing(drawingsPart);
+          shapes.addAll(drawing.getShapes());
+        }
+      } catch (XmlException | InvalidFormatException | IOException e) {
+        LOGGER.warn("issue getting shapes", e);
+        return null;
+      }
+      return shapes;
+    }
   }
+
+  private static Comments parseComments(final StreamingReader.Builder builder,
+                                        final PackagePart commentsPart,
+                                        final boolean strictOoxmlChecksNeeded)
+          throws IOException, XMLStreamException, InvalidFormatException {
+    if (builder.getCommentsImplementationType() == CommentsImplementationType.TEMP_FILE_BACKED) {
+      try (InputStream is = commentsPart.getInputStream()) {
+        TempFileCommentsTable ct = new TempFileCommentsTable(
+                builder.encryptCommentsTempFile(),
+                builder.fullFormatRichText());
+        try {
+          ct.readFrom(is);
+        } catch (IOException | RuntimeException e) {
+          ct.close();
+          throw e;
+        }
+        return ct;
+      }
+    } else if (builder.getCommentsImplementationType() == CommentsImplementationType.CUSTOM_MAP_BACKED) {
+      try (InputStream is = commentsPart.getInputStream()) {
+        MapBackedCommentsTable ct = new MapBackedCommentsTable(
+                builder.fullFormatRichText());
+        try {
+          ct.readFrom(is);
+        } catch (IOException | RuntimeException e) {
+          ct.close();
+          throw e;
+        }
+        return ct;
+      }
+    } else if (strictOoxmlChecksNeeded) {
+      return OoxmlStrictHelper.getCommentsTable(builder, commentsPart);
+    } else {
+      return new CommentsTable(commentsPart);
+    }
+  }
+
 }
