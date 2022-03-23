@@ -154,8 +154,7 @@ public class OoxmlReader extends XSSFReader {
    * from the Iterator. It's up to you to close the
    * InputStreams when done with each one.
    */
-  @Override
-  public OoxmlSheetIterator getSheetsData() throws IOException {
+  public OoxmlSheetIterator sheetIterator() throws IOException {
     return new OoxmlSheetReader(builder, workbookPart, strictOoxmlChecksNeeded).iterator();
   }
 
@@ -255,7 +254,7 @@ public class OoxmlReader extends XSSFReader {
   /**
    * Iterator over sheet data.
    */
-  public static class OoxmlSheetIterator implements Iterator<InputStream> {
+  public static class OoxmlSheetIterator implements Iterator<SheetData> {
 
     private final StreamingReader.Builder builder;
 
@@ -274,8 +273,7 @@ public class OoxmlReader extends XSSFReader {
     private final boolean strictOoxmlChecksNeeded;
 
     private int sheetRefPosition;
-    private PackagePart sheetPart;
-    private String sheetName;
+    private SheetData sheetData;
 
     OoxmlSheetIterator(final StreamingReader.Builder builder,
                        final Map<String, PackagePart> sheetMap,
@@ -303,16 +301,16 @@ public class OoxmlReader extends XSSFReader {
      * @return input stream of the next sheet in the iteration
      */
     @Override
-    public InputStream next() {
+    public SheetData next() {
       XSSFSheetRef xssfSheetRef = sheetRefList.get(sheetRefPosition++);
 
       try {
-//        if (builder.readShapes()) {
-  //      }
-        sheetName = xssfSheetRef.getName();
-        sheetPart = sheetMap.get(xssfSheetRef.getId());
-        return sheetPart.getInputStream();
-      } catch (IOException e) {
+        final PackagePart sheetPart = sheetMap.get(xssfSheetRef.getId());
+        final List<XSSFShape> shapes = builder.readShapes() ? getShapes(sheetPart) : null;
+        final Comments comments = builder.readComments() ? getSheetComments(builder, sheetPart) : null;
+        sheetData = new SheetData(sheetPart, xssfSheetRef.getName(), comments, shapes);
+        return sheetData;
+      } catch (Exception e) {
         throw new POIXMLException(e);
       }
     }
@@ -326,25 +324,10 @@ public class OoxmlReader extends XSSFReader {
     }
 
     /**
-     * Returns name of the current sheet
-     *
-     * @return name of the current sheet
-     */
-    public String getSheetName() {
-      return sheetName;
-    }
-
-    public PackagePart getSheetPart() {
-      return sheetPart;
-    }
-
-    /**
      * Returns the comments associated with this sheet,
      * or null if there aren't any
      */
-    public Comments getSheetComments(StreamingReader.Builder builder) {
-      PackagePart sheetPkg = getSheetPart();
-
+    private Comments getSheetComments(final StreamingReader.Builder builder, final PackagePart sheetPkg) {
       // Do we have a comments relationship? (Only ever one if so)
       try {
         PackageRelationshipCollection commentsList =
@@ -370,9 +353,8 @@ public class OoxmlReader extends XSSFReader {
      * Returns the shapes associated with this sheet,
      * an empty list or null if there is an exception
      */
-    public List<XSSFShape> getShapes() {
-      PackagePart sheetPkg = getSheetPart();
-      List<XSSFShape> shapes = new LinkedList<>();
+    private List<XSSFShape> getShapes(final PackagePart sheetPkg) {
+      final List<XSSFShape> shapes = new LinkedList<>();
       try {
         PackageRelationshipCollection drawingsList = sheetPkg.getRelationshipsByType(XSSFRelation.DRAWINGS.getRelation());
         if (drawingsList.size() == 0 && strictOoxmlChecksNeeded) {
@@ -400,17 +382,23 @@ public class OoxmlReader extends XSSFReader {
 
   public static class SheetData {
     private final PackagePart sheetPart;
+    private final String sheetName;
     private final Comments comments;
     private final List<XSSFShape> shapes;
 
-    SheetData(final PackagePart sheetPart, final Comments comments, List<XSSFShape> shapes) {
+    SheetData(final PackagePart sheetPart, final String sheetName, final Comments comments, List<XSSFShape> shapes) {
       this.sheetPart = sheetPart;
+      this.sheetName = sheetName;
       this.comments = comments;
       this.shapes = shapes;
     }
 
     public PackagePart getSheetPart() {
       return sheetPart;
+    }
+
+    public String getSheetName() {
+      return sheetName;
     }
 
     public Comments getComments() {
