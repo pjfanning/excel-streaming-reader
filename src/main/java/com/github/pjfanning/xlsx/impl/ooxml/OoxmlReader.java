@@ -157,13 +157,13 @@ public class OoxmlReader extends XSSFReader {
    */
   @Override
   public OoxmlSheetIterator getSheetsData() throws IOException {
-    return new OoxmlSheetIterator(workbookPart);
+    return new OoxmlSheetIterator(workbookPart, strictOoxmlChecksNeeded);
   }
 
   /**
    * Iterator over sheet data.
    */
-  public class OoxmlSheetIterator implements Iterator<InputStream> {
+  public static class OoxmlSheetIterator implements Iterator<InputStream> {
 
     /**
      * Maps relId and the corresponding PackagePart
@@ -182,12 +182,15 @@ public class OoxmlReader extends XSSFReader {
      */
     private final Iterator<XSSFSheetRef> sheetIterator;
 
+    private final boolean strictOoxmlChecksNeeded;
+
     /**
      * Construct a new SheetIterator
      *
      * @param wb package part holding workbook.xml
      */
-    OoxmlSheetIterator(PackagePart wb) throws IOException {
+    OoxmlSheetIterator(final PackagePart wb, final boolean strictOoxmlChecksNeeded) throws IOException {
+      this.strictOoxmlChecksNeeded = strictOoxmlChecksNeeded;
       /*
        * The order of sheets is defined by the order of CTSheet elements in workbook.xml
        */
