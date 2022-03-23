@@ -302,14 +302,15 @@ public class OoxmlReader extends XSSFReader {
      */
     @Override
     public SheetData next() {
-      XSSFSheetRef xssfSheetRef = sheetRefList.get(sheetRefPosition++);
-
       try {
+        XSSFSheetRef xssfSheetRef = sheetRefList.get(sheetRefPosition++);
         final PackagePart sheetPart = sheetMap.get(xssfSheetRef.getId());
         final List<XSSFShape> shapes = builder.readShapes() ? getShapes(sheetPart) : null;
         final Comments comments = builder.readComments() ? getSheetComments(builder, sheetPart) : null;
         sheetData = new SheetData(sheetPart, xssfSheetRef.getName(), comments, shapes);
         return sheetData;
+      } catch (IndexOutOfBoundsException e) {
+        throw new NoSuchElementException("Sheet iterator has no more elements");
       } catch (Exception e) {
         throw new POIXMLException(e);
       }
