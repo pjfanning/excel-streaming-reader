@@ -202,8 +202,8 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     //Some workbooks have multiple references to the same sheet. Need to filter
     //them out before creating the XMLEventReader by keeping track of their URIs.
     //The sheets are listed in order, so we must keep track of insertion order.
-    OoxmlReader.OoxmlSheetIterator iter = reader.sheetIterator();
-    Map<PackagePart, InputStream> sheetStreams = new LinkedHashMap<>();
+    Iterator<OoxmlReader.SheetData> iter = reader.sheetIterator();
+    List<PackagePart> sheetParts = new ArrayList<>();
     Map<PackagePart, Comments> sheetComments = new HashMap<>();
     while(iter.hasNext()) {
       OoxmlReader.SheetData sheetData = iter.next();
@@ -211,8 +211,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
         shapeMap.put(sheetData.getSheetName(), sheetData.getShapes());
       }
       PackagePart part = sheetData.getSheetPart();
-      //TODO see if sheetStreams map can be removed
-      sheetStreams.put(part, part.getInputStream());
+      sheetParts.add(part);
       if (builder.readComments()) {
         sheetComments.put(part, sheetData.getComments());
       }
@@ -220,12 +219,12 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
 
     //Iterate over the loaded streams
     int i = 0;
-    for(Map.Entry<PackagePart, InputStream> entry : sheetStreams.entrySet()) {
-      XMLEventReader parser = getXmlInputFactory().createXMLEventReader(entry.getValue());
+    for(PackagePart part : sheetParts) {
+      XMLEventReader parser = getXmlInputFactory().createXMLEventReader(part.getInputStream());
       sheets.add(new StreamingSheet(
               sheetProperties.get(i++).get("name"),
-              new StreamingSheetReader(this, entry.getKey(), sst, stylesTable,
-                      sheetComments.get(entry.getKey()), parser, use1904Dates, builder.getRowCacheSize())));
+              new StreamingSheetReader(this, part, sst, stylesTable,
+                      sheetComments.get(part), parser, use1904Dates, builder.getRowCacheSize())));
     }
   }
 

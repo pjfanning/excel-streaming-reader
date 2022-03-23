@@ -154,11 +154,11 @@ public class OoxmlReader extends XSSFReader {
    * from the Iterator. It's up to you to close the
    * InputStreams when done with each one.
    */
-  public OoxmlSheetIterator sheetIterator() throws IOException {
+  public Iterator<SheetData> sheetIterator() throws IOException {
     return new OoxmlSheetReader(builder, workbookPart, strictOoxmlChecksNeeded).iterator();
   }
 
-  public static class OoxmlSheetReader {
+  static class OoxmlSheetReader {
 
     public final StreamingReader.Builder builder;
 
@@ -254,7 +254,7 @@ public class OoxmlReader extends XSSFReader {
   /**
    * Iterator over sheet data.
    */
-  public static class OoxmlSheetIterator implements Iterator<SheetData> {
+  static class OoxmlSheetIterator implements Iterator<SheetData> {
 
     private final StreamingReader.Builder builder;
 
