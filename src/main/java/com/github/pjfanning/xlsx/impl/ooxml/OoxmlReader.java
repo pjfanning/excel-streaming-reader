@@ -22,7 +22,6 @@ import com.github.pjfanning.poi.xssf.streaming.TempFileCommentsTable;
 import com.github.pjfanning.poi.xssf.streaming.TempFileSharedStringsTable;
 import com.github.pjfanning.xlsx.CommentsImplementationType;
 import com.github.pjfanning.xlsx.StreamingReader;
-import com.github.pjfanning.xlsx.impl.StreamingWorkbookReader;
 import org.apache.poi.ooxml.POIXMLException;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
@@ -168,20 +167,17 @@ public class OoxmlReader extends XSSFReader {
     private final Map<String, PackagePart> sheetMap;
 
     /**
-     * Current sheet reference
-     */
-    private XSSFSheetRef xssfSheetRef;
-
-    /**
      * List over CTSheet objects, returns sheets in {@code logical} order.
      * We can't rely on the Ooxml4J's relationship iterator because it returns objects in physical order,
      * i.e. as they are stored in the underlying package
      */
-    private final List<XSSFSheetRef> sheetRefList;
-
-    private int sheetRefPosition;
+    private final ArrayList<XSSFSheetRef> sheetRefList;
 
     private final boolean strictOoxmlChecksNeeded;
+
+    private int sheetRefPosition;
+    private PackagePart sheetPart;
+    private String sheetName;
 
     /**
      * Construct a new SheetIterator
@@ -229,12 +225,12 @@ public class OoxmlReader extends XSSFReader {
      */
     @Override
     public InputStream next() {
-      xssfSheetRef = sheetRefList.get(sheetRefPosition++);
+      XSSFSheetRef xssfSheetRef = sheetRefList.get(sheetRefPosition++);
 
-      String sheetId = xssfSheetRef.getId();
       try {
-        PackagePart sheetPkg = sheetMap.get(sheetId);
-        return sheetPkg.getInputStream();
+        sheetName = xssfSheetRef.getName();
+        sheetPart = sheetMap.get(xssfSheetRef.getId());
+        return sheetPart.getInputStream();
       } catch (IOException e) {
         throw new POIXMLException(e);
       }
@@ -246,12 +242,11 @@ public class OoxmlReader extends XSSFReader {
      * @return name of the current sheet
      */
     public String getSheetName() {
-      return xssfSheetRef.getName();
+      return sheetName;
     }
 
     public PackagePart getSheetPart() {
-      String sheetId = xssfSheetRef.getId();
-      return sheetMap.get(sheetId);
+      return sheetPart;
     }
 
     /**
@@ -321,7 +316,7 @@ public class OoxmlReader extends XSSFReader {
       return shapes;
     }
 
-    private List<XSSFSheetRef> createSheetListFromWB(PackagePart wb) throws IOException {
+    private ArrayList<XSSFSheetRef> createSheetListFromWB(PackagePart wb) throws IOException {
 
       XMLSheetRefReader xmlSheetRefReader = new XMLSheetRefReader();
       XMLReader xmlReader;
@@ -337,7 +332,7 @@ public class OoxmlReader extends XSSFReader {
         throw new POIXMLException(e);
       }
 
-      List<XSSFSheetRef> validSheets = new ArrayList<>();
+      final ArrayList<XSSFSheetRef> validSheets = new ArrayList<>();
       for (XSSFSheetRef xssfSheetRef : xmlSheetRefReader.getSheetRefs()) {
         //if there's no relationship id, silently skip the sheet
         String sheetId = xssfSheetRef.getId();
