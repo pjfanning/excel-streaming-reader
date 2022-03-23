@@ -22,7 +22,6 @@ import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.Date1904Support;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.util.XMLHelper;
 import org.apache.poi.xssf.model.*;
 import org.apache.poi.xssf.usermodel.XSSFShape;
 import org.slf4j.Logger;
@@ -32,8 +31,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import java.io.Closeable;
 import java.io.File;
@@ -47,7 +44,6 @@ import static com.github.pjfanning.xlsx.XmlUtils.searchForNodeList;
 
 public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support, AutoCloseable {
   private static final Logger log = LoggerFactory.getLogger(StreamingWorkbookReader.class);
-  private static XMLInputFactory xmlInputFactory;
 
   private final List<StreamingSheet> sheets;
   private final List<Map<String, String>> sheetProperties = new ArrayList<>();
@@ -220,11 +216,10 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     //Iterate over the loaded streams
     int i = 0;
     for(PackagePart part : sheetParts) {
-      XMLEventReader parser = getXmlInputFactory().createXMLEventReader(part.getInputStream());
       sheets.add(new StreamingSheet(
               sheetProperties.get(i++).get("name"),
               new StreamingSheetReader(this, part, sst, stylesTable,
-                      sheetComments.get(part), parser, use1904Dates, builder.getRowCacheSize())));
+                      sheetComments.get(part), use1904Dates, builder.getRowCacheSize())));
     }
   }
 
@@ -299,18 +294,6 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
 
   List<XSSFShape> getShapes(String sheetName) {
     return shapeMap.get(sheetName);
-  }
-
-  private static XMLInputFactory getXmlInputFactory() {
-    if (xmlInputFactory == null) {
-      try {
-        xmlInputFactory = XMLHelper.newXMLInputFactory();
-      } catch (Exception e) {
-        log.error("Issue creating XMLInputFactory", e);
-        throw e;
-      }
-    }
-    return xmlInputFactory;
   }
 
   static class StreamingSheetIterator implements Iterator<Sheet> {
