@@ -64,16 +64,13 @@ public class OoxmlReader extends XSSFReader {
           ));
 
   private final boolean strictOoxmlChecksNeeded;
-  private final StreamingWorkbookReader streamingWorkbookReader;
 
   /**
    * Creates a new XSSFReader, for the given package
    */
   @Internal
-  public OoxmlReader(StreamingWorkbookReader streamingWorkbookReader,
-                     OPCPackage pkg, boolean strictOoxmlChecksNeeded) throws IOException, OpenXML4JException {
+  public OoxmlReader(final OPCPackage pkg, final boolean strictOoxmlChecksNeeded) throws IOException, OpenXML4JException {
     super(pkg, true);
-    this.streamingWorkbookReader = streamingWorkbookReader;
     this.strictOoxmlChecksNeeded = strictOoxmlChecksNeeded;
 
     PackageRelationship coreDocRelationship = this.pkg.getRelationshipsByType(
