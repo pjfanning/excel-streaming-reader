@@ -62,17 +62,17 @@ public class OoxmlReader extends XSSFReader {
                           XSSFRelation.MACRO_SHEET_BIN.getRelation())
           ));
 
+  private final StreamingReader.Builder builder;
   private final boolean strictOoxmlChecksNeeded;
-  private final StreamingWorkbookReader streamingWorkbookReader;
 
   /**
    * Creates a new XSSFReader, for the given package
    */
   @Internal
-  public OoxmlReader(StreamingWorkbookReader streamingWorkbookReader,
+  public OoxmlReader(StreamingReader.Builder builder,
                      OPCPackage pkg, boolean strictOoxmlChecksNeeded) throws IOException, OpenXML4JException {
     super(pkg, true);
-    this.streamingWorkbookReader = streamingWorkbookReader;
+    this.builder = builder;
     this.strictOoxmlChecksNeeded = strictOoxmlChecksNeeded;
 
     PackageRelationship coreDocRelationship = this.pkg.getRelationshipsByType(
@@ -156,10 +156,12 @@ public class OoxmlReader extends XSSFReader {
    */
   @Override
   public OoxmlSheetIterator getSheetsData() throws IOException {
-    return new OoxmlSheetReader(workbookPart, strictOoxmlChecksNeeded).iterator();
+    return new OoxmlSheetReader(builder, workbookPart, strictOoxmlChecksNeeded).iterator();
   }
 
   public static class OoxmlSheetReader {
+
+    public final StreamingReader.Builder builder;
 
     /**
      * Maps relId and the corresponding PackagePart
@@ -180,7 +182,9 @@ public class OoxmlReader extends XSSFReader {
      *
      * @param wb package part holding workbook.xml
      */
-    OoxmlSheetReader(final PackagePart wb, final boolean strictOoxmlChecksNeeded) throws IOException {
+    OoxmlSheetReader(final StreamingReader.Builder builder,
+                     final PackagePart wb, final boolean strictOoxmlChecksNeeded) throws IOException {
+      this.builder = builder;
       this.strictOoxmlChecksNeeded = strictOoxmlChecksNeeded;
       /*
        * The order of sheets is defined by the order of CTSheet elements in workbook.xml
@@ -205,7 +209,7 @@ public class OoxmlReader extends XSSFReader {
     }
 
     public OoxmlSheetIterator iterator() {
-      return new OoxmlSheetIterator(sheetMap, sheetRefList, strictOoxmlChecksNeeded);
+      return new OoxmlSheetIterator(builder, sheetMap, sheetRefList, strictOoxmlChecksNeeded);
     }
 
     private ArrayList<XSSFSheetRef> createSheetListFromWB(PackagePart wb) throws IOException {
@@ -253,6 +257,8 @@ public class OoxmlReader extends XSSFReader {
    */
   public static class OoxmlSheetIterator implements Iterator<InputStream> {
 
+    private final StreamingReader.Builder builder;
+
     /**
      * Maps relId and the corresponding PackagePart
      */
@@ -271,9 +277,11 @@ public class OoxmlReader extends XSSFReader {
     private PackagePart sheetPart;
     private String sheetName;
 
-    OoxmlSheetIterator(final Map<String, PackagePart> sheetMap,
+    OoxmlSheetIterator(final StreamingReader.Builder builder,
+                       final Map<String, PackagePart> sheetMap,
                        final ArrayList<XSSFSheetRef> sheetRefList,
                        final boolean strictOoxmlChecksNeeded) {
+      this.builder = builder;
       this.sheetMap = sheetMap;
       this.sheetRefList = sheetRefList;
       this.strictOoxmlChecksNeeded = strictOoxmlChecksNeeded;
@@ -299,6 +307,8 @@ public class OoxmlReader extends XSSFReader {
       XSSFSheetRef xssfSheetRef = sheetRefList.get(sheetRefPosition++);
 
       try {
+//        if (builder.readShapes()) {
+  //      }
         sheetName = xssfSheetRef.getName();
         sheetPart = sheetMap.get(xssfSheetRef.getId());
         return sheetPart.getInputStream();
@@ -384,6 +394,30 @@ public class OoxmlReader extends XSSFReader {
         LOGGER.warn("issue getting shapes", e);
         return null;
       }
+      return shapes;
+    }
+  }
+
+  public static class SheetData {
+    private final PackagePart sheetPart;
+    private final Comments comments;
+    private final List<XSSFShape> shapes;
+
+    SheetData(final PackagePart sheetPart, final Comments comments, List<XSSFShape> shapes) {
+      this.sheetPart = sheetPart;
+      this.comments = comments;
+      this.shapes = shapes;
+    }
+
+    public PackagePart getSheetPart() {
+      return sheetPart;
+    }
+
+    public Comments getComments() {
+      return comments;
+    }
+
+    public List<XSSFShape> getShapes() {
       return shapes;
     }
   }
