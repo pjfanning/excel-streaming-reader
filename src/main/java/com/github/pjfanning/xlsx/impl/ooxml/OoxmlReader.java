@@ -176,11 +176,13 @@ public class OoxmlReader extends XSSFReader {
     private XSSFSheetRef xssfSheetRef;
 
     /**
-     * Iterator over CTSheet objects, returns sheets in {@code logical} order.
+     * List over CTSheet objects, returns sheets in {@code logical} order.
      * We can't rely on the Ooxml4J's relationship iterator because it returns objects in physical order,
      * i.e. as they are stored in the underlying package
      */
-    private final Iterator<XSSFSheetRef> sheetIterator;
+    private final List<XSSFSheetRef> sheetRefList;
+
+    private int sheetRefPosition;
 
     private final boolean strictOoxmlChecksNeeded;
 
@@ -207,8 +209,7 @@ public class OoxmlReader extends XSSFReader {
           }
         }
         //step 2. Read array of CTSheet elements, wrap it in a LinkedList
-        //and construct an iterator
-        sheetIterator = createSheetIteratorFromWB(wb);
+        sheetRefList = createSheetListFromWB(wb);
       } catch (InvalidFormatException e) {
         throw new POIXMLException(e);
       }
@@ -221,7 +222,7 @@ public class OoxmlReader extends XSSFReader {
      */
     @Override
     public boolean hasNext() {
-      return sheetIterator.hasNext();
+      return sheetRefPosition < sheetRefList.size();
     }
 
     /**
@@ -231,7 +232,7 @@ public class OoxmlReader extends XSSFReader {
      */
     @Override
     public InputStream next() {
-      xssfSheetRef = sheetIterator.next();
+      xssfSheetRef = sheetRefList.get(sheetRefPosition++);
 
       String sheetId = xssfSheetRef.getId();
       try {
@@ -323,7 +324,7 @@ public class OoxmlReader extends XSSFReader {
       return shapes;
     }
 
-    private Iterator<XSSFSheetRef> createSheetIteratorFromWB(PackagePart wb) throws IOException {
+    private List<XSSFSheetRef> createSheetListFromWB(PackagePart wb) throws IOException {
 
       XMLSheetRefReader xmlSheetRefReader = new XMLSheetRefReader();
       XMLReader xmlReader;
@@ -347,7 +348,7 @@ public class OoxmlReader extends XSSFReader {
           validSheets.add(xssfSheetRef);
         }
       }
-      return validSheets.iterator();
+      return validSheets;
     }
 
     /**
