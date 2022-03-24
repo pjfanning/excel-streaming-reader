@@ -208,8 +208,11 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     if (sheets != null && sheets.size() > idx) {
       return sheets.get(idx);
     } else {
-      final StreamingSheet sheet = createSheet(idx);
-      sheetMap.put(idx, sheet);
+      StreamingSheet sheet = sheetMap.get(idx);
+      if (sheet == null) {
+        sheet = createSheet(idx);
+        sheetMap.put(idx, sheet);
+      }
       return sheet;
     }
   }
