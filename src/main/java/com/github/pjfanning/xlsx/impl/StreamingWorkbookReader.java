@@ -46,6 +46,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
   private static final Logger log = LoggerFactory.getLogger(StreamingWorkbookReader.class);
 
   private List<StreamingSheet> sheets;
+  private final Map<Integer, StreamingSheet> sheetMap = new HashMap<>();
   private final List<Map<String, String>> sheetProperties = new ArrayList<>();
   private final Map<String, List<XSSFShape>> shapeMap = new HashMap<>();
   private final Builder builder;
@@ -198,52 +199,39 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     //Some workbooks have multiple references to the same sheet. Need to filter
     //them out before creating the XMLEventReader by keeping track of their URIs.
     //The sheets are listed in order, so we must keep track of insertion order.
-    Iterator<OoxmlReader.SheetData> iter = ooxmlReader.sheetIterator();
-    List<PackagePart> sheetParts = new ArrayList<>();
-    Map<PackagePart, Comments> sheetComments = new HashMap<>();
-    while(iter.hasNext()) {
-      OoxmlReader.SheetData sheetData = iter.next();
-      if (builder.readShapes()) {
-        shapeMap.put(sheetData.getSheetName(), sheetData.getShapes());
-      }
-      PackagePart part = sheetData.getSheetPart();
-      sheetParts.add(part);
-      if (builder.readComments()) {
-        sheetComments.put(part, sheetData.getComments());
-      }
+    final int numSheets = ooxmlReader.getNumberOfSheets();
+    for(int i = 0; i < numSheets; i++) {
+      final StreamingSheet maybeSheet = sheetMap.get(i);
+      sheetList.add(maybeSheet == null ? createSheet(i) : maybeSheet);
     }
-
-    //Iterate over the loaded streams
-    int i = 0;
-    for(PackagePart part : sheetParts) {
-      sheetList.add(new StreamingSheet(
-              sheetProperties.get(i++).get("name"),
-              new StreamingSheetReader(this, part, sst, styles,
-                      sheetComments.get(part), use1904Dates, builder.getRowCacheSize())));
-    }
+    sheetMap.clear();
     return sheetList;
   }
 
-  //TODO need to add this to sheetList or some other shared structure that replaces sheetList
   public StreamingSheet getSheetAt(final int idx) throws IOException, XMLStreamException {
     if (sheets != null && sheets.size() > idx) {
       return sheets.get(idx);
     } else {
-      OoxmlReader.SheetData sheetData = ooxmlReader.getSheetDataAt(idx);
-      Map<PackagePart, Comments> sheetComments = new HashMap<>();
-      if (builder.readShapes()) {
-        shapeMap.put(sheetData.getSheetName(), sheetData.getShapes());
-      }
-      PackagePart part = sheetData.getSheetPart();
-      if (builder.readComments()) {
-        sheetComments.put(part, sheetData.getComments());
-      }
+      final StreamingSheet sheet = createSheet(idx);
+      sheetMap.put(idx, sheet);
+      return sheet;
+    }
+  }
 
-      return new StreamingSheet(
+  private StreamingSheet createSheet(final int idx) throws IOException, XMLStreamException {
+    final OoxmlReader.SheetData sheetData = ooxmlReader.getSheetDataAt(idx);
+    final Map<PackagePart, Comments> sheetComments = new HashMap<>();
+    if (builder.readShapes()) {
+      shapeMap.put(sheetData.getSheetName(), sheetData.getShapes());
+    }
+    final PackagePart part = sheetData.getSheetPart();
+    if (builder.readComments()) {
+      sheetComments.put(part, sheetData.getComments());
+    }
+    return new StreamingSheet(
               sheetProperties.get(idx).get("name"),
               new StreamingSheetReader(this, part, sst, styles,
                       sheetComments.get(part), use1904Dates, builder.getRowCacheSize()));
-    }
   }
 
   private void lookupSheetNames(Document workbookDoc) {

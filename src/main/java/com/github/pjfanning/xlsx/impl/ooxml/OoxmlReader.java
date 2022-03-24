@@ -165,6 +165,10 @@ public class OoxmlReader extends XSSFReader {
     return ooxmlSheetReader.getSheetData(idx);
   }
 
+  public int getNumberOfSheets() {
+    return ooxmlSheetReader.size();
+  }
+
   static class OoxmlSheetReader {
 
     public final StreamingReader.Builder builder;
@@ -214,6 +218,10 @@ public class OoxmlReader extends XSSFReader {
       } catch (InvalidFormatException e) {
         throw new POIXMLException(e);
       }
+    }
+
+    int size() {
+      return sheetRefList.size();
     }
 
     OoxmlSheetIterator iterator() {
