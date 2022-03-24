@@ -224,6 +224,24 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     return sheetList;
   }
 
+  //TODO need to add this to sheetList or some other shared structure that replaces sheetList
+  public StreamingSheet getSheetAt(final int idx) throws IOException, XMLStreamException {
+    OoxmlReader.SheetData sheetData = ooxmlReader.getSheetDataAt(idx);
+    Map<PackagePart, Comments> sheetComments = new HashMap<>();
+    if (builder.readShapes()) {
+      shapeMap.put(sheetData.getSheetName(), sheetData.getShapes());
+    }
+    PackagePart part = sheetData.getSheetPart();
+    if (builder.readComments()) {
+      sheetComments.put(part, sheetData.getComments());
+    }
+
+    return new StreamingSheet(
+              sheetProperties.get(idx).get("name"),
+              new StreamingSheetReader(this, part, sst, styles,
+                      sheetComments.get(part), use1904Dates, builder.getRowCacheSize()));
+  }
+
   private void lookupSheetNames(Document workbookDoc) {
     sheetProperties.clear();
     NodeList nl = searchForNodeList(workbookDoc, "/ss:workbook/ss:sheets/ss:sheet");

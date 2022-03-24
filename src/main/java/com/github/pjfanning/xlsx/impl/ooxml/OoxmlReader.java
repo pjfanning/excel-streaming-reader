@@ -161,6 +161,10 @@ public class OoxmlReader extends XSSFReader {
     return ooxmlSheetReader.getSheetData(name);
   }
 
+  public SheetData getSheetDataAt(final int idx) {
+    return ooxmlSheetReader.getSheetData(idx);
+  }
+
   static class OoxmlSheetReader {
 
     public final StreamingReader.Builder builder;
@@ -212,18 +216,28 @@ public class OoxmlReader extends XSSFReader {
       }
     }
 
-    public OoxmlSheetIterator iterator() {
+    OoxmlSheetIterator iterator() {
       return new OoxmlSheetIterator(this, sheetRefList);
     }
 
-    //TODO return proper error if name does not match
-    public SheetData getSheetData(final String name) {
+    SheetData getSheetData(final String name) {
       XSSFSheetRef matchedSheetRef = null;
       for (XSSFSheetRef sheetRef : sheetRefList) {
         if (name.equalsIgnoreCase(sheetRef.getName())) {
           matchedSheetRef = sheetRef;
           break;
         }
+      }
+      if (matchedSheetRef == null) {
+        throw new NoSuchElementException("Failed to find sheet " + name);
+      }
+      return getSheetData(matchedSheetRef);
+    }
+
+    SheetData getSheetData(final int idx) {
+      XSSFSheetRef matchedSheetRef = sheetRefList.get(idx);
+      if (matchedSheetRef == null) {
+        throw new NoSuchElementException("Failed to find sheet with id " + idx);
       }
       return getSheetData(matchedSheetRef);
     }
