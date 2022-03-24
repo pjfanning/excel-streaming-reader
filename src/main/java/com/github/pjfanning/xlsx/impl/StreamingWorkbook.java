@@ -94,11 +94,7 @@ public class StreamingWorkbook implements Workbook, Date1904Support, AutoCloseab
    */
   @Override
   public int getNumberOfSheets() {
-    try {
-      return reader.getSheets().size();
-    } catch (XMLStreamException|IOException e) {
-      throw new ReadException(e);
-    }
+    return reader.getSheetProperties().size();
   }
 
   /**

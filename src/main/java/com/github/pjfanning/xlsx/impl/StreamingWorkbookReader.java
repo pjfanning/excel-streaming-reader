@@ -147,6 +147,11 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     if (strictFormat) {
       log.info("file is in strict OOXML format");
     }
+
+    final Document workbookDoc = readDocument(ooxmlReader.getWorkbookData());
+    use1904Dates = WorkbookUtil.use1904Dates(workbookDoc);
+    lookupSheetNames(workbookDoc);
+
     if (builder.getSharedStringsImplementationType() == SharedStringsImplementationType.TEMP_FILE_BACKED) {
       log.info("Created sst cache file");
       sst = new TempFileSharedStringsTable(pkg, builder.encryptSstTempFile(), builder.fullFormatRichText());
@@ -176,10 +181,6 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
         styles = ooxmlReader.getStylesTable();
       }
     }
-
-    final Document workbookDoc = readDocument(ooxmlReader.getWorkbookData());
-    use1904Dates = WorkbookUtil.use1904Dates(workbookDoc);
-    lookupSheetNames(workbookDoc);
   }
 
   void setWorkbook(StreamingWorkbook workbook) {
