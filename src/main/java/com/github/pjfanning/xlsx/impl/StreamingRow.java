@@ -12,6 +12,7 @@ public class StreamingRow implements Row {
   private float height = -1.0f;
   private TreeMap<Integer, Cell> cellMap = new TreeMap<>();
   private StreamingSheetReader streamingSheetReader;
+  private CellStyle cellStyle;
 
   public StreamingRow(Sheet sheet, int rowIndex, boolean isHidden) {
     this.sheet = sheet;
@@ -25,6 +26,10 @@ public class StreamingRow implements Row {
 
   void setHeight(float height) {
     this.height = height;
+  }
+
+  void setCellStyle(final CellStyle cellStyle) {
+    this.cellStyle = cellStyle;
   }
 
   public Map<Integer, Cell> getCellMap() {
@@ -151,6 +156,17 @@ public class StreamingRow implements Row {
     return cell;
   }
 
+
+  @Override
+  public boolean isFormatted() {
+    return cellStyle != null;
+  }
+
+  @Override
+  public CellStyle getRowStyle() {
+    return cellStyle;
+  }
+
   /* Not supported */
 
   /**
@@ -207,22 +223,6 @@ public class StreamingRow implements Row {
   @Override
   public void setHeightInPoints(float height) {
     throw new NotSupportedException("update operations are not supported");
-  }
-
-  /**
-   * Not supported
-   */
-  @Override
-  public boolean isFormatted() {
-    throw new NotSupportedException();
-  }
-
-  /**
-   * Not supported
-   */
-  @Override
-  public CellStyle getRowStyle() {
-    throw new NotSupportedException();
   }
 
   /**
