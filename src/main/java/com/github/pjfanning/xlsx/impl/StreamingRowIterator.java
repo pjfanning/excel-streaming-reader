@@ -167,7 +167,7 @@ class StreamingRowIterator implements CloseableIterator<Row> {
             String indexStr = styleAttr.getValue();
             try {
               int index = Integer.parseInt(indexStr);
-              currentRow.setCellStyle(stylesTable.getStyleAt(index));
+              currentRow.setRowStyle(stylesTable.getStyleAt(index));
             } catch (NumberFormatException nfe) {
               LOG.warn("Ignoring invalid row style index {}", indexStr);
             }
