@@ -3,10 +3,13 @@ package com.github.pjfanning.xlsx;
 import com.github.pjfanning.xlsx.exceptions.MissingSheetException;
 import com.github.pjfanning.xlsx.impl.StreamingSheet;
 import com.github.pjfanning.xlsx.impl.StreamingWorkbook;
+import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.openxml4j.opc.PackageAccess;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellAddress;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -1212,30 +1215,48 @@ public class StreamingReaderTest {
 
   @Test
   public void testIteratingRowsOnSheetTwice() throws Exception {
-    Map<String, SharedFormula> sharedFormulaMap = null;
     try (
             Workbook wb = StreamingReader.builder()
                     .setReadSharedFormulas(true)
                     .open(new File("src/test/resources/bug65464.xlsx"))
     ) {
-      Sheet sheet = wb.getSheet("SheetWithSharedFormula");
+      StreamingSheet sheet = (StreamingSheet) wb.getSheet("SheetWithSharedFormula");
       for (Row row : sheet) {
         //iterate through rows to ensure all state is loaded for the sheet
       }
-      sharedFormulaMap = ((StreamingSheet)sheet).getSharedFormulaMap();
-    }
-    assertEquals(1, sharedFormulaMap.size());
+      assertEquals(1, sheet.getSharedFormulaMap().size());
 
-    //the only way to do a 2nd pass on the row data is to create a new workbook and iterate over its sheet
+      Cell v15 = null;
+      Cell v16 = null;
+      Cell v17 = null;
+      for (Row row : sheet) {
+        if (row.getRowNum() == 14) {
+          v15 = row.getCell(21);
+        } else if (row.getRowNum() == 15) {
+          v16 = row.getCell(21);
+        } else if (row.getRowNum() == 16) {
+          v17 = row.getCell(21);
+        }
+      }
+      assertNotNull("v15 found", v15);
+      assertNotNull("v16 found", v16);
+      assertNotNull("v17 found", v17);
+      assertEquals("U15/R15", v15.getCellFormula());
+      assertEquals("U16/R16", v16.getCellFormula());
+      assertEquals("U17/R17", v17.getCellFormula());
+    }
+  }
+
+  @Test
+  public void testPresetSharedFormulas() throws Exception {
     try (
             Workbook wb = StreamingReader.builder()
                     .setReadSharedFormulas(true)
                     .open(new File("src/test/resources/bug65464.xlsx"))
     ) {
-      StreamingSheet sheet = (StreamingSheet)wb.getSheet("SheetWithSharedFormula");
-      sharedFormulaMap.entrySet().forEach( entry ->
-              sheet.addSharedFormula(entry.getKey(), entry.getValue())
-      );
+      StreamingSheet sheet = (StreamingSheet) wb.getSheet("SheetWithSharedFormula");
+      sheet.addSharedFormula("0", new SharedFormula(new CellAddress("V15"), "U15/R15"));
+
       Cell v15 = null;
       Cell v16 = null;
       Cell v17 = null;
@@ -1268,7 +1289,7 @@ public class StreamingReaderTest {
   }
 
   @Test
-  public void testReadSharedFormulasStrictFomat() throws Exception {
+  public void testReadSharedFormulasStrictFormat() throws Exception {
     try (
             InputStream inputStream = new FileInputStream("src/test/resources/sharedformula-strict-format.xlsx");
             Workbook wb = StreamingReader.builder().setReadSharedFormulas(true)
@@ -1369,8 +1390,9 @@ public class StreamingReaderTest {
       assertEquals(expectedRuns, comment31.getString().numFormattingRuns());
       assertEquals("Shaun Kalley", comment00.getAuthor());
 
-      Row firstRow = sheet.rowIterator().next();
-      Row secondRow = sheet.rowIterator().next();
+      Iterator<Row> rowIterator = sheet.rowIterator();
+      Row firstRow = rowIterator.next();
+      Row secondRow = rowIterator.next();
       Cell cellA2 = secondRow.cellIterator().next();
       Comment cellA2Comment = cellA2.getCellComment();
       assertEquals(comment10.toString(), cellA2Comment.toString());
@@ -1458,6 +1480,50 @@ public class StreamingReaderTest {
       RichTextString richTextString = sheet2.getCellComment(new CellAddress("A1")).getString();
       assertEquals("date", richTextString.getString());
       assertEquals(0, richTextString.numFormattingRuns());
+    }
+  }
+
+  @Test
+  public void copyToSXSSF() throws Exception {
+    try (
+            InputStream inputStream = new FileInputStream("src/test/resources/stream_reader_test.xlsx");
+            UnsynchronizedByteArrayOutputStream bos = new UnsynchronizedByteArrayOutputStream();
+    ) {
+      SXSSFWorkbook wbOutput = CopyToSXSSFUtil.copyToSXSSF(inputStream);
+      try {
+        wbOutput.write(bos);
+      } finally {
+        wbOutput.close();
+        wbOutput.dispose();
+      }
+
+      try (XSSFWorkbook xssfWorkbook = new XSSFWorkbook(bos.toInputStream())) {
+        DataFormatter formatter = new DataFormatter();
+
+        Sheet sheet = xssfWorkbook.getSheet("Sheet0");
+        Iterator<Row> rowIterator = sheet.rowIterator();
+
+        assertTrue(rowIterator.hasNext());
+        // header
+        Row currentRow = rowIterator.next();
+        assertTrue(rowIterator.hasNext());
+        currentRow = rowIterator.next();
+
+        List<String> expected = Arrays.asList(new String[]{
+                "10002", "John", "Doe", "06/09/1976", "1", "NORMAL", "NORMAL", "CUSTOMER", "Customer",
+                "NOT_CONFIRMED", "94", "2", "FALSE()"
+        });
+
+        for (int i = 0; i < currentRow.getLastCellNum(); i++) {
+          Cell cell = currentRow.getCell(i, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+
+          String value = formatter.formatCellValue(cell);
+
+          assertEquals(expected.get(i), value);
+        }
+
+        assertEquals("1976-09-06T00:00", currentRow.getCell(3).getLocalDateTimeCellValue().toString());
+      }
     }
   }
 

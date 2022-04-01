@@ -13,6 +13,7 @@ public class StreamingRow implements Row {
   private CellStyle cellStyle;
   private TreeMap<Integer, Cell> cellMap = new TreeMap<>();
   private StreamingSheetReader streamingSheetReader;
+  private CellStyle rowStyle;
 
   public StreamingRow(Sheet sheet, int rowIndex, boolean isHidden) {
     this.sheet = sheet;
@@ -151,6 +152,23 @@ public class StreamingRow implements Row {
     }
     return cell;
   }
+
+
+  @Override
+  public boolean isFormatted() {
+    return rowStyle != null;
+  }
+
+  @Override
+  public CellStyle getRowStyle() {
+    return rowStyle;
+  }
+
+  @Override
+  public void setRowStyle(CellStyle style) {
+    this.rowStyle = style;
+  }
+
 
   /* Not supported */
 

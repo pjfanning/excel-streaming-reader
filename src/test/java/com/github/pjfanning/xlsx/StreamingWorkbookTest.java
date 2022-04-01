@@ -136,9 +136,11 @@ public class StreamingWorkbookTest {
       assertTrue("Column 1 should be hidden", sheet.isColumnHidden(1));
       assertFalse("Column 2 should not be hidden", sheet.isColumnHidden(2));
 
-      assertFalse("Row 0 should not be hidden", sheet.rowIterator().next().getZeroHeight());
-      assertTrue("Row 1 should be hidden", sheet.rowIterator().next().getZeroHeight());
-      assertFalse("Row 2 should not be hidden", sheet.rowIterator().next().getZeroHeight());
+      Iterator<Row> rowIterator = sheet.rowIterator();
+
+      assertFalse("Row 0 should not be hidden", rowIterator.next().getZeroHeight());
+      assertTrue("Row 1 should be hidden", rowIterator.next().getZeroHeight());
+      assertFalse("Row 2 should not be hidden", rowIterator.next().getZeroHeight());
     }
   }
 
@@ -406,7 +408,7 @@ public class StreamingWorkbookTest {
     });
   }
 
-  @Test(expected = ParseException.class)
+  @Test(expected = OpenException.class)
   public void testEntityExpansionWithReadOnlySst() throws Exception {
     ExploitServer.withServer(s -> fail("Should not have made request"), () -> {
       try (
@@ -472,8 +474,7 @@ public class StreamingWorkbookTest {
       iter2.forEachRemaining(sheetList2::add);
       assertEquals(1, sheetList2.size());
       assertEquals(sheetList1.get(0).hashCode(), sheetList2.get(0).hashCode());
-      //the next line fails because current code does not let you iterate the rows on a sheet more than once
-      //validateFormatsSheet(sheetList2.get(0));
+      validateFormatsSheet(sheetList2.get(0));
     }
   }
 
@@ -491,8 +492,32 @@ public class StreamingWorkbookTest {
       iter2.forEachRemaining(sheetList2::add);
       assertEquals(1, sheetList2.size());
       assertEquals(sheetList1.get(0).hashCode(), sheetList2.get(0).hashCode());
-      //the next line fails because current code does not let you iterate the rows on a sheet more than once
-      //validateFormatsSheet(sheetList2.get(0));
+      validateFormatsSheet(sheetList2.get(0));
+    }
+  }
+
+  @Test
+  public void testWithGetSheetAtAndThenIterator() throws IOException {
+    try(Workbook workbook = openWorkbook("formats.xlsx")) {
+      Sheet sheet = workbook.getSheetAt(0);
+      validateFormatsSheet(sheet);
+      Iterator<Sheet> iter1 = workbook.sheetIterator();
+      List<Sheet> sheetList1 = new ArrayList<>();
+      iter1.forEachRemaining(sheetList1::add);
+      assertEquals(1, sheetList1.size());
+      assertEquals(sheet.hashCode(), sheetList1.get(0).hashCode());
+      validateFormatsSheet(sheetList1.get(0));
+    }
+  }
+
+  @Test
+  public void testNoSuchElementExceptionOnSheetIterator() throws IOException {
+    try (Workbook workbook = openWorkbook("formats.xlsx")) {
+      Iterator<Sheet> iter1 = workbook.sheetIterator();
+      assertTrue(iter1.hasNext());
+      assertNotNull(iter1.next());
+      assertFalse(iter1.hasNext());
+      assertThrows(NoSuchElementException.class, () -> iter1.next());
     }
   }
 
@@ -639,12 +664,14 @@ public class StreamingWorkbookTest {
       xssfSheet2.createRow(0).createCell(0).setCellValue(sheetName2);
       xssfWorkbook.write(bos);
       try (Workbook wb = StreamingReader.builder().open(bos.toInputStream())) {
+        Sheet sheet1 = wb.getSheetAt(0);
         Sheet sheet1a = wb.getSheet(sheetName1);
         Sheet sheet1b = wb.getSheet(sheetName1.toLowerCase(Locale.ROOT));
         Sheet sheet1c = wb.getSheet(sheetName1.toUpperCase(Locale.ROOT));
-        assertNotNull(sheet1a);
-        assertEquals(sheet1a, sheet1b);
-        assertEquals(sheet1a, sheet1c);
+        assertNotNull(sheet1);
+        assertEquals(sheet1, sheet1a);
+        assertEquals(sheet1, sheet1b);
+        assertEquals(sheet1, sheet1c);
         assertEquals(sheetName1, sheet1a.getSheetName());
         assertEquals(sheetName1, sheet1a.rowIterator().next().getCell(0).getStringCellValue());
         assertEquals(0, wb.getSheetIndex(sheet1c));
@@ -652,13 +679,15 @@ public class StreamingWorkbookTest {
         assertEquals(0, wb.getSheetIndex(sheetName1.toLowerCase(Locale.ROOT)));
         assertEquals(0, wb.getSheetIndex(sheetName1.toUpperCase(Locale.ROOT)));
 
+        Sheet sheet2 = wb.getSheetAt(1);
         Sheet sheet2a = wb.getSheet(sheetName2);
         Sheet sheet2b = wb.getSheet(sheetName2.toLowerCase(Locale.ROOT));
         Sheet sheet2c = wb.getSheet(sheetName2.toUpperCase(Locale.ROOT));
-        assertNotNull(sheet2a);
+        assertNotNull(sheet2);
         assertNotEquals(sheet1a, sheet2a);
-        assertEquals(sheet2a, sheet2b);
-        assertEquals(sheet2a, sheet2c);
+        assertEquals(sheet2, sheet2a);
+        assertEquals(sheet2, sheet2b);
+        assertEquals(sheet2, sheet2c);
         assertEquals(sheetName2, sheet2a.getSheetName());
         assertEquals(sheetName2, sheet2a.rowIterator().next().getCell(0).getStringCellValue());
         assertEquals(1, wb.getSheetIndex(sheet2c));
@@ -732,7 +761,67 @@ public class StreamingWorkbookTest {
     }
   }
 
-  private void validateFormatsSheet(Sheet sheet) {
+  @Test
+  public void testSheetReadWrongOrder() throws Exception {
+    try (
+            XSSFWorkbook xssfWorkbook = new XSSFWorkbook();
+            UnsynchronizedByteArrayOutputStream bos = new UnsynchronizedByteArrayOutputStream()
+    ) {
+      Sheet sheet1 = xssfWorkbook.createSheet("s1");
+      Sheet sheet2 = xssfWorkbook.createSheet("s2");
+      Random rnd = new Random();
+      final int rowCount1 = rnd.nextInt(20);
+      final int rowCount2 = rnd.nextInt(20);
+      final AtomicInteger total1 = new AtomicInteger();
+      final AtomicInteger total2 = new AtomicInteger();
+      for (int i = 0; i < rowCount1; i++) {
+        int value = rnd.nextInt(1000);
+        total1.addAndGet(value);
+        sheet1.createRow(i).createCell(0).setCellValue(value);
+      }
+      for (int i = 0; i < rowCount2; i++) {
+        int value = rnd.nextInt(1000);
+        total2.addAndGet(value);
+        sheet2.createRow(i).createCell(0).setCellValue(value);
+      }
+      xssfWorkbook.write(bos);
+
+      try (Workbook wb = StreamingReader.builder().open(bos.toInputStream())) {
+        assertEquals(2, wb.getNumberOfSheets());
+        final Sheet wbSheet2 = wb.getSheet("s2");
+        assertEquals("s2", wbSheet2.getSheetName());
+        final Sheet wbSheet1 = wb.getSheet("s1");
+        assertEquals("s1", wbSheet1.getSheetName());
+        Iterator<Sheet> siter = wb.sheetIterator();
+        ArrayList<Sheet> sheets = new ArrayList<>();
+        siter.forEachRemaining(sheets::add);
+        assertEquals(2, sheets.size());
+        assertEquals("s1", sheets.get(0).getSheetName());
+        assertEquals("s2", sheets.get(1).getSheetName());
+        assertEquals(wbSheet1.hashCode(), sheets.get(0).hashCode());
+        assertEquals(wbSheet2.hashCode(), sheets.get(1).hashCode());
+
+        int readRowCount1 = 0;
+        double readTotal1 = 0.0;
+        for (Row row : wbSheet1) {
+          readRowCount1++;
+          readTotal1 += row.getCell(0).getNumericCellValue();
+        }
+        assertEquals(rowCount1, readRowCount1);
+        assertEquals(total1.get(), (int)readTotal1);
+        int readRowCount2 = 0;
+        double readTotal2 = 0.0;
+        for (Row row : wbSheet2) {
+          readRowCount2++;
+          readTotal2 += row.getCell(0).getNumericCellValue();
+        }
+        assertEquals(rowCount2, readRowCount2);
+        assertEquals(total2.get(), (int)readTotal2);
+      }
+    }
+  }
+
+  private void validateFormatsSheet(Sheet sheet) throws IOException {
     Iterator<Row> rowIterator = sheet.rowIterator();
 
     Cell A1 = getCellFromNextRow(rowIterator, 0);
@@ -742,6 +831,9 @@ public class StreamingWorkbookTest {
     expectFormattedContent(A1, "1234.6");
     expectFormattedContent(A2, "1918-11-11");
     expectFormattedContent(A3, "50%");
+
+    assertTrue(rowIterator instanceof Closeable);
+    ((Closeable)rowIterator).close();
   }
 
   private static class ExploitServer extends NanoHTTPD implements AutoCloseable {

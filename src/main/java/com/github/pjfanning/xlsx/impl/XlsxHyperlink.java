@@ -1,19 +1,22 @@
 package com.github.pjfanning.xlsx.impl;
 
 import com.github.pjfanning.xlsx.impl.ooxml.HyperlinkData;
+import org.apache.poi.common.Duplicatable;
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.openxml4j.opc.PackageRelationship;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.Hyperlink;
 import org.apache.poi.ss.util.AreaReference;
 import org.apache.poi.ss.util.CellReference;
+import org.apache.poi.xssf.usermodel.XSSFHyperlink;
 
 import java.net.URI;
+import java.util.Objects;
 
 /**
  * A read-only implementation of Hyperlink
  */
-public class XlsxHyperlink implements Hyperlink {
+public class XlsxHyperlink implements Hyperlink, Duplicatable {
   private final HyperlinkType _type;
   private final PackageRelationship _externalRel;
   private final HyperlinkData hyperlinkData; //contains a reference to the cell where the hyperlink is anchored, getRef()
@@ -230,4 +233,41 @@ public class XlsxHyperlink implements Hyperlink {
     throw new UnsupportedOperationException("update operations are not supported");
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    XlsxHyperlink that = (XlsxHyperlink) o;
+    return _type == that._type && Objects.equals(_externalRel, that._externalRel) && Objects.equals(hyperlinkData, that.hyperlinkData) && Objects.equals(_location, that._location);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(_type, _externalRel, hyperlinkData, _location);
+  }
+
+  /**
+   * @return a copy of this XlsxHyperlink instance
+   * @since 4.0.0
+   */
+  @Override
+  public Duplicatable copy() {
+    return new XlsxHyperlink(hyperlinkData, _externalRel);
+  }
+
+  /**
+   * @return a copy of this XlsxHyperlink instance but as a XSSFHyperlink
+   * @since 4.0.0
+   */
+  public XSSFHyperlink createXSSFHyperlink(){
+    XSSFHyperlink xssfHyperlink = new XSSFHyperlink(getType()) {};
+    xssfHyperlink.setLocation(getLocation());
+    xssfHyperlink.setFirstRow(getFirstRow());
+    xssfHyperlink.setLastRow(getLastRow());
+    xssfHyperlink.setFirstColumn(getFirstColumn());
+    xssfHyperlink.setLastColumn(getLastColumn());
+    xssfHyperlink.setLabel(getLabel());
+    xssfHyperlink.setTooltip(getTooltip());
+    return xssfHyperlink;
+  }
 }

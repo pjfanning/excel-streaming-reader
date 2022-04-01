@@ -22,7 +22,6 @@ import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.Date1904Support;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.util.XMLHelper;
 import org.apache.poi.xssf.model.*;
 import org.apache.poi.xssf.usermodel.XSSFShape;
 import org.slf4j.Logger;
@@ -32,8 +31,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import java.io.Closeable;
 import java.io.File;
@@ -47,21 +44,23 @@ import static com.github.pjfanning.xlsx.XmlUtils.searchForNodeList;
 
 public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support, AutoCloseable {
   private static final Logger log = LoggerFactory.getLogger(StreamingWorkbookReader.class);
-  private static XMLInputFactory xmlInputFactory;
 
-  private final List<StreamingSheet> sheets;
+  private List<StreamingSheet> sheets;
+  private final Map<Integer, StreamingSheet> sheetMap = new HashMap<>();
   private final List<Map<String, String>> sheetProperties = new ArrayList<>();
   private final Map<String, List<XSSFShape>> shapeMap = new HashMap<>();
   private final Builder builder;
   private File tmp;
   private OPCPackage pkg;
   private SharedStrings sst;
+  private StylesTable styles;
   private boolean use1904Dates = false;
+  private boolean strictFormat = false;
   private StreamingWorkbook workbook = null;
   private POIXMLProperties.CoreProperties coreProperties = null;
+  private OoxmlReader ooxmlReader;
 
   public StreamingWorkbookReader(Builder builder) {
-    this.sheets = new ArrayList<>();
     this.builder = builder;
   }
 
@@ -144,11 +143,16 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
   }
 
   private void loadPackage(OPCPackage pkg) throws IOException, OpenXML4JException, SAXException, XMLStreamException {
-    boolean strictFormat = pkg.isStrictOoxmlFormat();
-    OoxmlReader reader = new OoxmlReader(this, pkg, strictFormat);
+    strictFormat = pkg.isStrictOoxmlFormat();
+    ooxmlReader = new OoxmlReader(builder, pkg, strictFormat);
     if (strictFormat) {
       log.info("file is in strict OOXML format");
     }
+
+    final Document workbookDoc = readDocument(ooxmlReader.getWorkbookData());
+    use1904Dates = WorkbookUtil.use1904Dates(workbookDoc);
+    lookupSheetNames(workbookDoc);
+
     if (builder.getSharedStringsImplementationType() == SharedStringsImplementationType.TEMP_FILE_BACKED) {
       log.info("Created sst cache file");
       sst = new TempFileSharedStringsTable(pkg, builder.encryptSstTempFile(), builder.fullFormatRichText());
@@ -157,33 +161,27 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     } else if (strictFormat) {
       sst = OoxmlStrictHelper.getSharedStringsTable(builder, pkg);
     } else {
-      sst = reader.getSharedStrings(builder);
+      sst = ooxmlReader.getSharedStrings(builder);
     }
 
     if (builder.readCoreProperties()) {
       try {
-        POIXMLProperties xmlProperties = new POIXMLProperties(pkg);
+        final POIXMLProperties xmlProperties = new POIXMLProperties(pkg);
         coreProperties = xmlProperties.getCoreProperties();
       } catch (Exception e) {
         log.warn("Failed to read coreProperties", e);
       }
     }
 
-    StylesTable styles = null;
     if (builder.readStyles()) {
       if (strictFormat) {
         ThemesTable themesTable = OoxmlStrictHelper.getThemesTable(builder, pkg);
         styles = OoxmlStrictHelper.getStylesTable(builder, pkg);
         styles.setTheme(themesTable);
       } else {
-        styles = reader.getStylesTable();
+        styles = ooxmlReader.getStylesTable();
       }
     }
-
-    Document workbookDoc = readDocument(reader.getWorkbookData());
-    use1904Dates = WorkbookUtil.use1904Dates(workbookDoc);
-
-    loadSheets(workbookDoc, reader, sst, styles);
   }
 
   void setWorkbook(StreamingWorkbook workbook) {
@@ -195,37 +193,49 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     return workbook;
   }
 
-  private void loadSheets(Document workbookDoc, OoxmlReader reader, SharedStrings sst, StylesTable stylesTable)
-          throws IOException, XMLStreamException {
-    lookupSheetNames(workbookDoc);
-
-    //Some workbooks have multiple references to the same sheet. Need to filter
-    //them out before creating the XMLEventReader by keeping track of their URIs.
-    //The sheets are listed in order, so we must keep track of insertion order.
-    OoxmlReader.OoxmlSheetIterator iter = reader.getSheetsData();
-    Map<PackagePart, InputStream> sheetStreams = new LinkedHashMap<>();
-    Map<PackagePart, Comments> sheetComments = new HashMap<>();
-    while(iter.hasNext()) {
-      InputStream is = iter.next();
-      if (builder.readShapes()) {
-        shapeMap.put(iter.getSheetName(), iter.getShapes());
-      }
-      PackagePart part = iter.getSheetPart();
-      sheetStreams.put(part, is);
-      if (builder.readComments()) {
-        sheetComments.put(part, iter.getSheetComments(builder));
-      }
+  private List<StreamingSheet> loadSheets() {
+    final ArrayList<StreamingSheet> sheetList = new ArrayList<>();
+    final int numSheets = ooxmlReader.getNumberOfSheets();
+    for(int i = 0; i < numSheets; i++) {
+      final StreamingSheet maybeSheet = sheetMap.get(i);
+      sheetList.add(maybeSheet == null ? createSheet(i) : maybeSheet);
     }
+    sheetMap.clear();
+    return sheetList;
+  }
 
-    //Iterate over the loaded streams
-    int i = 0;
-    for(Map.Entry<PackagePart, InputStream> entry : sheetStreams.entrySet()) {
-      XMLEventReader parser = getXmlInputFactory().createXMLEventReader(entry.getValue());
-      sheets.add(new StreamingSheet(
-              sheetProperties.get(i++).get("name"),
-              new StreamingSheetReader(this, entry.getKey(), sst, stylesTable,
-                      sheetComments.get(entry.getKey()), parser, use1904Dates, builder.getRowCacheSize())));
+  public StreamingSheet getSheetAt(final int idx) throws IOException, XMLStreamException {
+    if (sheets != null && sheets.size() > idx) {
+      return sheets.get(idx);
+    } else {
+      StreamingSheet sheet = sheetMap.get(idx);
+      if (sheet == null) {
+        sheet = createSheet(idx);
+        sheetMap.put(idx, sheet);
+      }
+      return sheet;
     }
+  }
+
+  public StreamingSheet getSheet(final String name) throws IOException, XMLStreamException {
+    final int idx = ooxmlReader.getSheetIndex(name);
+    return getSheetAt(idx);
+  }
+
+  private StreamingSheet createSheet(final int idx) {
+    final OoxmlReader.SheetData sheetData = ooxmlReader.getSheetDataAt(idx);
+    final Map<PackagePart, Comments> sheetComments = new HashMap<>();
+    if (builder.readShapes()) {
+      shapeMap.put(sheetData.getSheetName(), sheetData.getShapes());
+    }
+    final PackagePart part = sheetData.getSheetPart();
+    if (builder.readComments()) {
+      sheetComments.put(part, sheetData.getComments());
+    }
+    return new StreamingSheet(
+              sheetProperties.get(idx).get("name"),
+              new StreamingSheetReader(this, part, sst, styles,
+                      sheetComments.get(part), use1904Dates, builder.getRowCacheSize()));
   }
 
   private void lookupSheetNames(Document workbookDoc) {
@@ -241,7 +251,10 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     }
   }
 
-  List<StreamingSheet> getSheets() {
+  List<StreamingSheet> getSheets() throws XMLStreamException, IOException {
+    if (sheets == null) {
+      sheets = loadSheets();
+    }
     return sheets;
   }
 
@@ -251,12 +264,20 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
 
   @Override
   public Iterator<Sheet> iterator() {
-    return new StreamingSheetIterator(sheets.iterator());
+    try {
+      return new StreamingSheetIterator(getSheets().iterator());
+    } catch (XMLStreamException|IOException e) {
+      throw new ReadException(e);
+    }
   }
 
   @Override
   public Spliterator<Sheet> spliterator() {
-    return Spliterators.spliterator(sheets, Spliterator.ORDERED);
+    try {
+      return Spliterators.spliterator(getSheets(), Spliterator.ORDERED);
+    } catch (XMLStreamException|IOException e) {
+      throw new ReadException(e);
+    }
   }
 
   /**
@@ -270,8 +291,10 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
   @Override
   public void close() throws IOException {
     try {
-      for(StreamingSheet sheet : sheets) {
-        sheet.getReader().close();
+      if (sheets != null) {
+        for(StreamingSheet sheet : sheets) {
+          sheet.getReader().close();
+        }
       }
       pkg.revert();
     } finally {
@@ -299,18 +322,6 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
 
   List<XSSFShape> getShapes(String sheetName) {
     return shapeMap.get(sheetName);
-  }
-
-  private static XMLInputFactory getXmlInputFactory() {
-    if (xmlInputFactory == null) {
-      try {
-        xmlInputFactory = XMLHelper.newXMLInputFactory();
-      } catch (Exception e) {
-        log.error("Issue creating XMLInputFactory", e);
-        throw e;
-      }
-    }
-    return xmlInputFactory;
   }
 
   static class StreamingSheetIterator implements Iterator<Sheet> {
