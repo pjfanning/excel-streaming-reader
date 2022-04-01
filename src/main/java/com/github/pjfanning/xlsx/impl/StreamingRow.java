@@ -10,6 +10,7 @@ public class StreamingRow implements Row {
   private final int rowIndex;
   private final boolean isHidden;
   private float height = -1.0f;
+  private CellStyle cellStyle;
   private TreeMap<Integer, Cell> cellMap = new TreeMap<>();
   private StreamingSheetReader streamingSheetReader;
   private CellStyle rowStyle;
@@ -225,6 +226,37 @@ public class StreamingRow implements Row {
   @Override
   public void setHeightInPoints(float height) {
     throw new NotSupportedException("update operations are not supported");
+  }
+
+  /**
+   * Is this row formatted? Most aren't, but some rows
+   *  do have whole-row styles. For those that do, you
+   *  can get the formatting from {@link #getRowStyle()}
+   */
+  @Override
+  public boolean isFormatted() {
+    return cellStyle != null;
+  }
+
+  /**
+   * Returns the whole-row cell styles. Most rows won't
+   *  have one of these, so will return null. Call
+   *  {@link #isFormatted()} to check first.
+   */
+  @Override
+  public CellStyle getRowStyle() {
+    if(!isFormatted()) {
+      return null;
+    }
+    return cellStyle;
+  }
+
+  /**
+   * Applies a whole-row cell styling to the row.
+   */
+  @Override
+  public void setRowStyle(CellStyle style) {
+      this.cellStyle = style;
   }
 
   /**
