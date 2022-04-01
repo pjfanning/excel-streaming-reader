@@ -87,13 +87,18 @@ public class XlsxHyperlink implements Hyperlink, Duplicatable {
 
   /**
    * Hyperlink address. Depending on the hyperlink type it can be URL, e-mail, path to a file.
-   * The is the hyperlink target.
+   * This is the hyperlink target.
    *
    * @return the address of this hyperlink
    */
   @Override
   public String getAddress() {
-    return _location;
+    String addr = _location;
+    String locn = getLocation();
+    if (addr.endsWith(locn)) {
+      return addr.substring(0, addr.length() - locn.length());
+    }
+    return addr;
   }
 
   /**
@@ -261,13 +266,14 @@ public class XlsxHyperlink implements Hyperlink, Duplicatable {
    */
   public XSSFHyperlink createXSSFHyperlink(){
     XSSFHyperlink xssfHyperlink = new XSSFHyperlink(getType()) {};
-    xssfHyperlink.setLocation(getLocation());
     xssfHyperlink.setFirstRow(getFirstRow());
     xssfHyperlink.setLastRow(getLastRow());
     xssfHyperlink.setFirstColumn(getFirstColumn());
     xssfHyperlink.setLastColumn(getLastColumn());
     xssfHyperlink.setLabel(getLabel());
     xssfHyperlink.setTooltip(getTooltip());
+    xssfHyperlink.setAddress(getAddress());
+    xssfHyperlink.setLocation(getLocation());
     return xssfHyperlink;
   }
 }

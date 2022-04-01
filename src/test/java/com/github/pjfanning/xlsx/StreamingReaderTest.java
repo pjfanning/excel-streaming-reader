@@ -9,6 +9,7 @@ import org.apache.poi.openxml4j.opc.PackageAccess;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellAddress;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -1523,6 +1524,32 @@ public class StreamingReaderTest {
         }
 
         assertEquals("1976-09-06T00:00", currentRow.getCell(3).getLocalDateTimeCellValue().toString());
+      }
+    }
+  }
+
+  @Test
+  public void copyToSXSSFWithHyperlinks() throws Exception {
+    try (
+            InputStream inputStream = new FileInputStream("src/test/resources/59775.xlsx");
+            UnsynchronizedByteArrayOutputStream bos = new UnsynchronizedByteArrayOutputStream();
+    ) {
+      SXSSFWorkbook wbOutput = CopyToSXSSFUtil.copyToSXSSF(inputStream);
+      try {
+        wbOutput.write(bos);
+      } finally {
+        wbOutput.close();
+        wbOutput.dispose();
+      }
+
+      try (XSSFWorkbook xssfWorkbook = new XSSFWorkbook(bos.toInputStream())) {
+        XSSFSheet xssfSheet = xssfWorkbook.getSheetAt(0);
+        assertEquals(4, xssfSheet.getHyperlinkList().size());
+        ArrayList<String> xssfLocations = new ArrayList<>();
+        xssfSheet.getHyperlinkList().forEach(hyperlink -> xssfLocations.add(hyperlink.getAddress()));
+        ArrayList<String> sxssfLocations = new ArrayList<>();
+        wbOutput.getSheetAt(0).getHyperlinkList().forEach(hyperlink -> sxssfLocations.add(hyperlink.getAddress()));
+        assertEquals(sxssfLocations, xssfLocations);
       }
     }
   }
