@@ -9,6 +9,7 @@ import org.apache.poi.openxml4j.opc.PackageAccess;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellAddress;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFHyperlink;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.AfterClass;
@@ -1532,9 +1533,20 @@ public class StreamingReaderTest {
   public void copyToSXSSFWithHyperlinks() throws Exception {
     try (
             InputStream inputStream = new FileInputStream("src/test/resources/59775.xlsx");
-            UnsynchronizedByteArrayOutputStream bos = new UnsynchronizedByteArrayOutputStream();
+            XSSFWorkbook xw = new XSSFWorkbook(inputStream)
+    ) {
+      for (XSSFHyperlink hyperlink : xw.getSheetAt(0).getHyperlinkList()) {
+        System.out.println(">>>>> " + hyperlink.getAddress() + " " + hyperlink.getLocation());
+      }
+    }
+    try (
+            InputStream inputStream = new FileInputStream("src/test/resources/59775.xlsx");
+            UnsynchronizedByteArrayOutputStream bos = new UnsynchronizedByteArrayOutputStream()
     ) {
       SXSSFWorkbook wbOutput = CopyToSXSSFUtil.copyToSXSSF(inputStream);
+      for (XSSFHyperlink hyperlink : wbOutput.getSheetAt(0).getHyperlinkList()) {
+        System.out.println("sxssf " + hyperlink.getAddress() + " " + hyperlink.getLocation());
+      }
       try {
         wbOutput.write(bos);
       } finally {
@@ -1545,6 +1557,11 @@ public class StreamingReaderTest {
       try (XSSFWorkbook xssfWorkbook = new XSSFWorkbook(bos.toInputStream())) {
         XSSFSheet xssfSheet = xssfWorkbook.getSheetAt(0);
         assertEquals(4, xssfSheet.getHyperlinkList().size());
+
+        for (XSSFHyperlink hyperlink : xssfWorkbook.getSheetAt(0).getHyperlinkList()) {
+          System.out.println("<<<<>>>> " + hyperlink.getAddress() + " " + hyperlink.getLocation());
+        }
+
         ArrayList<String> xssfLocations = new ArrayList<>();
         xssfSheet.getHyperlinkList().forEach(hyperlink -> xssfLocations.add(hyperlink.getAddress()));
         ArrayList<String> sxssfLocations = new ArrayList<>();
