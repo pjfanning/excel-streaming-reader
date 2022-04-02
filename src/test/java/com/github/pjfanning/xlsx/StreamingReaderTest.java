@@ -1531,22 +1531,18 @@ public class StreamingReaderTest {
 
   @Test
   public void copyToSXSSFWithHyperlinks() throws Exception {
+    ArrayList<String> originalLocations = new ArrayList<>();
     try (
             InputStream inputStream = new FileInputStream("src/test/resources/59775.xlsx");
             XSSFWorkbook xw = new XSSFWorkbook(inputStream)
     ) {
-      for (XSSFHyperlink hyperlink : xw.getSheetAt(0).getHyperlinkList()) {
-        System.out.println(">>>>> " + hyperlink.getAddress() + " " + hyperlink.getLocation());
-      }
+      xw.getSheetAt(0).getHyperlinkList().forEach(hyperlink -> originalLocations.add(hyperlink.getAddress()));
     }
     try (
             InputStream inputStream = new FileInputStream("src/test/resources/59775.xlsx");
             UnsynchronizedByteArrayOutputStream bos = new UnsynchronizedByteArrayOutputStream()
     ) {
       SXSSFWorkbook wbOutput = CopyToSXSSFUtil.copyToSXSSF(inputStream);
-      for (XSSFHyperlink hyperlink : wbOutput.getSheetAt(0).getHyperlinkList()) {
-        System.out.println("sxssf " + hyperlink.getAddress() + " " + hyperlink.getLocation());
-      }
       try {
         wbOutput.write(bos);
       } finally {
@@ -1558,15 +1554,9 @@ public class StreamingReaderTest {
         XSSFSheet xssfSheet = xssfWorkbook.getSheetAt(0);
         assertEquals(4, xssfSheet.getHyperlinkList().size());
 
-        for (XSSFHyperlink hyperlink : xssfWorkbook.getSheetAt(0).getHyperlinkList()) {
-          System.out.println("<<<<>>>> " + hyperlink.getAddress() + " " + hyperlink.getLocation());
-        }
-
         ArrayList<String> xssfLocations = new ArrayList<>();
         xssfSheet.getHyperlinkList().forEach(hyperlink -> xssfLocations.add(hyperlink.getAddress()));
-        ArrayList<String> sxssfLocations = new ArrayList<>();
-        wbOutput.getSheetAt(0).getHyperlinkList().forEach(hyperlink -> sxssfLocations.add(hyperlink.getAddress()));
-        assertEquals(sxssfLocations, xssfLocations);
+        assertEquals(originalLocations, xssfLocations);
       }
     }
   }
