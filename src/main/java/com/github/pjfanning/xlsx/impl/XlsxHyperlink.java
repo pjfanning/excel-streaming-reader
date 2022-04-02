@@ -95,8 +95,8 @@ public class XlsxHyperlink implements Hyperlink, Duplicatable {
   public String getAddress() {
     String addr = _location;
     String locn = getLocation();
-    if (addr.endsWith(locn)) {
-      return addr.substring(0, addr.length() - locn.length());
+    if (addr != null && !addr.equals(locn) && addr.endsWith(locn)) {
+      return addr.substring(0, addr.length() - locn.length() - 1);
     }
     return addr;
   }
