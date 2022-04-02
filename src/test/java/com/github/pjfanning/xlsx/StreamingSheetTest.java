@@ -195,6 +195,15 @@ public class StreamingSheetTest {
       XlsxHyperlink link1a = (XlsxHyperlink) link1.copy();
       assertEquals(link1, link1a);
       assertEquals(link1.hashCode(), link1a.hashCode());
+
+      XSSFHyperlink link1b = link1.createXSSFHyperlink();
+      //TODO needs investigation
+      //assertEquals(link1.getAddress(), link1b.getAddress());
+      assertEquals(link1.getLocation(), link1b.getLocation());
+      assertEquals(link1.getCellRef(), link1b.getCellRef());
+      assertEquals(link1.getType(), link1b.getType());
+      assertEquals(link1.getLabel(), link1b.getLabel());
+      assertEquals(link1.getTooltip(), link1b.getTooltip());
     }
   }
 
