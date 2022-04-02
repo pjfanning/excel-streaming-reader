@@ -164,25 +164,29 @@ public class StreamingSheetTest {
       XlsxHyperlink link1 = (XlsxHyperlink)sheet.getHyperlink(A2);
       assertEquals("A2", link1.getCellRef());
       assertEquals(HyperlinkType.URL, link1.getType());
-      assertEquals("http://twitter.com/#!/apacheorg", link1.getAddress());
+      assertEquals("http://twitter.com/", link1.getAddress());
+      assertEquals("!/apacheorg", link1.getLocation());
       assertTrue(hps.contains(link1));
 
       XlsxHyperlink link2 = (XlsxHyperlink)sheet.getHyperlink(A3);
       assertEquals("A3", link2.getCellRef());
       assertEquals(HyperlinkType.URL, link2.getType());
-      assertEquals("http://www.bailii.org/databases.html#ie", link2.getAddress());
+      assertEquals("http://www.bailii.org/databases.html", link2.getAddress());
+      assertEquals("ie", link2.getLocation());
       assertTrue(hps.contains(link2));
 
       XlsxHyperlink link3 = (XlsxHyperlink)sheet.getHyperlink(A4);
       assertEquals("A4", link3.getCellRef());
       assertEquals(HyperlinkType.URL, link3.getType());
-      assertEquals("https://en.wikipedia.org/wiki/Apache_POI#See_also", link3.getAddress());
+      assertEquals("https://en.wikipedia.org/wiki/Apache_POI", link3.getAddress());
+      assertEquals("See_also", link3.getLocation());
       assertTrue(hps.contains(link3));
 
       XlsxHyperlink link4 = (XlsxHyperlink)sheet.getHyperlink(A7);
       assertEquals("A7", link4.getCellRef());
       assertEquals(HyperlinkType.DOCUMENT, link4.getType());
       assertEquals("Sheet1", link4.getAddress());
+      assertEquals("Sheet1", link4.getLocation());
       assertTrue(hps.contains(link4));
 
       assertEquals(hps, sheet.getHyperlinkList());
