@@ -517,6 +517,7 @@ class StreamingRowIterator implements CloseableIterator<Row> {
           // it is not needed in all cases..
           final int currentNumericFormatIndex = currentCell.getNumericFormatIndex();
           final String currentNumericFormat = currentCell.getNumericFormat();
+
           return new LazySupplier<>(() -> dataFormatter.formatRawCellContents(
                   Double.parseDouble(lastContents),
                   currentNumericFormatIndex,
