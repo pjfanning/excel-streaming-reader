@@ -1,11 +1,11 @@
 package com.github.pjfanning.xlsx.impl;
 
+import com.github.pjfanning.xlsx.impl.adapter.HyperlinkAdapter;
 import com.github.pjfanning.xlsx.impl.ooxml.HyperlinkData;
 import org.apache.poi.common.Duplicatable;
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.openxml4j.opc.PackageRelationship;
 import org.apache.poi.ss.SpreadsheetVersion;
-import org.apache.poi.ss.usermodel.Hyperlink;
 import org.apache.poi.ss.util.AreaReference;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFHyperlink;
@@ -16,7 +16,7 @@ import java.util.Objects;
 /**
  * A read-only implementation of Hyperlink
  */
-public class XlsxHyperlink implements Hyperlink, Duplicatable {
+public class XlsxHyperlink implements HyperlinkAdapter, Duplicatable {
   private final HyperlinkType _type;
   private final PackageRelationship _externalRel;
   private final HyperlinkData hyperlinkData; //contains a reference to the cell where the hyperlink is anchored, getRef()
@@ -192,54 +192,6 @@ public class XlsxHyperlink implements Hyperlink, Duplicatable {
    */
   public String getTooltip() {
     return hyperlinkData.getTooltip();
-  }
-
-  /**
-   * @throws UnsupportedOperationException
-   */
-  @Override
-  public void setAddress(String address) {
-    throw new UnsupportedOperationException("update operations are not supported");
-  }
-
-  /**
-   * @throws UnsupportedOperationException
-   */
-  @Override
-  public void setLabel(String label) {
-    throw new UnsupportedOperationException("update operations are not supported");
-  }
-
-  /**
-   * @throws UnsupportedOperationException
-   */
-  @Override
-  public void setFirstColumn(int col) {
-    throw new UnsupportedOperationException("update operations are not supported");
-  }
-
-  /**
-   * @throws UnsupportedOperationException
-   */
-  @Override
-  public void setLastColumn(int col) {
-    throw new UnsupportedOperationException("update operations are not supported");
-  }
-
-  /**
-   * @throws UnsupportedOperationException
-   */
-  @Override
-  public void setFirstRow(int row) {
-    throw new UnsupportedOperationException("update operations are not supported");
-  }
-
-  /**
-   * @throws UnsupportedOperationException
-   */
-  @Override
-  public void setLastRow(int row) {
-    throw new UnsupportedOperationException("update operations are not supported");
   }
 
   @Override

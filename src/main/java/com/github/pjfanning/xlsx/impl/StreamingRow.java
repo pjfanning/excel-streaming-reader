@@ -1,16 +1,22 @@
 package com.github.pjfanning.xlsx.impl;
 
-import com.github.pjfanning.xlsx.exceptions.NotSupportedException;
-import org.apache.poi.ss.usermodel.*;
+import com.github.pjfanning.xlsx.impl.adapter.RowAdapter;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CellType;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.Iterator;
+import java.util.Spliterator;
+import java.util.Spliterators;
 
-import java.util.*;
-
-public class StreamingRow implements Row {
+public class StreamingRow implements RowAdapter {
   private final Sheet sheet;
   private final int rowIndex;
   private final boolean isHidden;
   private float height = -1.0f;
-  private TreeMap<Integer, Cell> cellMap = new TreeMap<>();
+  private final TreeMap<Integer, Cell> cellMap;
   private StreamingSheetReader streamingSheetReader;
   private CellStyle rowStyle;
 
@@ -18,6 +24,7 @@ public class StreamingRow implements Row {
     this.sheet = sheet;
     this.rowIndex = rowIndex;
     this.isHidden = isHidden;
+    cellMap = new TreeMap<>();
   }
 
   void setStreamingSheetReader(StreamingSheetReader streamingSheetReader) {
@@ -166,89 +173,6 @@ public class StreamingRow implements Row {
   @Override
   public void setRowStyle(CellStyle style) {
     this.rowStyle = style;
-  }
-
-
-  /* Not supported */
-
-  /**
-   * Not supported
-   */
-  @Override
-  public Cell createCell(int column) {
-    throw new NotSupportedException();
-  }
-
-  /**
-   * Not supported
-   */
-  @Override
-  public Cell createCell(int i, CellType cellType) {
-    throw new NotSupportedException();
-  }
-
-  /**
-   * Update operations are not supported
-   */
-  @Override
-  public void removeCell(Cell cell) {
-    throw new NotSupportedException("update operations are not supported");
-  }
-
-  /**
-   * Update operations are not supported
-   */
-  @Override
-  public void setRowNum(int rowNum) {
-    throw new NotSupportedException("update operations are not supported");
-  }
-
-  /**
-   * Update operations are not supported
-   */
-  @Override
-  public void setHeight(short height) {
-    throw new NotSupportedException("update operations are not supported");
-  }
-
-  /**
-   * Update operations are not supported
-   */
-  @Override
-  public void setZeroHeight(boolean zHeight) {
-    throw new NotSupportedException("update operations are not supported");
-  }
-
-  /**
-   * Update operations are not supported
-   */
-  @Override
-  public void setHeightInPoints(float height) {
-    throw new NotSupportedException("update operations are not supported");
-  }
-
-  /**
-   * Not supported
-   */
-  @Override
-  public int getOutlineLevel() {
-    throw new NotSupportedException();
-  }
-
-  /**
-   * Update operations are not supported
-   */
-  @Override
-  public void shiftCellsRight(int firstShiftColumnIndex, int lastShiftColumnIndex, int step) {
-    throw new NotSupportedException("update operations are not supported");
-  }
-
-  /**
-   * Update operations are not supported
-   */
-  @Override
-  public void shiftCellsLeft(int firstShiftColumnIndex, int lastShiftColumnIndex, int step) {
-    throw new NotSupportedException("update operations are not supported");
   }
 
 }

@@ -2,18 +2,22 @@ package com.github.pjfanning.xlsx.impl;
 
 import com.github.pjfanning.xlsx.XmlUtils;
 import com.github.pjfanning.xlsx.exceptions.NotSupportedException;
-import org.apache.poi.ss.formula.FormulaParseException;
-import org.apache.poi.ss.usermodel.*;
+import com.github.pjfanning.xlsx.impl.adapter.CellAdapter;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.Comment;
+import org.apache.poi.ss.usermodel.Hyperlink;
+import org.apache.poi.ss.usermodel.FormulaError;
 import org.apache.poi.ss.util.CellAddress;
-import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Calendar;
 import java.util.Date;
 
-public class StreamingCell implements Cell {
+public class StreamingCell implements CellAdapter {
 
   private static final Supplier NULL_SUPPLIER = () -> null;
 
@@ -155,23 +159,29 @@ public class StreamingCell implements Cell {
    */
   @Override
   public CellType getCellType() {
-    if(formulaType) {
+    if (formulaType) {
       return CellType.FORMULA;
-    } else if(contentsSupplier.getContent() == null || type == null) {
+    } else if (contentsSupplier.getContent() == null || type == null) {
       return CellType.BLANK;
-    } else if("n".equals(type)) {
-      return CellType.NUMERIC;
-    } else if("d".equals(type)) {
-      return CellType.NUMERIC;
-    } else if("s".equals(type) || "inlineStr".equals(type) || "str".equals(type)) {
-      return CellType.STRING;
-    } else if("b".equals(type)) {
-      return CellType.BOOLEAN;
-    } else if("e".equals(type)) {
-      return CellType.ERROR;
-    } else {
-      throw new UnsupportedOperationException("Unsupported cell type '" + type + "'");
     }
+    return getCellTypeFromShortHandType(type);
+  }
+
+  private static CellType getCellTypeFromShortHandType(final String shortHandType) {
+    switch (shortHandType) {
+      case "n":
+      case "d":
+        return CellType.NUMERIC;
+      case "s":
+      case "inlineStr":
+      case "str":
+        return CellType.STRING;
+      case "b":
+        return CellType.BOOLEAN;
+      case "e":
+        return CellType.ERROR;
+    }
+    throw new UnsupportedOperationException("Unsupported cell shortHandType '" + shortHandType + "'");
   }
 
   /**
@@ -346,19 +356,8 @@ public class StreamingCell implements Cell {
     if (formulaType) {
       if(contentsSupplier.getContent() == null || type == null) {
         return CellType.BLANK;
-      } else if("n".equals(type)) {
-        return CellType.NUMERIC;
-      } else if("d".equals(type)) {
-        return CellType.NUMERIC;
-      } else if("s".equals(type) || "inlineStr".equals(type) || "str".equals(type)) {
-        return CellType.STRING;
-      } else if("b".equals(type)) {
-        return CellType.BOOLEAN;
-      } else if("e".equals(type)) {
-        return CellType.ERROR;
-      } else {
-        throw new NotSupportedException("Unsupported cell type '" + type + "'");
       }
+      return getCellTypeFromShortHandType(type);
     } else  {
       throw new IllegalStateException("Only formula cells have cached results");
     }
@@ -418,163 +417,4 @@ public class StreamingCell implements Cell {
     return (sheet == null) ? null : sheet.getHyperlink(getAddress());
   }
 
-  /* Not supported */
-
-  /**
-   * Update operations are not supported
-   */
-  @Override
-  public void setCellType(CellType cellType) {
-    throw new NotSupportedException("update operations are not supported");
-  }
-
-  /**
-   * Update operations are not supported
-   */
-  @Override
-  public void setBlank() { throw new NotSupportedException("update operations are not supported"); }
-
-  /**
-   * Update operations are not supported
-   */
-  @Override
-  public void setCellValue(double value) {
-    throw new NotSupportedException("update operations are not supported");
-  }
-
-  /**
-   * Update operations are not supported
-   */
-  @Override
-  public void setCellValue(Date value) {
-    throw new NotSupportedException("update operations are not supported");
-  }
-
-  /**
-   * Update operations are not supported
-   */
-  @Override
-  public void setCellValue(Calendar value) {
-    throw new NotSupportedException("update operations are not supported");
-  }
-
-  /**
-   * Update operations are not supported
-   */
-  @Override
-  public void setCellValue(LocalDate value) {
-    throw new NotSupportedException("update operations are not supported");
-  }
-
-  /**
-   * Update operations are not supported
-   */
-  @Override
-  public void setCellValue(LocalDateTime value) {
-    throw new NotSupportedException("update operations are not supported");
-  }
-
-  /**
-   * Update operations are not supported
-   */
-  @Override
-  public void setCellValue(RichTextString value) {
-    throw new NotSupportedException("update operations are not supported");
-  }
-
-  /**
-   * Update operations are not supported
-   */
-  @Override
-  public void setCellValue(String value) {
-    throw new NotSupportedException("update operations are not supported");
-  }
-
-  /**
-   * Update operations are not supported
-   */
-  @Override
-  public void setCellFormula(String formula) throws FormulaParseException {
-    throw new NotSupportedException("update operations are not supported");
-  }
-
-  /**
-   * Update operations are not supported
-   */
-  @Override
-  public void removeFormula() throws IllegalStateException {
-    throw new NotSupportedException("update operations are not supported");
-  }
-
-  /**
-   * Update operations are not supported
-   */
-  @Override
-  public void setCellValue(boolean value) {
-    throw new NotSupportedException("update operations are not supported");
-  }
-
-  /**
-   * Update operations are not supported
-   */
-  @Override
-  public void setCellErrorValue(byte value) {
-    throw new NotSupportedException("update operations are not supported");
-  }
-
-  /**
-   * Update operations are not supported
-   */
-  @Override
-  public void setAsActiveCell() {
-    throw new NotSupportedException("update operations are not supported");
-  }
-
-  /**
-   * Update operations are not supported
-   */
-  @Override
-  public void setCellComment(Comment comment) {
-    throw new NotSupportedException("update operations are not supported");
-  }
-
-  /**
-   * Update operations are not supported
-   */
-  @Override
-  public void removeCellComment() {
-    throw new NotSupportedException("update operations are not supported");
-  }
-
-  /**
-   * Update operations are not supported
-   */
-  @Override
-  public void setHyperlink(Hyperlink link) {
-    throw new NotSupportedException("update operations are not supported");
-  }
-
-  /**
-   * Update operations are not supported
-   */
-  @Override
-  public void removeHyperlink() {
-    throw new NotSupportedException("update operations are not supported");
-  }
-
-  /**
-   * Not supported
-   */
-  @Override
-  public CellRangeAddress getArrayFormulaRange() {
-    throw new NotSupportedException();
-  }
-
-  /**
-   * Not supported
-   */
-  @Override
-  public boolean isPartOfArrayFormulaGroup() {
-    throw new NotSupportedException();
-  }
 }

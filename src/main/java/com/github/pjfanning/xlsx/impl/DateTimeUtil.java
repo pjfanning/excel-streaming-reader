@@ -5,7 +5,7 @@ import org.apache.poi.ss.usermodel.DateUtil;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-class DateTimeUtil {
+final class DateTimeUtil {
 
   private DateTimeUtil() {}
 
