@@ -65,6 +65,11 @@ nexusPublishing {
 
 publish.dependsOn cyclonedxBom
 
+cyclonedxBom {
+    // skipConfigs is a list of configuration names to exclude when generating the BOM
+    skipConfigs += ["compileClasspath", "testCompileClasspath"]
+}
+
 /*
 def bomFile = layout.buildDirectory.file('reports/bom.xml')
 def bomArtifact = artifacts.add('archives', bomFile.asFile) {
