@@ -66,8 +66,7 @@ nexusPublishing {
 publish.dependsOn cyclonedxBom
 
 cyclonedxBom {
-    // skipConfigs is a list of configuration names to exclude when generating the BOM
-    skipConfigs += ["compileClasspath", "testCompileClasspath"]
+    includeConfigs = ["runtimeClasspath"]
 }
 
 /*
