@@ -1,3 +1,4 @@
+[![OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/projects/6321/badge)](https://bestpractices.coreinfrastructure.org/projects/6321)
 ![Build Status](https://github.com/pjfanning/excel-streaming-reader/actions/workflows/ci.yml/badge.svg)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.pjfanning/excel-streaming-reader/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.pjfanning/excel-streaming-reader)
 
@@ -186,3 +187,8 @@ Workbook workbook = StreamingReader.builder()
 ```
 
 This library will ONLY work with XLSX files. The older XLS format is not capable of being streamed.
+
+# Contributing
+
+[Contributing](Contributing.md)
+
