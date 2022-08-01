@@ -69,18 +69,22 @@ cyclonedxBom {
     includeConfigs = ["runtimeClasspath"]
 }
 
-/*
-def bomFile = layout.buildDirectory.file('reports/bom.xml')
-def bomArtifact = artifacts.add('archives', bomFile.asFile) {
-    type 'bom'
+Provider<RegularFile> sbomFile() {
+    layout.buildDirectory.file('reports/bom.xml')
 }
-*/
+
+PublishArtifact sbomArtifact() {
+    def fileProvider = sbomFile()
+    artifacts.add('archives', fileProvider.get().asFile) {
+        type 'sbom'
+    }
+}
 
 publishing {
     publications {
         mavenJava(MavenPublication) {
             from(components.java)
-            //artifact bomArtifact
+            artifact sbomArtifact()
             pom {
                 name = 'excel-streaming-reader'
                 description = 'Streaming Excel reader'
@@ -113,8 +117,11 @@ publishing {
 }
 
 signing {
+    /*
     def signingKey = findProperty("signingKey")
     def signingPassword = findProperty("signingPassword")
     useInMemoryPgpKeys(signingKey, signingPassword)
+    
+     */
     sign publishing.publications.mavenJava
 }
