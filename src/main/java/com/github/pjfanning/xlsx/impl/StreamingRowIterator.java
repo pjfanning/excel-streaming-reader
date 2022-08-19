@@ -378,7 +378,7 @@ class StreamingRowIterator implements CloseableIterator<Row> {
                 }
               }
             } else {
-              LOG.error("No eval workbook found");
+              LOG.warn("No eval workbook found");
             }
           }
         }
