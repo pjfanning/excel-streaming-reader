@@ -12,7 +12,7 @@ import java.io.IOException;
 
 import static com.github.pjfanning.xlsx.XmlUtils.*;
 
-public class WorkbookUtil {
+public final class WorkbookUtil {
 
   private WorkbookUtil() {}
 

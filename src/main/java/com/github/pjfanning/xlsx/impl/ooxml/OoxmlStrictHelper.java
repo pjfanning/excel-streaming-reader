@@ -16,7 +16,7 @@ import javax.xml.stream.XMLStreamException;
 import java.io.*;
 import java.util.List;
 
-public class OoxmlStrictHelper {
+public final class OoxmlStrictHelper {
 
   private OoxmlStrictHelper() {}
 

@@ -46,9 +46,9 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
   private static final Logger log = LoggerFactory.getLogger(StreamingWorkbookReader.class);
 
   private List<StreamingSheet> sheets;
-  private final Map<Integer, StreamingSheet> sheetMap = new HashMap<>();
-  private final List<Map<String, String>> sheetProperties = new ArrayList<>();
-  private final Map<String, List<XSSFShape>> shapeMap = new HashMap<>();
+  private final Map<Integer, StreamingSheet> sheetMap;
+  private final List<Map<String, String>> sheetProperties;
+  private final Map<String, List<XSSFShape>> shapeMap;
   private final Builder builder;
   private File tmp;
   private OPCPackage pkg;
@@ -62,6 +62,9 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
 
   public StreamingWorkbookReader(Builder builder) {
     this.builder = builder;
+    sheetMap = new HashMap<>();
+    sheetProperties = new ArrayList<>();
+    shapeMap = new HashMap<>();
   }
 
   public void init(InputStream is) {
@@ -177,6 +180,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
       if (strictFormat) {
         ThemesTable themesTable = OoxmlStrictHelper.getThemesTable(builder, pkg);
         styles = OoxmlStrictHelper.getStylesTable(builder, pkg);
+        assert styles != null;
         styles.setTheme(themesTable);
       } else {
         styles = ooxmlReader.getStylesTable();

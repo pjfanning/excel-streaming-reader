@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
-public class XmlUtils {
+public final class XmlUtils {
 
   private static final NamespaceContext transitionalFormatNamespaceContext =
           new NamespaceContextImpl("ss", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
@@ -48,7 +48,7 @@ public class XmlUtils {
     return bool.equals(TRUE_AS_STRING) || bool.equalsIgnoreCase("true");
   }
 
-  private static class NamespaceContextImpl implements NamespaceContext {
+  private static final class NamespaceContextImpl implements NamespaceContext {
     private final Map<String, String> urisByPrefix = new HashMap<>();
 
     private final Map<String, Set<String>> prefixesByURI = new HashMap<>();

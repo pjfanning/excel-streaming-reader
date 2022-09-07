@@ -13,11 +13,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.*;
 
+import static com.github.pjfanning.xlsx.impl.constants.QNameBucket.CONFORMANCE;
+
 @Beta
 public class OoXmlStrictConverter implements AutoCloseable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OoXmlStrictConverter.class);
-    private static final QName CONFORMANCE = new QName("conformance");
     private static final Properties mappings;
     private static XMLEventFactory XEF;
     private static XMLInputFactory XIF;
@@ -187,7 +188,7 @@ public class OoXmlStrictConverter implements AutoCloseable {
         while(iter.hasNext()) {
             Attribute att = iter.next();
             QName qn = updateQName(att.getName());
-            if(rootElement && mappings.containsKey(elementNamespaceUri) && att.getName().equals(CONFORMANCE)) {
+            if(rootElement && mappings.containsKey(elementNamespaceUri) && att.getName().equals(CONFORMANCE.getQName())) {
                 //drop attribute
             } else {
                 String newValue = att.getValue();

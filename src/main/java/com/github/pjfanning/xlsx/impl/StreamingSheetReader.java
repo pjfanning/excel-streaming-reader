@@ -49,11 +49,11 @@ public class StreamingSheetReader implements Iterable<Row> {
   private final Comments commentsTable;
   private final boolean use1904Dates;
   private final int rowCacheSize;
-  private final Set<Integer> hiddenColumns = new HashSet<>();
-  private final Map<Integer, Float> columnWidths = new HashMap<>();
-  private final Set<CellRangeAddress> mergedCells = new LinkedHashSet<>();  // use HashSet to prevent duplicates
-  private final List<StreamingRowIterator> iterators = new ArrayList<>();
-  private final Set<HyperlinkData> hyperlinks = new LinkedHashSet<>();  // use HashSet to prevent duplicates
+  private final Set<Integer> hiddenColumns;
+  private final Map<Integer, Float> columnWidths;
+  private final Set<CellRangeAddress> mergedCells;  // use HashSet to prevent duplicates
+  private final List<StreamingRowIterator> iterators;
+  private final Set<HyperlinkData> hyperlinks;  // use HashSet to prevent duplicates
 
   private List<XlsxHyperlink> xlsxHyperlinks;
   private Map<String, SharedFormula> sharedFormulaMap;
@@ -76,6 +76,11 @@ public class StreamingSheetReader implements Iterable<Row> {
     this.commentsTable = commentsTable;
     this.use1904Dates = use1904Dates;
     this.rowCacheSize = rowCacheSize;
+    hiddenColumns = new HashSet<>();
+    columnWidths = new HashMap<>();
+    mergedCells = new LinkedHashSet<>();
+    iterators = new ArrayList<>();
+    hyperlinks = new LinkedHashSet<>();
   }
 
   void setSheet(StreamingSheet sheet) {
@@ -296,9 +301,8 @@ public class StreamingSheetReader implements Iterable<Row> {
     if (sheet != null) {
       List<XSSFShape> shapes = streamingWorkbookReader.getShapes(sheet.getSheetName());
       if (shapes != null) {
-        Iterator<XSSFShape> shapesIter = shapes.iterator();
-        while (shapesIter.hasNext()) {
-          return shapesIter.next().getDrawing();
+        for (XSSFShape shape : shapes) {//this could be a "if"?
+          return shape.getDrawing();
         }
       }
     }

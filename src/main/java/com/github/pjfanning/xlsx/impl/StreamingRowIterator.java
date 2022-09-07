@@ -38,17 +38,10 @@ import javax.xml.stream.events.XMLEvent;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import static com.github.pjfanning.xlsx.impl.constants.QNameBucket.*;
+
 class StreamingRowIterator implements CloseableIterator<Row> {
   private static final Logger LOG = LoggerFactory.getLogger(StreamingRowIterator.class);
-  private static final QName QNAME_HIDDEN = QName.valueOf("hidden");
-  private static final QName QNAME_HT = QName.valueOf("ht");
-  private static final QName QNAME_MAX = QName.valueOf("max");
-  private static final QName QNAME_MIN = QName.valueOf("min");
-  private static final QName QNAME_R = QName.valueOf("r");
-  private static final QName QNAME_REF = QName.valueOf("ref");
-  private static final QName QNAME_S = QName.valueOf("s");
-  private static final QName QNAME_T = QName.valueOf("t");
-  private static final QName QNAME_WIDTH = QName.valueOf("width");
 
   private final StreamingSheetReader streamingSheetReader;
   private final SharedStrings sst;
@@ -61,10 +54,10 @@ class StreamingRowIterator implements CloseableIterator<Row> {
   private final Map<Integer, Float> columnWidths;
   private final Set<CellRangeAddress> mergedCells;
   private final Set<HyperlinkData> hyperlinks;
-  private final DataFormatter dataFormatter = new DataFormatter();
-  private final List<Row> rowCache = new ArrayList<>();
-  private final StringBuilder contentBuilder = new StringBuilder(64);
-  private final StringBuilder formulaBuilder = new StringBuilder(64);
+  private final DataFormatter dataFormatter;
+  private final List<Row> rowCache;
+  private final StringBuilder contentBuilder;
+  private final StringBuilder formulaBuilder;
 
   private Map<String, SharedFormula> sharedFormulaMap;
   private int currentRowNum;
@@ -99,7 +92,10 @@ class StreamingRowIterator implements CloseableIterator<Row> {
     this.sharedFormulaMap = sharedFormulaMap;
     this.defaultRowHeight = defaultRowHeight;
     this.sheet = sheet;
-
+    rowCache = new ArrayList<>(rowCacheSize);
+    dataFormatter = new DataFormatter();
+    contentBuilder = new StringBuilder(64);
+    formulaBuilder = new StringBuilder(64);
     if (!getRow()) {
       LOG.debug("there appear to be no rows");
     }
@@ -141,14 +137,14 @@ class StreamingRowIterator implements CloseableIterator<Row> {
       String tagLocalName = startElement.getName().getLocalPart();
 
       if ("row".equals(tagLocalName)) {
-        Attribute rowNumAttr = startElement.getAttributeByName(QNAME_R);
+        Attribute rowNumAttr = startElement.getAttributeByName(QNAME_R.getQName());
         int rowIndex = currentRowNum;
         if (rowNumAttr != null) {
           rowIndex = Integer.parseInt(rowNumAttr.getValue()) - 1;
           currentRowNum = rowIndex;
         }
-        Attribute isHiddenAttr = startElement.getAttributeByName(QNAME_HIDDEN);
-        Attribute htAttr = startElement.getAttributeByName(QNAME_HT);
+        Attribute isHiddenAttr = startElement.getAttributeByName(QNAME_HIDDEN.getQName());
+        Attribute htAttr = startElement.getAttributeByName(QNAME_HT.getQName());
         float height = getDefaultRowHeight();
         if (htAttr != null) {
           try {
@@ -162,7 +158,7 @@ class StreamingRowIterator implements CloseableIterator<Row> {
         currentRow.setStreamingSheetReader(streamingSheetReader);
         currentRow.setHeight(height);
         if (stylesTable != null) {
-          Attribute styleAttr = startElement.getAttributeByName(QNAME_S);
+          Attribute styleAttr = startElement.getAttributeByName(QNAME_S.getQName());
           if (styleAttr != null) {
             String indexStr = styleAttr.getValue();
             try {
@@ -175,8 +171,8 @@ class StreamingRowIterator implements CloseableIterator<Row> {
         }
         currentColNum = firstColNum;
       } else if ("col".equals(tagLocalName)) {
-        Attribute isHiddenAttr = startElement.getAttributeByName(QNAME_HIDDEN);
-        Attribute widthAttr = startElement.getAttributeByName(QNAME_WIDTH);
+        Attribute isHiddenAttr = startElement.getAttributeByName(QNAME_HIDDEN.getQName());
+        Attribute widthAttr = startElement.getAttributeByName(QNAME_WIDTH.getQName());
         float width = -1;
         if (widthAttr != null) {
           try {
@@ -187,8 +183,8 @@ class StreamingRowIterator implements CloseableIterator<Row> {
         }
         boolean isHidden = isHiddenAttr != null && XmlUtils.evaluateBoolean(isHiddenAttr.getValue());
         if (isHidden || width >= 0) {
-          Attribute minAttr = startElement.getAttributeByName(QNAME_MIN);
-          Attribute maxAttr = startElement.getAttributeByName(QNAME_MAX);
+          Attribute minAttr = startElement.getAttributeByName(QNAME_MIN.getQName());
+          Attribute maxAttr = startElement.getAttributeByName(QNAME_MAX.getQName());
           int min = Integer.parseInt(minAttr.getValue()) - 1;
           int max = Integer.parseInt(maxAttr.getValue()) - 1;
           for (int columnIndex = min; columnIndex <= max; columnIndex++) {
@@ -197,7 +193,7 @@ class StreamingRowIterator implements CloseableIterator<Row> {
           }
         }
       } else if ("c".equals(tagLocalName)) {
-        Attribute ref = startElement.getAttributeByName(QNAME_R);
+        Attribute ref = startElement.getAttributeByName(QNAME_R.getQName());
 
         if (ref != null) {
           CellAddress cellAddress = new CellAddress(ref.getValue());
@@ -214,7 +210,7 @@ class StreamingRowIterator implements CloseableIterator<Row> {
         }
         streamingSheetReader.setFormatString(startElement, currentCell);
 
-        Attribute type = startElement.getAttributeByName(QNAME_T);
+        Attribute type = startElement.getAttributeByName(QNAME_T.getQName());
         if (type != null) {
           currentCell.setType(type.getValue());
         } else {
@@ -222,7 +218,7 @@ class StreamingRowIterator implements CloseableIterator<Row> {
         }
 
         if (stylesTable != null) {
-          Attribute style = startElement.getAttributeByName(QNAME_S);
+          Attribute style = startElement.getAttributeByName(QNAME_S.getQName());
           if (style != null) {
             String indexStr = style.getValue();
             try {
@@ -242,7 +238,7 @@ class StreamingRowIterator implements CloseableIterator<Row> {
       } else if ("is".equals(tagLocalName)) {
         insideIS = true;
       } else if ("dimension".equals(tagLocalName)) {
-        Attribute refAttr = startElement.getAttributeByName(QNAME_REF);
+        Attribute refAttr = startElement.getAttributeByName(QNAME_REF.getQName());
         String ref = refAttr != null ? refAttr.getValue() : null;
         if (ref != null) {
           // ref is formatted as A1 or A1:F25. Take the last numbers of this string and use it as lastRowNum
@@ -394,7 +390,7 @@ class StreamingRowIterator implements CloseableIterator<Row> {
         id = att.getValue();
       }
     }
-    Attribute ref = startElement.getAttributeByName(QNAME_REF);
+    Attribute ref = startElement.getAttributeByName(QNAME_REF.getQName());
     Attribute location = startElement.getAttributeByName(QName.valueOf("location"));
     Attribute display = startElement.getAttributeByName(QName.valueOf("display"));
     Attribute tooltip = startElement.getAttributeByName(QName.valueOf("tooltip"));
@@ -403,7 +399,7 @@ class StreamingRowIterator implements CloseableIterator<Row> {
   }
 
   private void parseMergeCell(StartElement startElement) {
-    Attribute ref = startElement.getAttributeByName(QNAME_REF);
+    Attribute ref = startElement.getAttributeByName(QNAME_REF.getQName());
     if (ref != null) {
       mergedCells.add(CellRangeAddress.valueOf(ref.getValue()));
     }
@@ -505,16 +501,13 @@ class StreamingRowIterator implements CloseableIterator<Row> {
         if (!lastContents.isEmpty()) {
           int idx = Integer.parseInt(lastContents);
           if (!getBuilder().fullFormatRichText() && sst instanceof SharedStringsTableBase) {
-            return new LazySupplier<>(() -> ((SharedStringsTableBase)sst).getString(idx));
+            return new LazySupplier<>(() -> ((SharedStringsTableBase) sst).getString(idx));
           }
           return new LazySupplier<>(() -> sst.getItemAt(idx));
         }
-        return new StringSupplier(lastContents);
-      case "inlineStr":   //inline string (not in sst)
-      case "str":
-        return new StringSupplier(lastContents);
+        return new LazySupplier<>(() -> lastContents);
       case "e":           //error type
-        return new StringSupplier("ERROR:  " + lastContents);
+        return new LazySupplier<>(() -> "ERROR:  " + lastContents);
       case "n":           //numeric type
         if(currentCell.getNumericFormat() != null && lastContents.length() > 0) {
           // the formatRawCellContents operation incurs a significant overhead on large sheets,
@@ -527,9 +520,8 @@ class StreamingRowIterator implements CloseableIterator<Row> {
                   Double.parseDouble(lastContents),
                   currentNumericFormatIndex,
                   currentNumericFormat));
-
         } else {
-          return new StringSupplier(lastContents);
+          return new LazySupplier<>(() -> lastContents);
         }
       case "d":           //date type (Strict OOXML format)
         if(currentCell.getNumericFormat() != null && lastContents.length() > 0) {
@@ -558,10 +550,10 @@ class StreamingRowIterator implements CloseableIterator<Row> {
             }
           });
         } else {
-          return new StringSupplier(lastContents);
+          return new LazySupplier<>(() -> lastContents);
         }
       default:
-        return new StringSupplier(lastContents);
+        return new LazySupplier<>(() -> lastContents);
     }
   }
 

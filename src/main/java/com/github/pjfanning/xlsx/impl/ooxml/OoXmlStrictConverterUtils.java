@@ -7,7 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 @Beta
-public class OoXmlStrictConverterUtils {
+public final class OoXmlStrictConverterUtils {
 
     private OoXmlStrictConverterUtils() {}
 
