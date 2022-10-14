@@ -361,13 +361,14 @@ class StreamingRowIterator implements CloseableIterator<Row> {
                   }
                   try {
                     Ptg[] ptgs = FormulaParser.parse(sf.getFormula(), evaluationWorkbook, FormulaType.CELL, sheetIndex, currentRow.getRowNum());
-                    String shiftedFmla = null;
                     final int rowsToMove = currentRowNum - sf.getCellAddress().getRow();
                     FormulaShifter formulaShifter = FormulaShifter.createForRowShift(sheetIndex, sheet.getSheetName(),
                             0, SpreadsheetVersion.EXCEL2007.getLastRowIndex(), rowsToMove, SpreadsheetVersion.EXCEL2007);
-                    if (formulaShifter.adjustFormula(ptgs, sheetIndex)) {
-                      shiftedFmla = FormulaRenderer.toFormulaString(evaluationWorkbook, ptgs);
-                    }
+                    // This function will adjust pggs in-place
+                    formulaShifter.adjustFormula(ptgs, sheetIndex);
+                    // Sometimes we could have formula ="FOO" or =1+1 so there's nothing to adjust
+                    String shiftedFmla = FormulaRenderer.toFormulaString(evaluationWorkbook, ptgs);
+
                     LOG.debug("cell {} should have formula {} based on shared formula {} (rowsToMove={})",
                             currentCell.getAddress(), shiftedFmla, sf.getFormula(), rowsToMove);
                     currentCell.setFormula(shiftedFmla);
