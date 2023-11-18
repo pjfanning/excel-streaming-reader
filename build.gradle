@@ -24,11 +24,14 @@ sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
+    maven {
+        url "https://repository.apache.org/content/groups/staging"
+    }
 }
 
 dependencies {
-    api 'org.apache.poi:poi:5.2.4'
-    api 'org.apache.poi:poi-ooxml:5.2.4'
+    api 'org.apache.poi:poi:5.2.5'
+    api 'org.apache.poi:poi-ooxml:5.2.5'
     implementation 'com.github.pjfanning:poi-shared-strings:2.7.0'
     implementation 'org.slf4j:slf4j-api:2.0.9'
     implementation 'commons-io:commons-io:2.15.0'
