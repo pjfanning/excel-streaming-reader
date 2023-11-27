@@ -31,7 +31,7 @@ To use it, add this to your POM:
   <dependency>
     <groupId>com.github.pjfanning</groupId>
     <artifactId>excel-streaming-reader</artifactId>
-    <version>4.2.0</version>
+    <version>4.2.1</version>
   </dependency>
 </dependencies>  
 ```
