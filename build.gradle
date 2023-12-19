@@ -91,6 +91,7 @@ publishing {
                     developer {
                         id = 'pjfanning'
                         name = 'PJ Fanning'
+                        url = 'https://github.com/pjfanning'
                     }
                 }
                 scm {
