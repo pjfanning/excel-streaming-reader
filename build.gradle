@@ -30,7 +30,7 @@ dependencies {
     api 'org.apache.poi:poi:5.2.5'
     api 'org.apache.poi:poi-ooxml:5.2.5'
     implementation 'com.github.pjfanning:poi-shared-strings:2.7.1'
-    implementation 'org.slf4j:slf4j-api:2.0.9'
+    implementation 'org.slf4j:slf4j-api:2.0.10'
     implementation 'commons-io:commons-io:2.15.1'
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.nanohttpd:nanohttpd:2.3.1'
