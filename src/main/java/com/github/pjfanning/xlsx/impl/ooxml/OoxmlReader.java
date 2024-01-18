@@ -265,7 +265,7 @@ public class OoxmlReader extends XSSFReader {
       for (XSSFSheetRef xssfSheetRef : xmlSheetRefReader.getSheetRefs()) {
         //if there's no relationship id, silently skip the sheet
         String sheetId = xssfSheetRef.getId();
-        if (sheetId != null && sheetId.length() > 0) {
+        if (sheetId != null && !sheetId.isEmpty()) {
           validSheets.add(xssfSheetRef);
         }
       }
@@ -396,11 +396,11 @@ public class OoxmlReader extends XSSFReader {
     try {
       PackageRelationshipCollection commentsList =
               sheetPkg.getRelationshipsByType(XSSFRelation.SHEET_COMMENTS.getRelation());
-      if (commentsList.size() == 0 && strictOoxmlChecksNeeded) {
+      if (commentsList.isEmpty() && strictOoxmlChecksNeeded) {
         commentsList =
                 sheetPkg.getRelationshipsByType(OoxmlReader.PURL_COMMENTS_RELATIONSHIP_URL);
       }
-      if (commentsList.size() > 0) {
+      if (!commentsList.isEmpty()) {
         PackageRelationship comments = commentsList.getRelationship(0);
         PackagePartName commentsName = PackagingURIHelper.createPartName(comments.getTargetURI());
         PackagePart commentsPart = sheetPkg.getPackage().getPart(commentsName);
@@ -457,7 +457,7 @@ public class OoxmlReader extends XSSFReader {
     final List<XSSFShape> shapes = new LinkedList<>();
     try {
       PackageRelationshipCollection drawingsList = sheetPkg.getRelationshipsByType(XSSFRelation.DRAWINGS.getRelation());
-      if (drawingsList.size() == 0 && strictOoxmlChecksNeeded) {
+      if (drawingsList.isEmpty() && strictOoxmlChecksNeeded) {
         drawingsList = sheetPkg.getRelationshipsByType(PURL_DRAWING_RELATIONSHIP_URL);
       }
       for (int i = 0; i < drawingsList.size(); i++) {
