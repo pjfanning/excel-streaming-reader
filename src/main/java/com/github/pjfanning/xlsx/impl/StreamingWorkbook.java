@@ -78,14 +78,18 @@ public class StreamingWorkbook implements Workbook, Date1904Support, AutoCloseab
   }
 
   /**
-   * {@inheritDoc}
+   * Returns the index of the given sheet
+   *
+   * @param sheet the sheet to look up
+   * @return index of the sheet (0 based)
+   * @throws IllegalArgumentException if the sheet provided is not a StreamingSheet
    */
   @Override
   public int getSheetIndex(Sheet sheet) {
     if(sheet instanceof StreamingSheet) {
       return findSheetByName(sheet.getSheetName());
     } else {
-      throw new UnsupportedOperationException("Cannot use non-StreamingSheet sheets");
+      throw new IllegalArgumentException("Cannot use non-StreamingSheet sheets");
     }
   }
 
@@ -101,7 +105,7 @@ public class StreamingWorkbook implements Workbook, Date1904Support, AutoCloseab
    * {@inheritDoc}
    */
   @Override
-  public Sheet getSheetAt(final int index) {
+  public Sheet getSheetAt(final int index) throws ReadException {
     try {
       return reader.getSheetAt(index);
     } catch (XMLStreamException|IOException e) {
@@ -118,7 +122,7 @@ public class StreamingWorkbook implements Workbook, Date1904Support, AutoCloseab
    * @throws ReadException if there is a problem reading the Excel file
    */
   @Override
-  public Sheet getSheet(String name) {
+  public Sheet getSheet(String name) throws MissingSheetException, ReadException {
     try {
       return reader.getSheet(name);
     } catch (XMLStreamException|IOException e) {

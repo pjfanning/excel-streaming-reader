@@ -440,7 +440,7 @@ public class StreamingReader implements AutoCloseable {
     }
 
     /**
-     * Enables adjustments to comments to remove boiler-plate text (related to threaded comments).
+     * Enables adjustments to comments to remove boilerplate text (related to threaded comments).
      * See https://github.com/pjfanning/excel-streaming-reader/issues/57.
      *
      * @param adjustLegacyComments whether to adjust legacy comments to remove boilerplate comments

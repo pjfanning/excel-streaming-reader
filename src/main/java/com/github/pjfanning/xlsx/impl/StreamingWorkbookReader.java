@@ -103,16 +103,16 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
         }
         init(f);
         tmp = f;
-      } catch(IOException e) {
-        if(f != null && !f.delete()) {
+      } catch(OpenException | ReadException e) {
+        if (f != null && !f.delete()) {
+          log.debug("failed to delete temp file");
+        }
+        throw e;
+      } catch(IOException | RuntimeException e) {
+        if (f != null && !f.delete()) {
           log.debug("failed to delete temp file");
         }
         throw new ReadException("Unable to read input stream", e);
-      } catch(RuntimeException e) {
-        if(f != null && !f.delete()) {
-          log.debug("failed to delete temp file");
-        }
-        throw new ReadException("Unexpected exception initializing read", e);
       }
     }
   }
@@ -192,7 +192,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
       if (strictFormat) {
         ThemesTable themesTable = OoxmlStrictHelper.getThemesTable(builder, pkg);
         styles = OoxmlStrictHelper.getStylesTable(builder, pkg);
-        styles.setTheme(themesTable);
+        if (styles != null) styles.setTheme(themesTable);
       } else {
         styles = ooxmlReader.getStylesTable();
       }
@@ -278,7 +278,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
   }
 
   @Override
-  public Iterator<Sheet> iterator() {
+  public Iterator<Sheet> iterator() throws ReadException {
     try {
       return new StreamingSheetIterator(getSheets().iterator());
     } catch (XMLStreamException|IOException e) {
@@ -287,7 +287,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
   }
 
   @Override
-  public Spliterator<Sheet> spliterator() {
+  public Spliterator<Sheet> spliterator() throws ReadException {
     try {
       return Spliterators.spliterator(getSheets(), Spliterator.ORDERED);
     } catch (XMLStreamException|IOException e) {
