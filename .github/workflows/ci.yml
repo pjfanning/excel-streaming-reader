@@ -69,4 +69,7 @@ jobs:
           cache: 'gradle'
 
       - name: SonarCloud Scan
-        run: ./gradlew test sonar --no-daemon
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}   # Generate a token on Sonarcloud.io, add it to the secrets of this repo with the name SONAR_TOKEN (Settings > Secrets > Actions > add new repository secret)
+        run: ./gradlew jacocoTestReport sonar --no-daemon
