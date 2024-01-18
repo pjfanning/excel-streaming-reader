@@ -1,5 +1,8 @@
 package com.github.pjfanning.xlsx;
 
+import com.github.pjfanning.xlsx.exceptions.OpenException;
+import com.github.pjfanning.xlsx.exceptions.ParseException;
+import com.github.pjfanning.xlsx.exceptions.ReadException;
 import com.github.pjfanning.xlsx.impl.*;
 import org.apache.poi.ss.usermodel.Workbook;
 
@@ -544,7 +547,7 @@ public class StreamingReader implements AutoCloseable {
      * @return A {@link Workbook} that can be read from
      * @throws com.github.pjfanning.xlsx.exceptions.ReadException if there is an issue reading the stream
      */
-    public Workbook open(InputStream is) {
+    public Workbook open(InputStream is) throws OpenException, ReadException, ParseException {
       StreamingWorkbookReader workbookReader = new StreamingWorkbookReader(this);
       workbookReader.init(is);
       return new StreamingWorkbook(workbookReader);
@@ -559,7 +562,7 @@ public class StreamingReader implements AutoCloseable {
      * @throws com.github.pjfanning.xlsx.exceptions.OpenException if there is an issue opening the file
      * @throws com.github.pjfanning.xlsx.exceptions.ReadException if there is an issue reading the file
      */
-    public Workbook open(File file) {
+    public Workbook open(File file) throws OpenException, ReadException, ParseException {
       StreamingWorkbookReader workbookReader = new StreamingWorkbookReader(this);
       workbookReader.init(file);
       return new StreamingWorkbook(workbookReader);
