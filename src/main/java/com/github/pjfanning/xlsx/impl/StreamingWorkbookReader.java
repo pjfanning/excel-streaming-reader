@@ -125,7 +125,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
    * @throws ParseException if an error occurs while parsing the file
    * @throws RuntimeException can also be thrown
    */
-  public void init(File f) {
+  public void init(File f) throws OpenException, ReadException, ParseException {
     try {
       if(builder.getPassword() != null) {
         POIFSFileSystem poifs = new POIFSFileSystem(f);
