@@ -71,7 +71,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
    * @throws ReadException if an error occurs while reading the file
    * @throws ParseException if an error occurs while parsing the file
    */
-  public void init(InputStream is) {
+  public void init(InputStream is) throws OpenException, ReadException, ParseException {
     if (builder.avoidTempFiles()) {
       try {
         if(builder.getPassword() != null) {
