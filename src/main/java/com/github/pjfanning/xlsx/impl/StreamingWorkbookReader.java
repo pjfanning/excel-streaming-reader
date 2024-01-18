@@ -64,6 +64,13 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     this.builder = builder;
   }
 
+  /**
+   * Initializes the reader with the given input stream.
+   * @param is the input stream to read from
+   * @throws OpenException if an error occurs while opening the file
+   * @throws ReadException if an error occurs while reading the file
+   * @throws ParseException if an error occurs while parsing the file
+   */
   public void init(InputStream is) {
     if (builder.avoidTempFiles()) {
       try {
@@ -105,11 +112,19 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
         if(f != null && !f.delete()) {
           log.debug("failed to delete temp file");
         }
-        throw e;
+        throw new ReadException("Unexpected exception initializing read", e);
       }
     }
   }
 
+  /**
+   * Initializes the reader with the given input stream.
+   * @param f the file to read from
+   * @throws OpenException if an error occurs while opening the file
+   * @throws ReadException if an error occurs while reading the file
+   * @throws ParseException if an error occurs while parsing the file
+   * @throws RuntimeException can also be thrown
+   */
   public void init(File f) {
     try {
       if(builder.getPassword() != null) {

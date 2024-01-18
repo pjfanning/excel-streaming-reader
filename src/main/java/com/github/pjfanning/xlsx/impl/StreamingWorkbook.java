@@ -115,6 +115,7 @@ public class StreamingWorkbook implements Workbook, Date1904Support, AutoCloseab
    * @param name - of the sheet
    * @return Sheet with the name provided
    * @throws MissingSheetException if no sheet is found with the provided <code>name</code>
+   * @throws ReadException if there is a problem reading the Excel file
    */
   @Override
   public Sheet getSheet(String name) {

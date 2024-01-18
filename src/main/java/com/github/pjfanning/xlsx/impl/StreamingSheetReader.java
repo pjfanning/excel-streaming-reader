@@ -257,6 +257,8 @@ public class StreamingSheetReader implements Iterable<Row> {
    *
    * @return the streaming iterator, an instance of {@link CloseableIterator} -
    * it is recommended that you close the iterator when finished with it if you intend to keep the sheet open.
+   * @throws OpenException if there is an IO issue
+   * @throws ReadException if there is a parse issue
    */
   @Override
   public CloseableIterator<Row> iterator() {
