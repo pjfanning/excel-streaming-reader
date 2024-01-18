@@ -213,10 +213,6 @@ public class OoxmlReader extends XSSFReader {
       return sheetRefList.size();
     }
 
-    OoxmlSheetIterator iterator() {
-      return new OoxmlSheetIterator(this, sheetRefList);
-    }
-
     int getSheetIndex(final String name) {
       int i = 0;
       for (XSSFSheetRef sheetRef : sheetRefList) {
@@ -284,67 +280,7 @@ public class OoxmlReader extends XSSFReader {
       return OVERRIDE_WORKSHEET_RELS;
     }
   }
-
-  /**
-   * Iterator over sheet data.
-   */
-  static class OoxmlSheetIterator implements Iterator<SheetData> {
-
-    /**
-     * List over CTSheet objects, returns sheets in {@code logical} order.
-     * We can't rely on the Ooxml4J's relationship iterator because it returns objects in physical order,
-     * i.e. as they are stored in the underlying package
-     */
-    private final ArrayList<XSSFSheetRef> sheetRefList;
-
-    private final OoxmlSheetReader ooxmlSheetReader;
-
-    private int sheetRefPosition;
-    private SheetData sheetData;
-
-    OoxmlSheetIterator(final OoxmlSheetReader ooxmlSheetReader,
-                       final ArrayList<XSSFSheetRef> sheetRefList) {
-      this.ooxmlSheetReader = ooxmlSheetReader;
-      this.sheetRefList = sheetRefList;
-    }
-
-    /**
-     * Returns {@code true} if the iteration has more elements.
-     *
-     * @return {@code true} if the iterator has more elements.
-     */
-    @Override
-    public boolean hasNext() {
-      return sheetRefPosition < sheetRefList.size();
-    }
-
-    /**
-     * Returns input stream of the next sheet in the iteration
-     *
-     * @return input stream of the next sheet in the iteration
-     */
-    @Override
-    public SheetData next() {
-      try {
-        XSSFSheetRef xssfSheetRef = sheetRefList.get(sheetRefPosition++);
-        sheetData = ooxmlSheetReader.getSheetData(xssfSheetRef);
-        return sheetData;
-      } catch (IndexOutOfBoundsException e) {
-        throw new NoSuchElementException("Sheet iterator has no more elements");
-      } catch (Exception e) {
-        throw new POIXMLException(e);
-      }
-    }
-
-    /**
-     * We're read only, so remove isn't supported
-     */
-    @Override
-    public void remove() {
-      throw new IllegalStateException("Not supported");
-    }
-  }
-
+  
   public static class SheetData {
     private final PackagePart sheetPart;
     private final String sheetName;
