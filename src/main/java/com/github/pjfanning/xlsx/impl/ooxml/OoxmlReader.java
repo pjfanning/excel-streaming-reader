@@ -280,7 +280,7 @@ public class OoxmlReader extends XSSFReader {
       return OVERRIDE_WORKSHEET_RELS;
     }
   }
-  
+
   public static class SheetData {
     private final PackagePart sheetPart;
     private final String sheetName;
