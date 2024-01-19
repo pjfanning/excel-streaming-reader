@@ -1,5 +1,6 @@
 package com.github.pjfanning.xlsx.impl;
 
+import com.github.pjfanning.xlsx.exceptions.ReadException;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.formula.*;
 import org.apache.poi.ss.formula.functions.FreeRefFunction;
@@ -72,7 +73,7 @@ abstract class BaseEvaluationWorkbook implements FormulaRenderingWorkbook, Evalu
     return convertToExternalSheetIndex(sheetIndex);
   }
 
-  private int resolveBookIndex(String bookName) {
+  private int resolveBookIndex(String bookName) throws ReadException {
     // Strip the [] wrapper, if still present
     if (bookName.startsWith("[") && bookName.endsWith("]")) {
       bookName = bookName.substring(1, bookName.length()-2);
@@ -84,7 +85,7 @@ abstract class BaseEvaluationWorkbook implements FormulaRenderingWorkbook, Evalu
     } catch (NumberFormatException e) {}
 
     // Not properly referenced
-    throw new RuntimeException("Book not linked for filename " + bookName);
+    throw new ReadException("Book not linked for filename " + bookName);
   }
 
   @Override
@@ -114,7 +115,7 @@ abstract class BaseEvaluationWorkbook implements FormulaRenderingWorkbook, Evalu
    * Return an external name (named range, function, user-defined function) Pxg
    */
   @Override
-  public NameXPxg getNameXPtg(String name, SheetIdentifier sheet) {
+  public NameXPxg getNameXPtg(String name, SheetIdentifier sheet) throws ReadException {
     // First, try to find it as a User Defined Function
     IndexedUDFFinder udfFinder = (IndexedUDFFinder)getUDFFinder();
     FreeRefFunction func = udfFinder.findFunction(name);
@@ -147,7 +148,7 @@ abstract class BaseEvaluationWorkbook implements FormulaRenderingWorkbook, Evalu
   }
 
   @Override
-  public Ptg get3DReferencePtg(CellReference cell, SheetIdentifier sheet) {
+  public Ptg get3DReferencePtg(CellReference cell, SheetIdentifier sheet) throws ReadException {
     if (sheet.getBookName() != null) {
       int bookIndex = resolveBookIndex(sheet.getBookName());
       return new Ref3DPxg(bookIndex, sheet, cell);
@@ -157,7 +158,7 @@ abstract class BaseEvaluationWorkbook implements FormulaRenderingWorkbook, Evalu
   }
 
   @Override
-  public Ptg get3DReferencePtg(AreaReference area, SheetIdentifier sheet) {
+  public Ptg get3DReferencePtg(AreaReference area, SheetIdentifier sheet) throws ReadException {
     if (sheet.getBookName() != null) {
       int bookIndex = resolveBookIndex(sheet.getBookName());
       return new Area3DPxg(bookIndex, sheet, area);
