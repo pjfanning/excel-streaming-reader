@@ -16,7 +16,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
@@ -110,7 +109,7 @@ public class StreamingSheetTest {
   }
 
   @Test
-  public void testMergedRegion() throws IOException {
+  public void testMergedRegion() throws Exception {
     try (UnsynchronizedByteArrayOutputStream bos = UnsynchronizedByteArrayOutputStream.builder().get()) {
       try (XSSFWorkbook wb = new XSSFWorkbook()) {
         XSSFSheet sheet = wb.createSheet();
@@ -368,7 +367,7 @@ public class StreamingSheetTest {
   }
 
   @Test
-  public void testCustomWidthAndHeight() throws IOException {
+  public void testCustomWidthAndHeight() throws Exception {
     try (
             InputStream is = getInputStream("WidthsAndHeights.xlsx");
             Workbook wb = StreamingReader.builder().open(is)
@@ -412,7 +411,7 @@ public class StreamingSheetTest {
   }
 
   @Test
-  public void testPaneInformation() throws IOException {
+  public void testPaneInformation() throws Exception {
     try (
             XSSFWorkbook xssfWorkbook = new XSSFWorkbook();
             UnsynchronizedByteArrayOutputStream bos = UnsynchronizedByteArrayOutputStream.builder().get()
@@ -462,7 +461,7 @@ public class StreamingSheetTest {
   }
 
   @Test
-  public void testRowStyle() throws IOException {
+  public void testRowStyle() throws Exception {
     try (
         InputStream is = getInputStream("row-style.xlsx");
         Workbook wb = StreamingReader.builder().open(is)
@@ -484,7 +483,7 @@ public class StreamingSheetTest {
   }
 
   @Test
-  public void testCellWithLineBreak() throws IOException {
+  public void testCellWithLineBreak() throws Exception {
     final String testValue = "1\n2\r\n3";
     try (
             XSSFWorkbook xssfWorkbook = new XSSFWorkbook();
@@ -511,7 +510,7 @@ public class StreamingSheetTest {
   }
 
   @Test
-  public void testCellWithLineBreakNoSharedStrings() throws IOException {
+  public void testCellWithLineBreakNoSharedStrings() throws Exception {
     //SXSSFWorkbook does not use SharedStrings by default
     final String testValue = "1\n2\r\n3";
     try (

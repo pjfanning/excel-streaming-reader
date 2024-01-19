@@ -1,5 +1,6 @@
 package com.github.pjfanning.xlsx;
 
+import com.github.pjfanning.xlsx.exceptions.CheckedReadException;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellReference;
 
@@ -15,7 +16,7 @@ final class TestUtils {
     return TestUtils.class.getResourceAsStream("/" + fileName);
   }
 
-  static Workbook openWorkbook(String fileName) throws IOException {
+  static Workbook openWorkbook(String fileName) throws IOException, CheckedReadException {
       try (InputStream stream = getInputStream(fileName)) {
           return StreamingReader.builder()
                   .open(stream);

@@ -1,7 +1,6 @@
 package com.github.pjfanning.xlsx;
 
-import com.github.pjfanning.xlsx.exceptions.OpenException;
-import com.github.pjfanning.xlsx.exceptions.ReadException;
+import com.github.pjfanning.xlsx.exceptions.CheckedReadException;
 import com.github.pjfanning.xlsx.impl.XlsxPictureData;
 import fi.iki.elonen.NanoHTTPD;
 import org.apache.commons.io.IOUtils;
@@ -430,8 +429,8 @@ public class StreamingWorkbookTest {
     }
   }
 
-  @Test(expected = OpenException.class)
-  public void testEntityExpansionWithPoiDefaultSst() throws Exception {
+  @Test(expected = ExpectedException.class)
+  public void testEntityExpansionWithPoiDefaultSst() {
     ExploitServer.withServer(s -> fail("Should not have made request"), () -> {
       try(
               InputStream stream = getInputStream("entity-expansion-exploit-poc-file.xlsx");
@@ -445,13 +444,15 @@ public class StreamingWorkbookTest {
             System.out.println(cell.getStringCellValue());
           }
         }
-      } catch(IOException e) {
-        throw new UncheckedIOException(e);
+      } catch(CheckedReadException e) {
+        throw new ExpectedException(e);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
       }
     });
   }
 
-  @Test(expected = OpenException.class)
+  @Test(expected = ExpectedException.class)
   public void testEntityExpansionWithReadOnlySst() throws Exception {
     ExploitServer.withServer(s -> fail("Should not have made request"), () -> {
       try (
@@ -465,14 +466,16 @@ public class StreamingWorkbookTest {
             System.out.println(cell.getStringCellValue());
           }
         }
-      } catch(IOException e) {
-        throw new UncheckedIOException(e);
+      } catch(CheckedReadException e) {
+        throw new ExpectedException(e);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
       }
     });
   }
 
   @Test
-  public void testDataFormatter() throws IOException {
+  public void testDataFormatter() throws Exception {
     try(Workbook workbook = openWorkbook("formats.xlsx")) {
       Sheet sheet = workbook.getSheetAt(0);
       validateFormatsSheet(sheet);
@@ -480,7 +483,7 @@ public class StreamingWorkbookTest {
   }
 
   @Test
-  public void testWithTempFileZipInputStream() throws IOException {
+  public void testWithTempFileZipInputStream() throws Exception {
     //this test cannot be run in parallel with other tests because it changes static configs
     ZipInputStreamZipEntrySource.setThresholdBytesForTempFiles(0);
     try(Workbook workbook = openWorkbook("formats.xlsx")) {
@@ -492,7 +495,7 @@ public class StreamingWorkbookTest {
   }
 
   @Test
-  public void testWithTempFileZipPackage() throws IOException {
+  public void testWithTempFileZipPackage() throws Exception {
     //this test cannot be run in parallel with other tests because it changes static configs
     ZipPackage.setUseTempFilePackageParts(true);
     try(Workbook workbook = openWorkbook("formats.xlsx")) {
@@ -504,7 +507,7 @@ public class StreamingWorkbookTest {
   }
 
   @Test
-  public void testCallingSheetIteratorTwice() throws IOException {
+  public void testCallingSheetIteratorTwice() throws Exception {
     try(Workbook workbook = openWorkbook("formats.xlsx")) {
       Iterator<Sheet> iter1 = workbook.sheetIterator();
       List<Sheet> sheetList1 = new ArrayList<>();
@@ -522,7 +525,7 @@ public class StreamingWorkbookTest {
   }
 
   @Test
-  public void testCallingSheetSpliteratorTwice() throws IOException {
+  public void testCallingSheetSpliteratorTwice() throws Exception {
     try(Workbook workbook = openWorkbook("formats.xlsx")) {
       Spliterator<Sheet> iter1 = workbook.spliterator();
       List<Sheet> sheetList1 = new ArrayList<>();
@@ -540,7 +543,7 @@ public class StreamingWorkbookTest {
   }
 
   @Test
-  public void testWithGetSheetAtAndThenIterator() throws IOException {
+  public void testWithGetSheetAtAndThenIterator() throws Exception {
     try(Workbook workbook = openWorkbook("formats.xlsx")) {
       Sheet sheet = workbook.getSheetAt(0);
       validateFormatsSheet(sheet);
@@ -554,7 +557,7 @@ public class StreamingWorkbookTest {
   }
 
   @Test
-  public void testNoSuchElementExceptionOnSheetIterator() throws IOException {
+  public void testNoSuchElementExceptionOnSheetIterator() throws Exception {
     try (Workbook workbook = openWorkbook("formats.xlsx")) {
       Iterator<Sheet> iter1 = workbook.sheetIterator();
       assertTrue(iter1.hasNext());
@@ -565,7 +568,7 @@ public class StreamingWorkbookTest {
   }
 
   @Test
-  public void testRightToLeft() throws IOException {
+  public void testRightToLeft() throws Exception {
     try(
             InputStream stream = getInputStream("right-to-left.xlsx");
             Workbook workbook = StreamingReader.builder()
@@ -593,7 +596,7 @@ public class StreamingWorkbookTest {
   }
 
   @Test
-  public void testRightToLeftMapBackedSst() throws IOException {
+  public void testRightToLeftMapBackedSst() throws Exception {
     try(
             InputStream stream = getInputStream("right-to-left.xlsx");
             Workbook workbook = StreamingReader.builder()
@@ -622,7 +625,7 @@ public class StreamingWorkbookTest {
   }
 
   @Test
-  public void testAdjustLegacyCommentsDisabled() throws IOException {
+  public void testAdjustLegacyCommentsDisabled() throws Exception {
     try(
             InputStream stream = getInputStream("right-to-left.xlsx");
             Workbook workbook = StreamingReader.builder().setReadComments(true).open(stream)
@@ -638,7 +641,7 @@ public class StreamingWorkbookTest {
   }
 
   @Test
-  public void testGetErrorCellValue() throws IOException {
+  public void testGetErrorCellValue() throws Exception {
     try(UnsynchronizedByteArrayOutputStream bos = UnsynchronizedByteArrayOutputStream.builder().get()) {
       try(XSSFWorkbook workbook = new XSSFWorkbook()) {
         XSSFSheet sheet = workbook.createSheet("sheet1");
@@ -694,7 +697,7 @@ public class StreamingWorkbookTest {
   }
 
   @Test
-  public void testSheetNameCaseInsensitivity() throws IOException {
+  public void testSheetNameCaseInsensitivity() throws Exception {
     final String sheetName1 = "sheetWithCamelCaseName";
     final String sheetName2 = "SHEET_WITH_CAPS_NAME";
     try (
@@ -880,7 +883,7 @@ public class StreamingWorkbookTest {
   public void testXlsReadFailure() throws Exception {
     try (Workbook workbook = openWorkbook("Basic_Expense_Template_2011.xls")) {
       fail("Should have thrown exception");
-    } catch (ReadException e) {
+    } catch (CheckedReadException e) {
       assertEquals("Unsupported File Format (only xlsx files are supported)", e.getMessage());
     }
   }
@@ -890,7 +893,7 @@ public class StreamingWorkbookTest {
     File file = new File("src/test/resources/Basic_Expense_Template_2011.xls");
     try (Workbook workbook = StreamingReader.builder().open(file)) {
       fail("Should have thrown exception");
-    } catch (ReadException e) {
+    } catch (CheckedReadException e) {
       assertEquals("Unsupported File Format (only xlsx files are supported)", e.getMessage());
     }
   }

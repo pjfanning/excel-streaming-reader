@@ -150,7 +150,7 @@ public class OoxmlReader extends XSSFReader {
    * @throws IOException if an error occurs while reading the styles.
    */
   @Override
-  public StylesTable getStylesTable() throws IOException, InvalidFormatException {
+  public StylesTable getStylesTable() throws IOException {
     ArrayList<PackagePart> parts = pkg.getPartsByContentType(XSSFRelation.STYLES.getContentType());
     if (parts.isEmpty()) return null;
 

@@ -4,11 +4,9 @@ import com.github.pjfanning.poi.xssf.streaming.MapBackedSharedStringsTable;
 import com.github.pjfanning.poi.xssf.streaming.TempFileSharedStringsTable;
 import com.github.pjfanning.xlsx.SharedStringsImplementationType;
 import com.github.pjfanning.xlsx.StreamingReader.Builder;
-import com.github.pjfanning.xlsx.exceptions.ExcelRuntimeException;
 import com.github.pjfanning.xlsx.exceptions.MissingSheetException;
+import com.github.pjfanning.xlsx.exceptions.CheckedReadException;
 import com.github.pjfanning.xlsx.exceptions.NotSupportedException;
-import com.github.pjfanning.xlsx.exceptions.OpenException;
-import com.github.pjfanning.xlsx.exceptions.ParseException;
 import com.github.pjfanning.xlsx.exceptions.ReadException;
 import com.github.pjfanning.xlsx.impl.ooxml.OoxmlStrictHelper;
 import com.github.pjfanning.xlsx.impl.ooxml.OoxmlReader;
@@ -70,11 +68,10 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
   /**
    * Initializes the reader with the given input stream.
    * @param is the input stream to read from
-   * @throws OpenException if an error occurs while opening the file
-   * @throws ReadException if an error occurs while reading the file
-   * @throws ParseException if an error occurs while parsing the file
+   * @throws IOException if an error occurs while opening the file
+   * @throws CheckedReadException if an error occurs while reading the file
    */
-  public void init(InputStream is) throws OpenException, ReadException, ParseException {
+  public void init(InputStream is) throws IOException, CheckedReadException {
     if (builder.avoidTempFiles()) {
       try {
         if(builder.getPassword() != null) {
@@ -86,10 +83,10 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
         loadPackage(pkg);
       } catch(SAXException e) {
         IOUtils.closeQuietly(pkg);
-        throw new ParseException("Failed to parse stream", e);
+        throw new CheckedReadException("Failed to parse stream", e);
       } catch(IOException e) {
         IOUtils.closeQuietly(pkg);
-        throw new OpenException("Failed to open stream", e);
+        throw e;
       } catch(GeneralSecurityException e) {
         IOUtils.closeQuietly(pkg);
         throw new ReadException("Unable to read workbook - Decryption failed", e);
@@ -106,7 +103,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
         }
         init(f);
         tmp = f;
-      } catch(OpenException | ReadException e) {
+      } catch(IOException | CheckedReadException e) {
         if (f != null && !f.delete()) {
           log.debug("failed to delete temp file");
         }
@@ -115,12 +112,12 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
         if (f != null && !f.delete()) {
           log.debug("failed to delete temp file");
         }
-        throw new ReadException("Unsupported File Format (only xlsx files are supported)", e);
-      } catch(IOException | RuntimeException e) {
+        throw new CheckedReadException("Unsupported File Format (only xlsx files are supported)", e);
+      } catch(RuntimeException e) {
         if (f != null && !f.delete()) {
           log.debug("failed to delete temp file");
         }
-        throw new ReadException("Unable to read input stream", e);
+        throw new CheckedReadException("Unable to read workbook", e);
       }
     }
   }
@@ -128,11 +125,10 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
   /**
    * Initializes the reader with the given input stream.
    * @param f the file to read from
-   * @throws OpenException if an error occurs while opening the file
-   * @throws ReadException if an error occurs while reading the file
-   * @throws ParseException if an error occurs while parsing the file
+   * @throws IOException if an error occurs while opening the file
+   * @throws CheckedReadException if an error occurs while reading the file
    */
-  public void init(File f) throws OpenException, ReadException, ParseException {
+  public void init(File f) throws IOException, CheckedReadException {
     try {
       if(builder.getPassword() != null) {
         POIFSFileSystem poifs = new POIFSFileSystem(f);
@@ -143,25 +139,19 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
       loadPackage(pkg);
     } catch(SAXException e) {
       IOUtils.closeQuietly(pkg);
-      throw new ParseException("Failed to parse file", e);
+      throw new CheckedReadException("Failed to parse file", e);
     } catch(IOException e) {
       IOUtils.closeQuietly(pkg);
-      throw new OpenException("Failed to open file", e);
+      throw e;
     } catch(UnsupportedFileFormatException e) {
       IOUtils.closeQuietly(pkg);
-      throw new ReadException("Unsupported File Format (only xlsx files are supported)", e);
-    } catch(OpenXML4JException | XMLStreamException e) {
-      IOUtils.closeQuietly(pkg);
-      throw new ReadException("Unable to read workbook", e);
+      throw new CheckedReadException("Unsupported File Format (only xlsx files are supported)", e);
     } catch(GeneralSecurityException e) {
       IOUtils.closeQuietly(pkg);
-      throw new ReadException("Unable to read workbook - Decryption failed", e);
-    } catch(ExcelRuntimeException e) {
+      throw new CheckedReadException("Unable to read workbook - Decryption failed", e);
+    } catch(OpenXML4JException | XMLStreamException | RuntimeException e) {
       IOUtils.closeQuietly(pkg);
-      throw e;
-    } catch(RuntimeException e) {
-      IOUtils.closeQuietly(pkg);
-      throw new ReadException("Unable to read workbook", e);
+      throw new CheckedReadException("Unable to read workbook", e);
     }
   }
 
@@ -240,10 +230,8 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
    * @param idx index (0 based)
    * @return the sheet at the given index
    * @throws MissingSheetException if a sheet at the given index does not exist
-   * @throws IOException should never be thrown
-   * @throws XMLStreamException should never be thrown
    */
-  public StreamingSheet getSheetAt(final int idx) throws MissingSheetException, IOException, XMLStreamException {
+  public StreamingSheet getSheetAt(final int idx) throws MissingSheetException {
     if (sheets != null && sheets.size() > idx) {
       return sheets.get(idx);
     } else {
@@ -261,10 +249,8 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
    * @param name the name of the sheet to return
    * @return the sheet with the given name
    * @throws MissingSheetException if a sheet with the given name does not exist
-   * @throws IOException should never be thrown
-   * @throws XMLStreamException should never be thrown
    */
-  public StreamingSheet getSheet(final String name) throws MissingSheetException, IOException, XMLStreamException {
+  public StreamingSheet getSheet(final String name) throws MissingSheetException {
     final int idx = ooxmlReader.getSheetIndex(name);
     return getSheetAt(idx);
   }
