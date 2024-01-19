@@ -3,6 +3,7 @@ package com.github.pjfanning.xlsx.impl;
 import com.github.pjfanning.xlsx.CloseableIterator;
 import com.github.pjfanning.xlsx.SharedFormula;
 import com.github.pjfanning.xlsx.StreamingReader;
+import com.github.pjfanning.xlsx.exceptions.CloseException;
 import com.github.pjfanning.xlsx.exceptions.OpenException;
 import com.github.pjfanning.xlsx.exceptions.ReadException;
 import com.github.pjfanning.xlsx.impl.ooxml.HyperlinkData;
@@ -309,7 +310,7 @@ public class StreamingSheetReader implements Iterable<Row> {
     return null;
   }
 
-  public void close() {
+  public void close() throws CloseException {
     iterators.forEach(iter -> iter.close(false));
   }
 

@@ -599,7 +599,7 @@ class StreamingRowIterator implements CloseableIterator<Row> {
   }
 
   @Override
-  public void close() {
+  public void close() throws CloseException {
     close(true);
   }
 
