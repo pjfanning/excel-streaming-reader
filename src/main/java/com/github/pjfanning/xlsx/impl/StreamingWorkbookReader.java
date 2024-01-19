@@ -146,6 +146,9 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     } catch(GeneralSecurityException e) {
       IOUtils.closeQuietly(pkg);
       throw new ReadException("Unable to read workbook - Decryption failed", e);
+    } catch(RuntimeException e) {
+      IOUtils.closeQuietly(pkg);
+      throw e;
     }
   }
 
