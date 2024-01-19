@@ -1,6 +1,6 @@
 package com.github.pjfanning.xlsx.exceptions;
 
-public class NotSupportedException extends RuntimeException {
+public class NotSupportedException extends ExcelRuntimeException {
 
   public NotSupportedException() {
     super();
