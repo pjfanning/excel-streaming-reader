@@ -1,5 +1,6 @@
 package com.github.pjfanning.xlsx.impl.ooxml;
 
+import com.github.pjfanning.xlsx.exceptions.ReadException;
 import org.apache.poi.util.Beta;
 
 import java.io.*;
@@ -34,7 +35,7 @@ public class OoXmlStrictConverterUtils {
 
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new ReadException("Failed to read mappings", e);
         }
         return props;
     }

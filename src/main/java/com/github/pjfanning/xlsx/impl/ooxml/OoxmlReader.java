@@ -71,7 +71,8 @@ public class OoxmlReader extends XSSFReader {
    */
   @Internal
   public OoxmlReader(StreamingReader.Builder builder,
-                     OPCPackage pkg, boolean strictOoxmlChecksNeeded) throws IOException, OpenXML4JException {
+                     OPCPackage pkg, boolean strictOoxmlChecksNeeded)
+          throws IOException, OpenXML4JException, POIXMLException {
     super(pkg, true);
 
     PackageRelationship coreDocRelationship = this.pkg.getRelationshipsByType(
@@ -183,9 +184,12 @@ public class OoxmlReader extends XSSFReader {
      * Construct a new SheetIterator
      *
      * @param wb package part holding workbook.xml
+     * @throws IOException if reading the data from the package fails
+     * @throws POIXMLException if the package data is invalid
      */
     OoxmlSheetReader(final StreamingReader.Builder builder,
-                     final PackagePart wb, final boolean strictOoxmlChecksNeeded) throws IOException {
+                     final PackagePart wb, final boolean strictOoxmlChecksNeeded)
+            throws IOException, POIXMLException {
       this.builder = builder;
       this.strictOoxmlChecksNeeded = strictOoxmlChecksNeeded;
       /*
@@ -245,7 +249,7 @@ public class OoxmlReader extends XSSFReader {
       return sd;
     }
 
-    private ArrayList<XSSFSheetRef> createSheetListFromWB(PackagePart wb) throws IOException {
+    private ArrayList<XSSFSheetRef> createSheetListFromWB(PackagePart wb) throws IOException, OpenException, POIXMLException {
 
       XMLSheetRefReader xmlSheetRefReader = new XMLSheetRefReader();
       XMLReader xmlReader;
