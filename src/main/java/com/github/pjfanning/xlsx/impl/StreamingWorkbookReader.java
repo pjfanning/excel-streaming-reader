@@ -165,7 +165,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
   }
 
   private void loadPackage(OPCPackage pkg)
-          throws IOException, OpenXML4JException, SAXException, XMLStreamException, POIXMLException {
+          throws IOException, CheckedReadException, OpenXML4JException, SAXException, XMLStreamException, POIXMLException {
     strictFormat = pkg.isStrictOoxmlFormat();
     ooxmlReader = new OoxmlReader(builder, pkg, strictFormat);
     if (strictFormat) {
