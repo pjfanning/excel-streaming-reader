@@ -9,6 +9,7 @@ import com.github.pjfanning.xlsx.exceptions.CloseException;
 import com.github.pjfanning.xlsx.exceptions.NotSupportedException;
 import com.github.pjfanning.xlsx.exceptions.ParseException;
 import com.github.pjfanning.xlsx.impl.ooxml.HyperlinkData;
+import org.apache.poi.ooxml.POIXMLException;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.formula.FormulaParser;
 import org.apache.poi.ss.formula.FormulaRenderer;
@@ -571,8 +572,12 @@ class StreamingRowIterator implements CloseableIterator<Row> {
 
   /**
    * Returns the contents of the cell, with no formatting applied
+   *
+   * @param formattedContentSupplier the supplier of the formatted content
+   * @return the unformatted contents
+   * @throws POIXMLException if there is a problem building the contents
    */
-  private String unformattedContents(Supplier formattedContentSupplier) {
+  private String unformattedContents(Supplier formattedContentSupplier) throws POIXMLException {
     final String lastContents = contentBuilder.toString();
     switch(currentCell.getType()) {
       case "s":           //string stored in shared table
