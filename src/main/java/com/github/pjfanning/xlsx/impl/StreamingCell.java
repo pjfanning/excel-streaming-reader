@@ -2,6 +2,7 @@ package com.github.pjfanning.xlsx.impl;
 
 import com.github.pjfanning.xlsx.XmlUtils;
 import com.github.pjfanning.xlsx.exceptions.NotSupportedException;
+import org.apache.poi.ooxml.POIXMLException;
 import org.apache.poi.ss.formula.FormulaParseException;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellAddress;
@@ -154,9 +155,10 @@ public class StreamingCell implements Cell {
    * Return the cell type.
    *
    * @return the cell type
+   * @throws POIXMLException if the value is not parseable
    */
   @Override
-  public CellType getCellType() {
+  public CellType getCellType() throws POIXMLException {
     if (formulaType) {
       return CellType.FORMULA;
     } else if (contentsSupplier.getContent() == null || type == null) {
@@ -170,9 +172,10 @@ public class StreamingCell implements Cell {
    * For blank cells, we return an empty string.
    *
    * @return the value of the cell as a string
+   * @throws POIXMLException if the value is not parseable
    */
   @Override
-  public String getStringCellValue() {
+  public String getStringCellValue() throws POIXMLException {
     Object c = contentsSupplier.getContent();
 
     return c == null ? "" : c.toString();
@@ -296,9 +299,10 @@ public class StreamingCell implements Cell {
    * </p>
    * @return the value of the cell as a XSSFRichTextString
    * @throws NotSupportedException if the cell type is unsupported
+   * @throws POIXMLException if the value is not parseable
    */
   @Override
-  public XSSFRichTextString getRichStringCellValue() {
+  public XSSFRichTextString getRichStringCellValue() throws POIXMLException {
     CellType cellType = getCellType();
     if (cellType == CellType.FORMULA) {
       cellType = getCachedFormulaResultType();
@@ -331,9 +335,10 @@ public class StreamingCell implements Cell {
    * on the cached value of the formula
    * @throws IllegalStateException if cell is not formula type
    * @throws NotSupportedException if cell formula type is unknown
+   * @throws POIXMLException if the value is not parseable
    */
   @Override
-  public CellType getCachedFormulaResultType() {
+  public CellType getCachedFormulaResultType() throws POIXMLException {
     if (formulaType) {
       if (contentsSupplier.getContent() == null || type == null) {
         return CellType.BLANK;
