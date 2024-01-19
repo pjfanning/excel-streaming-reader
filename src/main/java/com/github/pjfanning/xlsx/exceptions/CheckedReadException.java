@@ -1,5 +1,11 @@
 package com.github.pjfanning.xlsx.exceptions;
 
+/**
+ * An exception that is thrown if there is a problem reading the Excel file.
+ *
+ * @see ReadException
+ * @since 5.0.0
+ */
 public class CheckedReadException extends ExcelCheckedException {
 
   public CheckedReadException() {
