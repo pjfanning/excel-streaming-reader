@@ -2,6 +2,8 @@ package com.github.pjfanning.xlsx.exceptions;
 
 /**
  * A parent class for all the excel-streaming-reader specific Runtime Exceptions.
+ *
+ * @since 4.3.0
  */
 public class ExcelRuntimeException extends RuntimeException {
 
