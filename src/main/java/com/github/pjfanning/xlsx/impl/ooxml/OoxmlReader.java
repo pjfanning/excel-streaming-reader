@@ -24,7 +24,6 @@ import com.github.pjfanning.xlsx.CommentsImplementationType;
 import com.github.pjfanning.xlsx.StreamingReader;
 import com.github.pjfanning.xlsx.exceptions.CheckedReadException;
 import com.github.pjfanning.xlsx.exceptions.MissingSheetException;
-import com.github.pjfanning.xlsx.exceptions.OpenException;
 import org.apache.poi.ooxml.POIXMLException;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
@@ -73,13 +72,13 @@ public class OoxmlReader extends XSSFReader {
    * @param pkg The package this poi filesystem reader will use
    * @param strictOoxmlChecksNeeded whether to perform strict OOXML checks
    * @throws IOException if an error occurs while reading the package
-   * @throws OpenXML4JException if an error occurs while parsing the package
-   * @throws POIXMLException if the package is invalid
+   * @throws CheckedReadException if an error occurs while reading the package
+   * @throws OpenXML4JException if there is an error parsing the OpenXML file
    */
   @Internal
   public OoxmlReader(StreamingReader.Builder builder,
                      OPCPackage pkg, boolean strictOoxmlChecksNeeded)
-          throws IOException, CheckedReadException, OpenXML4JException, POIXMLException {
+          throws IOException, CheckedReadException, OpenXML4JException {
     super(pkg, true);
 
     PackageRelationship coreDocRelationship = this.pkg.getRelationshipsByType(
@@ -93,13 +92,17 @@ public class OoxmlReader extends XSSFReader {
               PackageRelationshipTypes.STRICT_CORE_DOCUMENT).getRelationship(0);
 
       if (coreDocRelationship == null) {
-        throw new POIXMLException("OOXML file structure broken/invalid - no core document found!");
+        throw new CheckedReadException("OOXML file structure broken/invalid - no core document found!");
       }
     }
 
     // Get the part that holds the workbook
     workbookPart = this.pkg.getPart(coreDocRelationship);
-    ooxmlSheetReader = new OoxmlSheetReader(builder, workbookPart, strictOoxmlChecksNeeded);
+    try {
+      ooxmlSheetReader = new OoxmlSheetReader(builder, workbookPart, strictOoxmlChecksNeeded);
+    } catch (InvalidFormatException e) {
+      throw new CheckedReadException("invalid format", e);
+    }
   }
 
 
