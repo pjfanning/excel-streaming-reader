@@ -1,26 +1,26 @@
 package com.github.pjfanning.xlsx.impl.ooxml;
 
 import com.github.pjfanning.xlsx.exceptions.ReadException;
-import org.apache.poi.util.Beta;
+import org.apache.poi.util.Internal;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
-@Beta
-public class OoXmlStrictConverterUtils {
+@Internal
+final class OoXmlStrictConverterUtils {
 
     private OoXmlStrictConverterUtils() {}
 
-    public static boolean isBlank(final String str) {
+    static boolean isBlank(final String str) {
         return str == null || str.trim().length() == 0;
     }
 
-    public static boolean isNotBlank(final String str) {
+    static boolean isNotBlank(final String str) {
         return !isBlank(str);
     }
 
-    public static Properties readMappings() throws ReadException {
+    static Properties readMappings() throws ReadException {
         Properties props = new Properties();
         try(InputStream is = OoXmlStrictConverterUtils.class.getResourceAsStream("/ooxml-strict-mappings.properties");
                 BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.ISO_8859_1))) {
