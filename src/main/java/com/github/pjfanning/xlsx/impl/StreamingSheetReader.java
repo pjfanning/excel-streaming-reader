@@ -261,7 +261,7 @@ public class StreamingSheetReader implements Iterable<Row> {
    * @throws ReadException if there is a parse issue
    */
   @Override
-  public CloseableIterator<Row> iterator() {
+  public CloseableIterator<Row> iterator() throws OpenException, ReadException {
     try {
       //StreamingRowIterator requires a new XMLEventReader with a new InputStream to be provided to start from the
       //beginning of the Sheet

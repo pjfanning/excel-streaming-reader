@@ -231,6 +231,13 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     return sheetList;
   }
 
+  /**
+   * Returns the sheet at the given index (0 based).
+   * @param idx index (0 based)
+   * @return the sheet at the given index
+   * @throws IOException should never be thrown
+   * @throws XMLStreamException should never be thrown
+   */
   public StreamingSheet getSheetAt(final int idx) throws IOException, XMLStreamException {
     if (sheets != null && sheets.size() > idx) {
       return sheets.get(idx);
@@ -244,6 +251,13 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     }
   }
 
+  /**
+   * Returns the sheet with the given name.
+   * @param name the name of the sheet to return
+   * @return the sheet with the given name
+   * @throws IOException should never be thrown
+   * @throws XMLStreamException should never be thrown
+   */
   public StreamingSheet getSheet(final String name) throws IOException, XMLStreamException {
     final int idx = ooxmlReader.getSheetIndex(name);
     return getSheetAt(idx);
