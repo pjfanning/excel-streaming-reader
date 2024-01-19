@@ -4,6 +4,7 @@ import com.github.pjfanning.poi.xssf.streaming.MapBackedSharedStringsTable;
 import com.github.pjfanning.poi.xssf.streaming.TempFileSharedStringsTable;
 import com.github.pjfanning.xlsx.SharedStringsImplementationType;
 import com.github.pjfanning.xlsx.StreamingReader.Builder;
+import com.github.pjfanning.xlsx.exceptions.MissingSheetException;
 import com.github.pjfanning.xlsx.exceptions.NotSupportedException;
 import com.github.pjfanning.xlsx.exceptions.OpenException;
 import com.github.pjfanning.xlsx.exceptions.ParseException;
@@ -255,10 +256,11 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
    * Returns the sheet with the given name.
    * @param name the name of the sheet to return
    * @return the sheet with the given name
+   * @throws MissingSheetException if a sheet with the given name does not exist
    * @throws IOException should never be thrown
    * @throws XMLStreamException should never be thrown
    */
-  public StreamingSheet getSheet(final String name) throws IOException, XMLStreamException {
+  public StreamingSheet getSheet(final String name) throws MissingSheetException, IOException, XMLStreamException {
     final int idx = ooxmlReader.getSheetIndex(name);
     return getSheetAt(idx);
   }

@@ -1,5 +1,6 @@
 package com.github.pjfanning.xlsx;
 
+import com.github.pjfanning.xlsx.exceptions.MissingSheetException;
 import com.github.pjfanning.xlsx.impl.XlsxHyperlink;
 import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream;
 import org.apache.poi.common.usermodel.HyperlinkType;
@@ -61,6 +62,16 @@ public class StreamingSheetTest {
       assertEquals(0, sheet.getFirstRowNum());
       assertEquals(0, sheet.getLastRowNum());
       assertEquals(workbook, sheet.getWorkbook());
+    }
+  }
+
+  @Test(expected = MissingSheetException.class)
+  public void testMissingSheet() throws Exception {
+    try(
+            InputStream is = getInputStream("empty_sheet.xlsx");
+            Workbook workbook = StreamingReader.builder().open(is)
+    ) {
+      Sheet sheet = workbook.getSheet("non-existent");
     }
   }
 
