@@ -231,7 +231,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     return sheetList;
   }
 
-  public StreamingSheet getSheetAt(final int idx) throws IOException, XMLStreamException {
+  public StreamingSheet getSheetAt(final int idx) {
     if (sheets != null && sheets.size() > idx) {
       return sheets.get(idx);
     } else {

@@ -105,12 +105,8 @@ public class StreamingWorkbook implements Workbook, Date1904Support, AutoCloseab
    * {@inheritDoc}
    */
   @Override
-  public Sheet getSheetAt(final int index) throws ReadException {
-    try {
-      return reader.getSheetAt(index);
-    } catch (XMLStreamException|IOException e) {
-      throw new ReadException(e);
-    }
+  public Sheet getSheetAt(final int index) {
+    return reader.getSheetAt(index);
   }
 
   /**
