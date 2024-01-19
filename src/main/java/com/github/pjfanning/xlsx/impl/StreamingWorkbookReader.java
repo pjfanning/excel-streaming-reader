@@ -4,6 +4,7 @@ import com.github.pjfanning.poi.xssf.streaming.MapBackedSharedStringsTable;
 import com.github.pjfanning.poi.xssf.streaming.TempFileSharedStringsTable;
 import com.github.pjfanning.xlsx.SharedStringsImplementationType;
 import com.github.pjfanning.xlsx.StreamingReader.Builder;
+import com.github.pjfanning.xlsx.exceptions.ExcelRuntimeException;
 import com.github.pjfanning.xlsx.exceptions.MissingSheetException;
 import com.github.pjfanning.xlsx.exceptions.NotSupportedException;
 import com.github.pjfanning.xlsx.exceptions.OpenException;
@@ -89,12 +90,12 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
       } catch(IOException e) {
         IOUtils.closeQuietly(pkg);
         throw new OpenException("Failed to open stream", e);
-      } catch(OpenXML4JException | XMLStreamException e) {
-        IOUtils.closeQuietly(pkg);
-        throw new ReadException("Unable to read workbook", e);
       } catch(GeneralSecurityException e) {
         IOUtils.closeQuietly(pkg);
         throw new ReadException("Unable to read workbook - Decryption failed", e);
+      } catch(OpenXML4JException | XMLStreamException | RuntimeException e) {
+        IOUtils.closeQuietly(pkg);
+        throw new ReadException("Unable to read workbook", e);
       }
     } else {
       File f = null;
@@ -130,7 +131,6 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
    * @throws OpenException if an error occurs while opening the file
    * @throws ReadException if an error occurs while reading the file
    * @throws ParseException if an error occurs while parsing the file
-   * @throws RuntimeException can also be thrown
    */
   public void init(File f) throws OpenException, ReadException, ParseException {
     try {
@@ -156,9 +156,12 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     } catch(GeneralSecurityException e) {
       IOUtils.closeQuietly(pkg);
       throw new ReadException("Unable to read workbook - Decryption failed", e);
-    } catch(RuntimeException e) {
+    } catch(ExcelRuntimeException e) {
       IOUtils.closeQuietly(pkg);
       throw e;
+    } catch(RuntimeException e) {
+      IOUtils.closeQuietly(pkg);
+      throw new ReadException("Unable to read workbook", e);
     }
   }
 
