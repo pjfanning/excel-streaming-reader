@@ -20,7 +20,7 @@ public class OoXmlStrictConverterUtils {
         return !isBlank(str);
     }
 
-    public static Properties readMappings() {
+    public static Properties readMappings() throws ReadException {
         Properties props = new Properties();
         try(InputStream is = OoXmlStrictConverterUtils.class.getResourceAsStream("/ooxml-strict-mappings.properties");
                 BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.ISO_8859_1))) {

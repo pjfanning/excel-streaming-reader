@@ -89,7 +89,7 @@ class StreamingRowIterator implements CloseableIterator<Row> {
                        final Set<Integer> hiddenColumns, final Map<Integer, Float> columnWidths,
                        final Set<CellRangeAddress> mergedCells, final Set<HyperlinkData> hyperlinks,
                        final Map<String, SharedFormula> sharedFormulaMap, final float defaultRowHeight,
-                       final StreamingSheet sheet) {
+                       final StreamingSheet sheet) throws ParseException {
     this.streamingSheetReader = streamingSheetReader;
     this.sst = sst;
     this.stylesTable = stylesTable;
@@ -118,7 +118,7 @@ class StreamingRowIterator implements CloseableIterator<Row> {
    *
    * @return true if data was read
    */
-  private boolean getRow() {
+  private boolean getRow() throws ParseException {
     try {
       rowCache.clear();
       while(rowCache.size() < rowCacheSize && parser.hasNext()) {
@@ -631,7 +631,7 @@ class StreamingRowIterator implements CloseableIterator<Row> {
   }
 
   @Override
-  public boolean hasNext() {
+  public boolean hasNext() throws ParseException {
     return (rowCacheIterator != null && rowCacheIterator.hasNext()) || getRow();
   }
 
