@@ -275,7 +275,7 @@ public class StreamingSheetReader implements Iterable<Row> {
     } catch (IOException e) {
       throw new OpenException("Failed to open stream", e);
     } catch (XMLStreamException e) {
-      throw new ReadException("Unable to read sheet", e);
+      throw new ReadException("Unable to read row data", e);
     }
   }
 
