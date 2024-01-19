@@ -1,6 +1,6 @@
 package com.github.pjfanning.xlsx.exceptions;
 
-public class OpenException extends RuntimeException {
+public class OpenException extends ExcelRuntimeException {
 
   public OpenException() {
     super();

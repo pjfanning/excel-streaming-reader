@@ -1,6 +1,6 @@
 package com.github.pjfanning.xlsx.exceptions;
 
-public class MissingSheetException extends RuntimeException {
+public class MissingSheetException extends ExcelRuntimeException {
 
   public MissingSheetException() {
     super();
