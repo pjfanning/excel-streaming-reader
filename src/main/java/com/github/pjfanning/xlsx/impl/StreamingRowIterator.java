@@ -89,7 +89,7 @@ class StreamingRowIterator implements CloseableIterator<Row> {
                        final Set<Integer> hiddenColumns, final Map<Integer, Float> columnWidths,
                        final Set<CellRangeAddress> mergedCells, final Set<HyperlinkData> hyperlinks,
                        final Map<String, SharedFormula> sharedFormulaMap, final float defaultRowHeight,
-                       final StreamingSheet sheet) throws ParseException {
+                       final StreamingSheet sheet) throws XMLStreamException {
     this.streamingSheetReader = streamingSheetReader;
     this.sst = sst;
     this.stylesTable = stylesTable;
@@ -118,17 +118,13 @@ class StreamingRowIterator implements CloseableIterator<Row> {
    *
    * @return true if data was read
    */
-  private boolean getRow() throws ParseException {
-    try {
-      rowCache.clear();
-      while(rowCache.size() < rowCacheSize && parser.hasNext()) {
-        handleEvent(parser.nextEvent());
-      }
-      rowCacheIterator = rowCache.iterator();
-      return rowCacheIterator.hasNext();
-    } catch(XMLStreamException e) {
-      throw new ParseException("Error reading XML stream", e);
+  private boolean getRow() throws XMLStreamException {
+    rowCache.clear();
+    while(rowCache.size() < rowCacheSize && parser.hasNext()) {
+      handleEvent(parser.nextEvent());
     }
+    rowCacheIterator = rowCache.iterator();
+    return rowCacheIterator.hasNext();
   }
 
   private void handleEvent(XMLEvent event) {
@@ -630,9 +626,17 @@ class StreamingRowIterator implements CloseableIterator<Row> {
     return att == null ? null : att.getValue();
   }
 
+  /**
+   * @return whether there are more rows
+   * @throws ParseException if there is an error parsing the underlying data
+   */
   @Override
   public boolean hasNext() throws ParseException {
-    return (rowCacheIterator != null && rowCacheIterator.hasNext()) || getRow();
+      try {
+          return (rowCacheIterator != null && rowCacheIterator.hasNext()) || getRow();
+      } catch (XMLStreamException e) {
+          throw new ParseException(e);
+      }
   }
 
   @Override
