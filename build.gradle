@@ -40,7 +40,7 @@ dependencies {
     implementation 'commons-io:commons-io:2.15.1'
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.nanohttpd:nanohttpd:2.3.1'
-    testImplementation 'org.mockito:mockito-core:4.11.0'
+    testImplementation 'org.mockito:mockito-core:5.9.0'
     testRuntimeOnly "org.slf4j:slf4j-simple:$slf4jVersion"
     testRuntimeOnly 'org.apache.logging.log4j:log4j-to-slf4j:2.22.1'
 }
