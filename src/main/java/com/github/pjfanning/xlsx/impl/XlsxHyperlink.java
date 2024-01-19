@@ -80,6 +80,7 @@ public class XlsxHyperlink implements Hyperlink, Duplicatable {
 
   /**
    * Get the address of the cell this hyperlink applies to, e.g. A55
+   * @return the reference of the cell this hyperlink applies to
    */
   public String getCellRef() {
     return hyperlinkData.getRef();
@@ -195,7 +196,7 @@ public class XlsxHyperlink implements Hyperlink, Duplicatable {
   }
 
   /**
-   * @throws UnsupportedOperationException
+   * @throws UnsupportedOperationException not supported
    */
   @Override
   public void setAddress(String address) {
@@ -203,7 +204,7 @@ public class XlsxHyperlink implements Hyperlink, Duplicatable {
   }
 
   /**
-   * @throws UnsupportedOperationException
+   * @throws UnsupportedOperationException not supported
    */
   @Override
   public void setLabel(String label) {
@@ -211,7 +212,7 @@ public class XlsxHyperlink implements Hyperlink, Duplicatable {
   }
 
   /**
-   * @throws UnsupportedOperationException
+   * @throws UnsupportedOperationException not supported
    */
   @Override
   public void setFirstColumn(int col) {
@@ -219,7 +220,7 @@ public class XlsxHyperlink implements Hyperlink, Duplicatable {
   }
 
   /**
-   * @throws UnsupportedOperationException
+   * @throws UnsupportedOperationException not supported
    */
   @Override
   public void setLastColumn(int col) {
@@ -227,7 +228,7 @@ public class XlsxHyperlink implements Hyperlink, Duplicatable {
   }
 
   /**
-   * @throws UnsupportedOperationException
+   * @throws UnsupportedOperationException not supported
    */
   @Override
   public void setFirstRow(int row) {
@@ -235,7 +236,7 @@ public class XlsxHyperlink implements Hyperlink, Duplicatable {
   }
 
   /**
-   * @throws UnsupportedOperationException
+   * @throws UnsupportedOperationException not supported
    */
   @Override
   public void setLastRow(int row) {

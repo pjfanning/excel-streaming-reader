@@ -68,6 +68,12 @@ public class OoxmlReader extends XSSFReader {
 
   /**
    * Creates a new XSSFReader, for the given package
+   * @param builder the builder to use
+   * @param pkg The package this poi filesystem reader will use
+   * @param strictOoxmlChecksNeeded whether to perform strict OOXML checks
+   * @throws IOException if an error occurs while reading the package
+   * @throws OpenXML4JException if an error occurs while parsing the package
+   * @throws POIXMLException if the package is invalid
    */
   @Internal
   public OoxmlReader(StreamingReader.Builder builder,
@@ -100,6 +106,8 @@ public class OoxmlReader extends XSSFReader {
    * Opens up the Shared Strings Table, parses it, and
    * returns a handy object for working with
    * shared strings.
+   * @return the shared strings table
+   * @throws IOException if an error occurs while reading the shared strings
    */
   @Override
   public SharedStringsTable getSharedStringsTable() throws IOException {
@@ -111,6 +119,10 @@ public class OoxmlReader extends XSSFReader {
    * Opens up the Shared Strings Table, parses it, and
    * returns a handy object for working with
    * shared strings.
+   * @param builder the builder to use
+   * @return the shared strings table
+   * @throws IOException if an error occurs while reading the shared strings
+   * @throws SAXException if an error occurs while parsing the shared strings
    */
   public SharedStrings getSharedStrings(StreamingReader.Builder builder) throws IOException, SAXException {
     ArrayList<PackagePart> parts = pkg.getPartsByContentType(XSSFRelation.SHARED_STRINGS.getContentType());
@@ -132,7 +144,10 @@ public class OoxmlReader extends XSSFReader {
 
   /**
    * Opens up the Styles Table, parses it, and
-   * returns a handy object for working with cell styles
+   * returns a handy object for working with cell styles.
+   *
+   * @return the styles table
+   * @throws IOException if an error occurs while reading the styles.
    */
   @Override
   public StylesTable getStylesTable() throws IOException, InvalidFormatException {

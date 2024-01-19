@@ -17,11 +17,11 @@ public class WorkbookUtil {
   private WorkbookUtil() {}
 
   /**
-   * @param reader
+   * @param reader reader for the xlsx file
    * @return whether the stored xlsx has 1904 date format
-   * @throws IOException
-   * @throws InvalidFormatException
-   * @throws SAXException
+   * @throws IOException if the workbook cannot be read
+   * @throws InvalidFormatException if the workbook is invalid
+   * @throws SAXException if the workbook cannot be parsed
    * @deprecated use {@link #use1904Dates(Document)}
    */
   @Deprecated
@@ -30,7 +30,7 @@ public class WorkbookUtil {
   }
 
   /**
-   * @param workbookDoc
+   * @param workbookDoc the workbook document in XML format
    * @return whether the stored xlsx has 1904 date format
    */
   public static boolean use1904Dates(Document workbookDoc) {
