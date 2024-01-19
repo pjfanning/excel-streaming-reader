@@ -12,6 +12,7 @@ import com.github.pjfanning.xlsx.impl.ooxml.OoxmlStrictHelper;
 import com.github.pjfanning.xlsx.impl.ooxml.OoxmlReader;
 import org.apache.commons.io.IOUtils;
 import org.apache.poi.UnsupportedFileFormatException;
+import org.apache.poi.ooxml.POIXMLException;
 import org.apache.poi.ooxml.POIXMLProperties;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
@@ -163,7 +164,8 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     return OPCPackage.open(d.getDataStream(poifs));
   }
 
-  private void loadPackage(OPCPackage pkg) throws IOException, OpenXML4JException, SAXException, XMLStreamException {
+  private void loadPackage(OPCPackage pkg)
+          throws IOException, OpenXML4JException, SAXException, XMLStreamException, POIXMLException {
     strictFormat = pkg.isStrictOoxmlFormat();
     ooxmlReader = new OoxmlReader(builder, pkg, strictFormat);
     if (strictFormat) {

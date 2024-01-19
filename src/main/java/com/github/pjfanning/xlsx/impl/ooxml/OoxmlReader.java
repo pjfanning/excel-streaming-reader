@@ -78,7 +78,7 @@ public class OoxmlReader extends XSSFReader {
   @Internal
   public OoxmlReader(StreamingReader.Builder builder,
                      OPCPackage pkg, boolean strictOoxmlChecksNeeded)
-          throws IOException, OpenXML4JException, POIXMLException {
+          throws IOException, OpenXML4JException, InvalidFormatException, POIXMLException {
     super(pkg, true);
 
     PackageRelationship coreDocRelationship = this.pkg.getRelationshipsByType(
@@ -200,33 +200,30 @@ public class OoxmlReader extends XSSFReader {
      *
      * @param wb package part holding workbook.xml
      * @throws IOException if reading the data from the package fails
-     * @throws POIXMLException if the package data is invalid
+     * @throws InvalidFormatException if the package data is invalid
+     * @throws RuntimeException the underlying POI code can throw other RuntimeExceptions
      */
     OoxmlSheetReader(final StreamingReader.Builder builder,
                      final PackagePart wb, final boolean strictOoxmlChecksNeeded)
-            throws IOException, POIXMLException {
+            throws IOException, InvalidFormatException {
       this.builder = builder;
       this.strictOoxmlChecksNeeded = strictOoxmlChecksNeeded;
       /*
        * The order of sheets is defined by the order of CTSheet elements in workbook.xml
        */
-      try {
-        //step 1. Map sheet's relationship Id and the corresponding PackagePart
-        sheetMap = new HashMap<>();
-        OPCPackage pkg = wb.getPackage();
-        Set<String> worksheetRels = getSheetRelationships();
-        for (PackageRelationship rel : wb.getRelationships()) {
-          String relType = rel.getRelationshipType();
-          if (worksheetRels.contains(relType)) {
-            PackagePartName relName = PackagingURIHelper.createPartName(rel.getTargetURI());
-            sheetMap.put(rel.getId(), pkg.getPart(relName));
-          }
+      //step 1. Map sheet's relationship Id and the corresponding PackagePart
+      sheetMap = new HashMap<>();
+      OPCPackage pkg = wb.getPackage();
+      Set<String> worksheetRels = getSheetRelationships();
+      for (PackageRelationship rel : wb.getRelationships()) {
+        String relType = rel.getRelationshipType();
+        if (worksheetRels.contains(relType)) {
+          PackagePartName relName = PackagingURIHelper.createPartName(rel.getTargetURI());
+          sheetMap.put(rel.getId(), pkg.getPart(relName));
         }
-        //step 2. Read array of CTSheet elements, wrap it in a LinkedList
-        sheetRefList = createSheetListFromWB(wb);
-      } catch (InvalidFormatException e) {
-        throw new POIXMLException(e);
       }
+      //step 2. Read array of CTSheet elements, wrap it in a LinkedList
+      sheetRefList = createSheetListFromWB(wb);
     }
 
     int size() {
