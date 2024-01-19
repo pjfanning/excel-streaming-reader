@@ -1,6 +1,6 @@
 package com.github.pjfanning.xlsx.exceptions;
 
-public class ReadException extends RuntimeException {
+public class ReadException extends ExcelRuntimeException {
 
   public ReadException() {
     super();

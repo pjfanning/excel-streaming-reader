@@ -1,6 +1,6 @@
 package com.github.pjfanning.xlsx.exceptions;
 
-public class ParseException extends RuntimeException {
+public class ParseException extends ExcelRuntimeException {
 
   public ParseException() {
     super();

@@ -1,6 +1,6 @@
 package com.github.pjfanning.xlsx.exceptions;
 
-public class CloseException extends RuntimeException {
+public class CloseException extends ExcelRuntimeException {
 
   public CloseException() {
     super();
