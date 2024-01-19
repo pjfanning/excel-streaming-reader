@@ -1,8 +1,7 @@
 package com.github.pjfanning.xlsx;
 
 import com.github.pjfanning.xlsx.exceptions.OpenException;
-import com.github.pjfanning.xlsx.exceptions.ParseException;
-import com.github.pjfanning.xlsx.impl.StreamingWorkbookReader;
+import com.github.pjfanning.xlsx.exceptions.ReadException;
 import com.github.pjfanning.xlsx.impl.XlsxPictureData;
 import fi.iki.elonen.NanoHTTPD;
 import org.apache.commons.io.IOUtils;
@@ -875,6 +874,25 @@ public class StreamingWorkbookTest {
 
         }
       }
+    }
+  }
+
+  @Test
+  public void testXlsReadFailure() throws Exception {
+    try (Workbook workbook = openWorkbook("Basic_Expense_Template_2011.xls")) {
+      fail("Should have thrown exception");
+    } catch (ReadException e) {
+      assertEquals("Unsupported File Format (only xlsx files are supported)", e.getMessage());
+    }
+  }
+
+  @Test
+  public void testXlsReadFileFailure() throws Exception {
+    File file = new File("src/test/resources/Basic_Expense_Template_2011.xls");
+    try (Workbook workbook = StreamingReader.builder().open(file)) {
+      fail("Should have thrown exception");
+    } catch (ReadException e) {
+      assertEquals("Unsupported File Format (only xlsx files are supported)", e.getMessage());
     }
   }
 
