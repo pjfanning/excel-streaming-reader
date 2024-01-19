@@ -43,7 +43,7 @@ public class StreamingSheetTest {
   public void testLastRowNum() throws Exception {
     try(
         InputStream is = getInputStream("large.xlsx");
-        Workbook workbook = StreamingReader.builder().open(is);
+        Workbook workbook = StreamingReader.builder().open(is)
     ) {
       assertEquals(1, workbook.getNumberOfSheets());
       Sheet sheet = workbook.getSheetAt(0);
@@ -54,7 +54,7 @@ public class StreamingSheetTest {
 
     try(
         InputStream is = getInputStream("empty_sheet.xlsx");
-        Workbook workbook = StreamingReader.builder().open(is);
+        Workbook workbook = StreamingReader.builder().open(is)
     ) {
       assertEquals(1, workbook.getNumberOfSheets());
       Sheet sheet = workbook.getSheetAt(0);
@@ -68,7 +68,7 @@ public class StreamingSheetTest {
   public void testEmptyCellShouldHaveGeneralStyle() throws Exception {
     try(
         InputStream is = getInputStream("large.xlsx");
-        Workbook workbook = StreamingReader.builder().open(is);
+        Workbook workbook = StreamingReader.builder().open(is)
     ) {
       assertEquals(1, workbook.getNumberOfSheets());
       Sheet sheet = workbook.getSheetAt(0);
@@ -80,7 +80,7 @@ public class StreamingSheetTest {
 
   @Test
   public void testMergedRegion() throws IOException {
-    try (UnsynchronizedByteArrayOutputStream bos = new UnsynchronizedByteArrayOutputStream()) {
+    try (UnsynchronizedByteArrayOutputStream bos = UnsynchronizedByteArrayOutputStream.builder().get()) {
       try (XSSFWorkbook wb = new XSSFWorkbook()) {
         XSSFSheet sheet = wb.createSheet();
         CellRangeAddress region = new CellRangeAddress(1, 1, 1, 2);
@@ -384,7 +384,7 @@ public class StreamingSheetTest {
   public void testPaneInformation() throws IOException {
     try (
             XSSFWorkbook xssfWorkbook = new XSSFWorkbook();
-            UnsynchronizedByteArrayOutputStream bos = new UnsynchronizedByteArrayOutputStream()
+            UnsynchronizedByteArrayOutputStream bos = UnsynchronizedByteArrayOutputStream.builder().get()
     ) {
       int leftmostColumn = 3;
       int topRow = 4;
@@ -457,7 +457,7 @@ public class StreamingSheetTest {
     final String testValue = "1\n2\r\n3";
     try (
             XSSFWorkbook xssfWorkbook = new XSSFWorkbook();
-            UnsynchronizedByteArrayOutputStream bos = new UnsynchronizedByteArrayOutputStream()
+            UnsynchronizedByteArrayOutputStream bos = UnsynchronizedByteArrayOutputStream.builder().get()
     ) {
       Sheet xssfSheet = xssfWorkbook.createSheet();
       xssfSheet.createRow(0).createCell(0).setCellValue(testValue);
@@ -485,7 +485,7 @@ public class StreamingSheetTest {
     final String testValue = "1\n2\r\n3";
     try (
             SXSSFWorkbook sxssfWorkbook = new SXSSFWorkbook();
-            UnsynchronizedByteArrayOutputStream bos = new UnsynchronizedByteArrayOutputStream()
+            UnsynchronizedByteArrayOutputStream bos = UnsynchronizedByteArrayOutputStream.builder().get()
     ) {
       Sheet xssfSheet = sxssfWorkbook.createSheet();
       xssfSheet.createRow(0).createCell(0).setCellValue(testValue);

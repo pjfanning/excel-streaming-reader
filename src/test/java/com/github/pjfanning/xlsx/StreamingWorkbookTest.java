@@ -15,7 +15,6 @@ import org.apache.poi.xssf.usermodel.*;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.xml.sax.SAXException;
 
 import java.io.*;
 import java.util.*;
@@ -48,7 +47,7 @@ public class StreamingWorkbookTest {
   public void testIterateSheets() throws Exception {
     try(
             InputStream is = new FileInputStream("src/test/resources/sheets.xlsx");
-            Workbook workbook = StreamingReader.builder().open(is);
+            Workbook workbook = StreamingReader.builder().open(is)
     ) {
       testIteration(workbook);
     }
@@ -59,7 +58,7 @@ public class StreamingWorkbookTest {
     StreamingReader.Builder builder = StreamingReader.builder().setAvoidTempFiles(true);
     try(
             InputStream is = new FileInputStream("src/test/resources/sheets.xlsx");
-            Workbook workbook = builder.open(is);
+            Workbook workbook = builder.open(is)
     ) {
       testIteration(workbook);
     }
@@ -89,7 +88,7 @@ public class StreamingWorkbookTest {
 
   @Test
   public void testMissingCells() throws Exception {
-    try(UnsynchronizedByteArrayOutputStream bos = new UnsynchronizedByteArrayOutputStream()) {
+    try(UnsynchronizedByteArrayOutputStream bos = UnsynchronizedByteArrayOutputStream.builder().get()) {
       try(XSSFWorkbook xssfWorkbook = new XSSFWorkbook()) {
         Sheet sheet = xssfWorkbook.createSheet();
         Row row = sheet.createRow(0);
@@ -640,7 +639,7 @@ public class StreamingWorkbookTest {
 
   @Test
   public void testGetErrorCellValue() throws IOException {
-    try(UnsynchronizedByteArrayOutputStream bos = new UnsynchronizedByteArrayOutputStream()) {
+    try(UnsynchronizedByteArrayOutputStream bos = UnsynchronizedByteArrayOutputStream.builder().get()) {
       try(XSSFWorkbook workbook = new XSSFWorkbook()) {
         XSSFSheet sheet = workbook.createSheet("sheet1");
         XSSFRow row = sheet.createRow(0);
@@ -669,7 +668,7 @@ public class StreamingWorkbookTest {
 
   @Test
   public void testBug65676() throws Exception {
-    try (UnsynchronizedByteArrayOutputStream output = new UnsynchronizedByteArrayOutputStream()) {
+    try (UnsynchronizedByteArrayOutputStream output = UnsynchronizedByteArrayOutputStream.builder().get()) {
       try(Workbook wb = new SXSSFWorkbook()) {
         Row r = wb.createSheet("Sheet").createRow(0);
         r.createCell(0).setCellValue(1.2); /* A1: Number 1.2 */
@@ -700,7 +699,7 @@ public class StreamingWorkbookTest {
     final String sheetName2 = "SHEET_WITH_CAPS_NAME";
     try (
             XSSFWorkbook xssfWorkbook = new XSSFWorkbook();
-            UnsynchronizedByteArrayOutputStream bos = new UnsynchronizedByteArrayOutputStream()
+            UnsynchronizedByteArrayOutputStream bos = UnsynchronizedByteArrayOutputStream.builder().get()
     ) {
       XSSFSheet xssfSheet1 = xssfWorkbook.createSheet(sheetName1);
       xssfSheet1.createRow(0).createCell(0).setCellValue(sheetName1);
@@ -746,7 +745,7 @@ public class StreamingWorkbookTest {
   public void testConcurrentSheetRead() throws Exception {
     try (
             XSSFWorkbook xssfWorkbook = new XSSFWorkbook();
-            UnsynchronizedByteArrayOutputStream bos = new UnsynchronizedByteArrayOutputStream()
+            UnsynchronizedByteArrayOutputStream bos = UnsynchronizedByteArrayOutputStream.builder().get()
     ) {
       Sheet sheet1 = xssfWorkbook.createSheet("s1");
       Sheet sheet2 = xssfWorkbook.createSheet("s2");
@@ -809,7 +808,7 @@ public class StreamingWorkbookTest {
   public void testSheetReadWrongOrder() throws Exception {
     try (
             XSSFWorkbook xssfWorkbook = new XSSFWorkbook();
-            UnsynchronizedByteArrayOutputStream bos = new UnsynchronizedByteArrayOutputStream()
+            UnsynchronizedByteArrayOutputStream bos = UnsynchronizedByteArrayOutputStream.builder().get()
     ) {
       Sheet sheet1 = xssfWorkbook.createSheet("s1");
       Sheet sheet2 = xssfWorkbook.createSheet("s2");
