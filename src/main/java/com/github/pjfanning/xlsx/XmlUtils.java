@@ -29,7 +29,7 @@ public class XmlUtils {
     return DocumentHelper.readDocument(inp);
   }
 
-  public static NodeList searchForNodeList(Document document, String xpath) throws ParseException {
+  public static NodeList searchForNodeList(Document document, String xpath) {
     try {
       XPath xp = XPathFactory.newInstance().newXPath();
       xp.setNamespaceContext(transitionalFormatNamespaceContext);

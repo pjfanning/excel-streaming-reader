@@ -22,7 +22,6 @@ import com.github.pjfanning.poi.xssf.streaming.TempFileCommentsTable;
 import com.github.pjfanning.poi.xssf.streaming.TempFileSharedStringsTable;
 import com.github.pjfanning.xlsx.CommentsImplementationType;
 import com.github.pjfanning.xlsx.StreamingReader;
-import com.github.pjfanning.xlsx.exceptions.MissingSheetException;
 import com.github.pjfanning.xlsx.exceptions.OpenException;
 import org.apache.poi.ooxml.POIXMLException;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
@@ -214,7 +213,7 @@ public class OoxmlReader extends XSSFReader {
       return sheetRefList.size();
     }
 
-    int getSheetIndex(final String name) throws MissingSheetException {
+    int getSheetIndex(final String name) {
       int i = 0;
       for (XSSFSheetRef sheetRef : sheetRefList) {
         if (name.equalsIgnoreCase(sheetRef.getName())) {
@@ -222,7 +221,7 @@ public class OoxmlReader extends XSSFReader {
         }
         i++;
       }
-      throw new MissingSheetException("Failed to find sheet " + name);
+      throw new NoSuchElementException("Failed to find sheet " + name);
     }
 
     SheetData getSheetData(final int idx) {
