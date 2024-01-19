@@ -35,7 +35,7 @@ ext {
 dependencies {
     api "org.apache.poi:poi:$poiVersion"
     api "org.apache.poi:poi-ooxml:$poiVersion"
-    implementation 'com.github.pjfanning:poi-shared-strings:2.7.1'
+    implementation 'com.github.pjfanning:poi-shared-strings:2.8.0'
     implementation "org.slf4j:slf4j-api:$slf4jVersion"
     implementation 'commons-io:commons-io:2.15.1'
     testImplementation 'junit:junit:4.13.2'
