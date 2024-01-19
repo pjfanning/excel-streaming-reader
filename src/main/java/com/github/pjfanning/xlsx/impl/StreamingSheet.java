@@ -159,9 +159,13 @@ public class StreamingSheet implements Sheet {
   /**
    * Only works after sheet is fully read (because merged regions data is stored
    * at the end of the sheet XML).
+   *
+   * @param index the index of the merged region to retrieve
+   * @return the merged region at the specified index
+   * @throws NoSuchElementException if the index argument is not a valid index
    */
   @Override
-  public CellRangeAddress getMergedRegion(int index) {
+  public CellRangeAddress getMergedRegion(int index) throws NoSuchElementException {
     List<CellRangeAddress> regions = getMergedRegions();
     if(index > regions.size()) {
       throw new NoSuchElementException("index " + index + " is out of range");
@@ -217,7 +221,7 @@ public class StreamingSheet implements Sheet {
    * This should only be called after all the rows are read because the hyperlink data is
    * at the end of the sheet.
    *
-   * @param cellAddress
+   * @param cellAddress the location of the cell
    * @return the hyperlink associated with this cell (only if feature is enabled on the Builder) - null if not found
    * @throws IllegalStateException if {@link com.github.pjfanning.xlsx.StreamingReader.Builder#setReadHyperlinks(boolean)} is not set to true
    */

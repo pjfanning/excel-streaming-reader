@@ -70,7 +70,10 @@ public class StreamingWorkbook implements Workbook, Date1904Support, AutoCloseab
   }
 
   /**
-   * {@inheritDoc}
+   * Returns the index of the sheet by his name (case insensitive match)
+   *
+   * @param name the sheet name
+   * @return index of the sheet (0 based) or {@code -1} if not found
    */
   @Override
   public int getSheetIndex(String name) {
@@ -81,7 +84,7 @@ public class StreamingWorkbook implements Workbook, Date1904Support, AutoCloseab
    * Returns the index of the given sheet
    *
    * @param sheet the sheet to look up
-   * @return index of the sheet (0 based)
+   * @return index of the sheet (0 based) or {@code -1} if not found
    * @throws IllegalArgumentException if the sheet provided is not a StreamingSheet
    */
   @Override

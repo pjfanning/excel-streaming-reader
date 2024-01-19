@@ -76,6 +76,16 @@ public class StreamingSheetTest {
   }
 
   @Test
+  public void testSheetIndexForMissingSheet() throws Exception {
+    try(
+            InputStream is = getInputStream("empty_sheet.xlsx");
+            Workbook workbook = StreamingReader.builder().open(is)
+    ) {
+      assertEquals(-1, workbook.getSheetIndex("non-existent"));
+    }
+  }
+
+  @Test
   public void testEmptyCellShouldHaveGeneralStyle() throws Exception {
     try(
         InputStream is = getInputStream("large.xlsx");
