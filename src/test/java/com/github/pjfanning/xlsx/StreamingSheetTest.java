@@ -75,6 +75,16 @@ public class StreamingSheetTest {
     }
   }
 
+  @Test(expected = MissingSheetException.class)
+  public void testMissingSheetIndex() throws Exception {
+    try(
+            InputStream is = getInputStream("empty_sheet.xlsx");
+            Workbook workbook = StreamingReader.builder().open(is)
+    ) {
+      Sheet sheet = workbook.getSheetAt(1000);
+    }
+  }
+
   @Test
   public void testSheetIndexForMissingSheet() throws Exception {
     try(

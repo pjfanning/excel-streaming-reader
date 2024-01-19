@@ -236,10 +236,11 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
    * Returns the sheet at the given index (0 based).
    * @param idx index (0 based)
    * @return the sheet at the given index
+   * @throws MissingSheetException if a sheet at the given index does not exist
    * @throws IOException should never be thrown
    * @throws XMLStreamException should never be thrown
    */
-  public StreamingSheet getSheetAt(final int idx) throws IOException, XMLStreamException {
+  public StreamingSheet getSheetAt(final int idx) throws MissingSheetException, IOException, XMLStreamException {
     if (sheets != null && sheets.size() > idx) {
       return sheets.get(idx);
     } else {
@@ -265,7 +266,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     return getSheetAt(idx);
   }
 
-  private StreamingSheet createSheet(final int idx) {
+  private StreamingSheet createSheet(final int idx) throws MissingSheetException {
     final OoxmlReader.SheetData sheetData = ooxmlReader.getSheetDataAt(idx);
     final Map<PackagePart, Comments> sheetComments = new HashMap<>();
     if (builder.readShapes()) {
