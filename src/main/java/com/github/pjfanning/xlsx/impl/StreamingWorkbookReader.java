@@ -11,6 +11,7 @@ import com.github.pjfanning.xlsx.exceptions.ReadException;
 import com.github.pjfanning.xlsx.impl.ooxml.OoxmlStrictHelper;
 import com.github.pjfanning.xlsx.impl.ooxml.OoxmlReader;
 import org.apache.commons.io.IOUtils;
+import org.apache.poi.UnsupportedFileFormatException;
 import org.apache.poi.ooxml.POIXMLProperties;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
@@ -108,6 +109,11 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
           log.debug("failed to delete temp file");
         }
         throw e;
+      } catch(UnsupportedFileFormatException e) {
+        if (f != null && !f.delete()) {
+          log.debug("failed to delete temp file");
+        }
+        throw new ReadException("Unsupported File Format (only xlsx files are supported)", e);
       } catch(IOException | RuntimeException e) {
         if (f != null && !f.delete()) {
           log.debug("failed to delete temp file");
@@ -140,6 +146,9 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     } catch(IOException e) {
       IOUtils.closeQuietly(pkg);
       throw new OpenException("Failed to open file", e);
+    } catch(UnsupportedFileFormatException e) {
+      IOUtils.closeQuietly(pkg);
+      throw new ReadException("Unsupported File Format (only xlsx files are supported)", e);
     } catch(OpenXML4JException | XMLStreamException e) {
       IOUtils.closeQuietly(pkg);
       throw new ReadException("Unable to read workbook", e);
