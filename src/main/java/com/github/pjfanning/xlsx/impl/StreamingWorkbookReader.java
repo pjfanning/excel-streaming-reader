@@ -4,6 +4,7 @@ import com.github.pjfanning.poi.xssf.streaming.MapBackedSharedStringsTable;
 import com.github.pjfanning.poi.xssf.streaming.TempFileSharedStringsTable;
 import com.github.pjfanning.xlsx.SharedStringsImplementationType;
 import com.github.pjfanning.xlsx.StreamingReader.Builder;
+import com.github.pjfanning.xlsx.exceptions.CheckedReadException;
 import com.github.pjfanning.xlsx.exceptions.ExcelRuntimeException;
 import com.github.pjfanning.xlsx.exceptions.MissingSheetException;
 import com.github.pjfanning.xlsx.exceptions.NotSupportedException;
@@ -75,53 +76,42 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
    * @throws ParseException if an error occurs while parsing the file
    */
   public void init(InputStream is) throws OpenException, ReadException, ParseException {
-    if (builder.avoidTempFiles()) {
-      try {
-        if(builder.getPassword() != null) {
-          POIFSFileSystem poifs = new POIFSFileSystem(is);
-          pkg = decryptWorkbook(poifs);
-        } else {
-          pkg = OPCPackage.open(is);
-        }
-        loadPackage(pkg);
-      } catch(SAXException e) {
-        IOUtils.closeQuietly(pkg);
-        throw new ParseException("Failed to parse stream", e);
-      } catch(IOException e) {
-        IOUtils.closeQuietly(pkg);
-        throw new OpenException("Failed to open stream", e);
-      } catch(GeneralSecurityException e) {
-        IOUtils.closeQuietly(pkg);
-        throw new ReadException("Unable to read workbook - Decryption failed", e);
-      } catch(OpenXML4JException | XMLStreamException | RuntimeException e) {
-        IOUtils.closeQuietly(pkg);
-        throw new ReadException("Unable to read workbook", e);
-      }
-    } else {
-      File f = null;
-      try {
-        f = TempFileUtil.writeInputStreamToFile(is, builder.getBufferSize());
-        if (log.isDebugEnabled()) {
-          log.debug("Created temp file [{}]", f.getAbsolutePath());
-        }
-        init(f);
-        tmp = f;
-      } catch(OpenException | ReadException e) {
-        if (f != null && !f.delete()) {
-          log.debug("failed to delete temp file");
-        }
-        throw e;
-      } catch(UnsupportedFileFormatException e) {
-        if (f != null && !f.delete()) {
-          log.debug("failed to delete temp file");
-        }
-        throw new ReadException("Unsupported File Format (only xlsx files are supported)", e);
-      } catch(IOException | RuntimeException e) {
-        if (f != null && !f.delete()) {
-          log.debug("failed to delete temp file");
-        }
-        throw new ReadException("Unable to read input stream", e);
-      }
+    try {
+      _init(is);
+    } catch(SAXException| XMLStreamException e) {
+      throw new ParseException("Failed to parse stream", e);
+    } catch(IOException e) {
+      throw new OpenException("Failed to open stream", e);
+    } catch(UnsupportedFileFormatException e) {
+      throw new ReadException("Unsupported File Format (only xlsx files are supported)", e);
+    } catch(GeneralSecurityException e) {
+      throw new ReadException("Unable to read workbook - Decryption failed", e);
+    } catch (ExcelRuntimeException e) {
+      throw e;
+    } catch(OpenXML4JException | RuntimeException e) {
+      throw new ReadException("Unable to read workbook", e);
+    }
+  }
+
+  /**
+   * Initializes the reader with the given input stream.
+   * @param is the input stream to read from
+   * @throws IOException if an error occurs while opening the file
+   * @throws CheckedReadException if an error occurs while reading the file
+   */
+  public void initWithCheckedExceptions(InputStream is) throws IOException, CheckedReadException {
+    try {
+      _init(is);
+    } catch(SAXException | XMLStreamException e) {
+      throw new CheckedReadException("Failed to parse stream", e);
+    } catch(IOException e) {
+      throw e;
+    } catch(UnsupportedFileFormatException e) {
+      throw new CheckedReadException("Unsupported File Format (only xlsx files are supported)", e);
+    } catch(GeneralSecurityException e) {
+      throw new CheckedReadException("Unable to read workbook - Decryption failed", e);
+    } catch(OpenXML4JException | RuntimeException e) {
+      throw new CheckedReadException("Unable to read workbook", e);
     }
   }
 
@@ -134,14 +124,8 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
    */
   public void init(File f) throws OpenException, ReadException, ParseException {
     try {
-      if(builder.getPassword() != null) {
-        POIFSFileSystem poifs = new POIFSFileSystem(f);
-        pkg = decryptWorkbook(poifs);
-      } else {
-        pkg = OPCPackage.open(f);
-      }
-      loadPackage(pkg);
-    } catch(SAXException e) {
+      _init(f);
+    } catch(SAXException | XMLStreamException e) {
       IOUtils.closeQuietly(pkg);
       throw new ParseException("Failed to parse file", e);
     } catch(IOException e) {
@@ -150,7 +134,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     } catch(UnsupportedFileFormatException e) {
       IOUtils.closeQuietly(pkg);
       throw new ReadException("Unsupported File Format (only xlsx files are supported)", e);
-    } catch(OpenXML4JException | XMLStreamException e) {
+    } catch(OpenXML4JException e) {
       IOUtils.closeQuietly(pkg);
       throw new ReadException("Unable to read workbook", e);
     } catch(GeneralSecurityException e) {
@@ -162,6 +146,88 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     } catch(RuntimeException e) {
       IOUtils.closeQuietly(pkg);
       throw new ReadException("Unable to read workbook", e);
+    }
+  }
+
+  /**
+   * Initializes the reader with the given input stream.
+   * @param f the file to read from
+   * @throws IOException if an error occurs while opening the file
+   * @throws CheckedReadException if an error occurs while reading the file
+   */
+  public void initWithCheckedExceptions(File f) throws IOException, CheckedReadException {
+    try {
+      _init(f);
+    } catch(SAXException | XMLStreamException e) {
+      IOUtils.closeQuietly(pkg);
+      throw new CheckedReadException("Failed to parse file", e);
+    } catch(IOException e) {
+      IOUtils.closeQuietly(pkg);
+      throw e;
+    } catch(UnsupportedFileFormatException e) {
+      IOUtils.closeQuietly(pkg);
+      throw new CheckedReadException("Unsupported File Format (only xlsx files are supported)", e);
+    } catch(OpenXML4JException e) {
+      IOUtils.closeQuietly(pkg);
+      throw new CheckedReadException("Unable to read workbook", e);
+    } catch(GeneralSecurityException e) {
+      IOUtils.closeQuietly(pkg);
+      throw new CheckedReadException("Unable to read workbook - Decryption failed", e);
+    } catch(ExcelRuntimeException e) {
+      IOUtils.closeQuietly(pkg);
+      throw new CheckedReadException(e.getMessage(), e);
+    } catch(RuntimeException e) {
+      IOUtils.closeQuietly(pkg);
+      throw new CheckedReadException("Unable to read workbook", e);
+    }
+  }
+
+  private void _init(InputStream is) throws OpenXML4JException, XMLStreamException,
+          GeneralSecurityException, IOException, SAXException {
+    if (builder.avoidTempFiles()) {
+      try {
+        if(builder.getPassword() != null) {
+          POIFSFileSystem poifs = new POIFSFileSystem(is);
+          pkg = decryptWorkbook(poifs);
+        } else {
+          pkg = OPCPackage.open(is);
+        }
+        loadPackage(pkg);
+      } catch(Exception e) {
+        IOUtils.closeQuietly(pkg);
+        throw e;
+      }
+    } else {
+      File f = null;
+      try {
+        f = TempFileUtil.writeInputStreamToFile(is, builder.getBufferSize());
+        if (log.isDebugEnabled()) {
+          log.debug("Created temp file [{}]", f.getAbsolutePath());
+        }
+        _init(f);
+        tmp = f;
+      } catch(Exception e) {
+        if (f != null && !f.delete()) {
+          log.debug("failed to delete temp file");
+        }
+        throw e;
+      }
+    }
+  }
+
+  private void _init(File f) throws OpenXML4JException, XMLStreamException,
+          GeneralSecurityException, IOException, SAXException {
+    try {
+      if(builder.getPassword() != null) {
+        POIFSFileSystem poifs = new POIFSFileSystem(f);
+        pkg = decryptWorkbook(poifs);
+      } else {
+        pkg = OPCPackage.open(f);
+      }
+      loadPackage(pkg);
+    } catch(Exception e) {
+      IOUtils.closeQuietly(pkg);
+      throw e;
     }
   }
 

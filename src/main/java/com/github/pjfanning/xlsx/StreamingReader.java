@@ -1,5 +1,6 @@
 package com.github.pjfanning.xlsx;
 
+import com.github.pjfanning.xlsx.exceptions.CheckedReadException;
 import com.github.pjfanning.xlsx.exceptions.OpenException;
 import com.github.pjfanning.xlsx.exceptions.ParseException;
 import com.github.pjfanning.xlsx.exceptions.ReadException;
@@ -545,7 +546,9 @@ public class StreamingReader implements AutoCloseable {
      *
      * @param is input stream to read in
      * @return A {@link Workbook} that can be read from
-     * @throws com.github.pjfanning.xlsx.exceptions.ReadException if there is an issue reading the stream
+     * @throws OpenException if there is an issue opening the file
+     * @throws ReadException if there is an issue reading the file
+     * @throws ParseException if there is an issue parsing the XML in the file
      */
     public Workbook open(InputStream is) throws OpenException, ReadException, ParseException {
       StreamingWorkbookReader workbookReader = new StreamingWorkbookReader(this);
@@ -559,12 +562,31 @@ public class StreamingReader implements AutoCloseable {
      *
      * @param file file to read in
      * @return built streaming reader instance
-     * @throws com.github.pjfanning.xlsx.exceptions.OpenException if there is an issue opening the file
-     * @throws com.github.pjfanning.xlsx.exceptions.ReadException if there is an issue reading the file
+     * @throws OpenException if there is an issue opening the file
+     * @throws ReadException if there is an issue reading the file
+     * @throws ParseException if there is an issue parsing the XML in the file
      */
     public Workbook open(File file) throws OpenException, ReadException, ParseException {
       StreamingWorkbookReader workbookReader = new StreamingWorkbookReader(this);
       workbookReader.init(file);
+      return new StreamingWorkbook(workbookReader);
+    }
+
+    /**
+     * Reads a given {@code InputStream} and returns a new
+     * instance of {@code Workbook}. Due to Apache POI
+     * limitations, a temporary file must be written in order
+     * to create a streaming iterator. This process will use
+     * the same buffer size as specified in {@link #bufferSize(int)}.
+     *
+     * @param is input stream to read in
+     * @return A {@link Workbook} that can be read from
+     * @throws IOException if an error occurs while opening the file
+     * @throws CheckedReadException if an error occurs while reading the file
+     */
+    public Workbook openWithCheckedExceptions(InputStream is) throws IOException, CheckedReadException {
+      StreamingWorkbookReader workbookReader = new StreamingWorkbookReader(this);
+      workbookReader.initWithCheckedExceptions(is);
       return new StreamingWorkbook(workbookReader);
     }
   }
