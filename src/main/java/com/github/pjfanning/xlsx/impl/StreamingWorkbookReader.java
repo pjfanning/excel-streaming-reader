@@ -74,6 +74,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
    * @throws OpenException if an error occurs while opening the file
    * @throws ReadException if an error occurs while reading the file
    * @throws ParseException if an error occurs while parsing the file
+   * @see #initWithCheckedExceptions(InputStream)
    */
   public void init(InputStream is) throws OpenException, ReadException, ParseException {
     try {
@@ -98,6 +99,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
    * @param is the input stream to read from
    * @throws IOException if an error occurs while opening the file
    * @throws CheckedReadException if an error occurs while reading the file
+   * @since 4.3.0
    */
   public void initWithCheckedExceptions(InputStream is) throws IOException, CheckedReadException {
     try {
@@ -121,6 +123,8 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
    * @throws OpenException if an error occurs while opening the file
    * @throws ReadException if an error occurs while reading the file
    * @throws ParseException if an error occurs while parsing the file
+   * @see #initWithCheckedExceptions(File)
+   * @since 4.3.0
    */
   public void init(File f) throws OpenException, ReadException, ParseException {
     try {
@@ -154,6 +158,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
    * @param f the file to read from
    * @throws IOException if an error occurs while opening the file
    * @throws CheckedReadException if an error occurs while reading the file
+   * @since 4.3.0
    */
   public void initWithCheckedExceptions(File f) throws IOException, CheckedReadException {
     try {
