@@ -480,6 +480,27 @@ public class StreamingWorkbookTest {
   }
 
   @Test
+  public void testIssue240() throws IOException {
+    try(Workbook workbook =
+                StreamingReader.builder()
+                        .rowCacheSize(100)
+                        .bufferSize(4096)
+                        .setSharedStringsImplementationType(SharedStringsImplementationType.TEMP_FILE_BACKED)
+                        .setReadSharedFormulas(true)
+                        .setEncryptSstTempFile(true)
+                        .open(new File("src/test/resources/2023_11_27_occurence_extension.xlsx"))) {
+      Sheet sheet = workbook.getSheetAt(0);
+      int cellCount = 0;
+      for (Row row : sheet) {
+        for (Cell cell : row) {
+          cellCount++;
+        }
+      }
+      assertEquals(5923, cellCount);
+    }
+  }
+
+  @Test
   public void testWithTempFileZipInputStream() throws IOException {
     //this test cannot be run in parallel with other tests because it changes static configs
     ZipInputStreamZipEntrySource.setThresholdBytesForTempFiles(0);
