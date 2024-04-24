@@ -13,7 +13,6 @@ import org.apache.poi.ooxml.POIXMLException;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.formula.FormulaParser;
 import org.apache.poi.ss.formula.FormulaRenderer;
-import org.apache.poi.ss.formula.FormulaShifter;
 import org.apache.poi.ss.formula.FormulaType;
 import org.apache.poi.ss.formula.ptg.Ptg;
 import org.apache.poi.ss.usermodel.*;
@@ -356,7 +355,7 @@ class StreamingRowIterator implements CloseableIterator<Row> {
                 if (sf == null) {
                   LOG.warn("No SharedFormula found for si={}", formulaSI);
                 } else {
-                  CurrentRowEvaluationWorkbook evaluationWorkbook =
+                  final CurrentRowEvaluationWorkbook evaluationWorkbook =
                           new CurrentRowEvaluationWorkbook(wb, currentRow);
                   int sheetIndex = wb.getSheetIndex(sheet);
                   if (sheetIndex < 0) {
@@ -364,17 +363,19 @@ class StreamingRowIterator implements CloseableIterator<Row> {
                     sheetIndex = 0;
                   }
                   try {
-                    Ptg[] ptgs = FormulaParser.parse(sf.getFormula(), evaluationWorkbook, FormulaType.CELL, sheetIndex, currentRow.getRowNum());
+                    Ptg[] ptgs = FormulaParser.parse(
+                        sf.getFormula(), evaluationWorkbook, FormulaType.CELL, sheetIndex, currentRow.getRowNum());
                     final int rowsToMove = currentRowNum - sf.getCellAddress().getRow();
-                    FormulaShifter formulaShifter = FormulaShifter.createForRowShift(sheetIndex, sheet.getSheetName(),
-                            0, SpreadsheetVersion.EXCEL2007.getLastRowIndex(), rowsToMove, SpreadsheetVersion.EXCEL2007);
-                    formulaShifter.adjustFormula(ptgs, sheetIndex);
+                    final int colsToMove = currentColNum - sf.getCellAddress().getColumn();
+                    org.apache.poi.ss.formula.SharedFormula formulaShifter = new org.apache.poi.ss.formula.SharedFormula(
+                            SpreadsheetVersion.EXCEL2007);
+                    ptgs = formulaShifter.convertSharedFormulas(ptgs, rowsToMove, colsToMove);
                     // There are some corner cases regarding formulas in this PR
                     // https://github.com/pjfanning/excel-streaming-reader/issues/151
                     String shiftedFmla = FormulaRenderer.toFormulaString(evaluationWorkbook, ptgs);
 
-                    LOG.debug("cell {} should have formula {} based on shared formula {} (rowsToMove={})",
-                            currentCell.getAddress(), shiftedFmla, sf.getFormula(), rowsToMove);
+                    LOG.debug("cell {} should have formula {} based on shared formula {} (rowsToMove={} colsToMove={})",
+                            currentCell.getAddress(), shiftedFmla, sf.getFormula(), rowsToMove, colsToMove);
                     currentCell.setFormula(shiftedFmla);
                   } catch (Exception e) {
                     LOG.warn("cell {} has a shared formula but excel-streaming-reader has an issue parsing it - will ignore the formula",

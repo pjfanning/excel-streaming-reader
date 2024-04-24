@@ -1215,6 +1215,56 @@ public class StreamingReaderTest {
   }
 
   @Test
+  public void testReadSharedFormulasIssue252() throws Exception {
+    // https://github.com/pjfanning/excel-streaming-reader/issues/252
+    try (
+        InputStream inputStream = new FileInputStream("src/test/resources/SharedFormula252.xlsx");
+        Workbook wb = StreamingReader.builder()
+            .setReadSharedFormulas(true)
+            .open(inputStream)
+    ) {
+      Sheet sheet = wb.getSheetAt(0);
+      Cell b11 = null;
+      Cell c11 = null;
+      Cell d11 = null;
+      Cell b23 = null;
+      Cell c23 = null;
+      Cell d23 = null;
+      for (Row row : sheet) {
+        if (row.getRowNum() == 10) {
+          b11 = row.getCell(1);
+          c11 = row.getCell(2);
+          d11 = row.getCell(3);
+        } else if (row.getRowNum() == 22) {
+          b23 = row.getCell(1);
+          c23 = row.getCell(2);
+          d23 = row.getCell(3);
+        }
+      }
+      assertNotNull("b11 found", b11);
+      assertNotNull("c11 found", c11);
+      assertNotNull("d11 found", d11);
+      assertNotNull("b23 found", b23);
+      assertNotNull("c23 found", c23);
+      assertNotNull("d23 found", d23);
+      assertEquals("SUM(B12:B20)", b11.getCellFormula());
+      assertEquals("SUM(C12:C20)", c11.getCellFormula());
+      assertEquals("SUM(D12:D20)", d11.getCellFormula());
+      assertEquals("B22+B11+B5+B21", b23.getCellFormula());
+      assertEquals("C22+C11+C5+C21", c23.getCellFormula());
+      assertEquals("D22+D11+D5+D21", d23.getCellFormula());
+      StreamingSheet ss = (StreamingSheet)sheet;
+      Map<String, SharedFormula> sharedFormulaMap = ss.getSharedFormulaMap();
+      assertEquals(2, sharedFormulaMap.size());
+      assertEquals("SUM(A12:A20)", sharedFormulaMap.get("0").getFormula());
+      assertEquals("A11", sharedFormulaMap.get("0").getCellAddress().formatAsString());
+      assertEquals("A22+A11+A5+A21", sharedFormulaMap.get("1").getFormula());
+      assertEquals("A23", sharedFormulaMap.get("1").getCellAddress().formatAsString());
+    }
+  }
+
+
+  @Test
   public void testReadSharedFormulasSimple() throws Exception {
     try (
             InputStream inputStream = new FileInputStream("src/test/resources/sharedformula-simple.xlsx");
