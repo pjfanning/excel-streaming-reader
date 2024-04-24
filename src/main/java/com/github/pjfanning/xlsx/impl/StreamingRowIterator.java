@@ -374,8 +374,8 @@ class StreamingRowIterator implements CloseableIterator<Row> {
                     // https://github.com/pjfanning/excel-streaming-reader/issues/151
                     String shiftedFmla = FormulaRenderer.toFormulaString(evaluationWorkbook, ptgs);
 
-                    LOG.debug("cell {} should have formula {} based on shared formula {} (rowsToMove={})",
-                            currentCell.getAddress(), shiftedFmla, sf.getFormula(), rowsToMove);
+                    LOG.debug("cell {} should have formula {} based on shared formula {} (rowsToMove={} colsToMove={})",
+                            currentCell.getAddress(), shiftedFmla, sf.getFormula(), rowsToMove, colsToMove);
                     currentCell.setFormula(shiftedFmla);
                   } catch (Exception e) {
                     LOG.warn("cell {} has a shared formula but excel-streaming-reader has an issue parsing it - will ignore the formula",
