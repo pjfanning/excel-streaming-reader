@@ -1659,6 +1659,28 @@ public class StreamingReaderTest {
     }
   }
 
+  @Test
+  public void testMissingSheet() throws Exception {
+    try (
+            InputStream inputStream = new FileInputStream("src/test/resources/test-missing-sheet.xlsx");
+            Workbook wb = StreamingReader.builder().open(inputStream)
+    ) {
+      Iterator<Sheet> sheetIterator = wb.sheetIterator();
+
+      sheetIterator.forEachRemaining(sheet -> {
+          for (Row r : sheet) {
+            r.cellIterator().forEachRemaining(cell -> {
+              assertNotNull(cell);
+            });
+           }
+      });
+   } catch (NullPointerException npe) {
+      fail("expected NPE to be caught");
+    } catch (MissingSheetException  mse) {
+      assertEquals("Sheet at index 0 is missing", mse.getMessage());
+    }
+  }
+
   private void testReadFile(boolean useReadOnlySst) throws Exception {
     try (
             InputStream inputStream = new FileInputStream("src/test/resources/stream_reader_test.xlsx");
@@ -1700,5 +1722,4 @@ public class StreamingReaderTest {
       assertEquals("1976-09-06T00:00", currentRow.getCell(3).getLocalDateTimeCellValue().toString());
     }
   }
-
 }
