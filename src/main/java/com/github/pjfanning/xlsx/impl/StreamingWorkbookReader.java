@@ -276,6 +276,9 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
       shapeMap.put(sheetData.getSheetName(), sheetData.getShapes());
     }
     final PackagePart part = sheetData.getSheetPart();
+    if (part == null) {
+      throw new MissingSheetException("Sheet at index " + idx + " is missing");
+    }
     if (builder.readComments()) {
       sheetComments.put(part, sheetData.getComments());
     }
