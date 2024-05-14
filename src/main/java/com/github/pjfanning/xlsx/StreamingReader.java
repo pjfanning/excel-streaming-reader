@@ -589,5 +589,23 @@ public class StreamingReader implements AutoCloseable {
       workbookReader.initWithCheckedExceptions(is);
       return new StreamingWorkbook(workbookReader);
     }
+
+    /**
+     * Reads a given {@code InputStream} and returns a new
+     * instance of {@code Workbook}. Due to Apache POI
+     * limitations, a temporary file must be written in order
+     * to create a streaming iterator. This process will use
+     * the same buffer size as specified in {@link #bufferSize(int)}.
+     *
+     * @param @param file file to read in
+     * @return A {@link Workbook} that can be read from
+     * @throws IOException if an error occurs while opening the file
+     * @throws CheckedReadException if an error occurs while reading the file
+     */
+    public Workbook openWithCheckedExceptions(File file) throws IOException, CheckedReadException {
+      StreamingWorkbookReader workbookReader = new StreamingWorkbookReader(this);
+      workbookReader.initWithCheckedExceptions(file);
+      return new StreamingWorkbook(workbookReader);
+    }
   }
 }
