@@ -108,12 +108,8 @@ public class StreamingWorkbook implements Workbook, Date1904Support, AutoCloseab
    * {@inheritDoc}
    */
   @Override
-  public Sheet getSheetAt(final int index) throws ReadException {
-    try {
-      return reader.getSheetAt(index);
-    } catch (XMLStreamException|IOException e) {
-      throw new ReadException(e);
-    }
+  public Sheet getSheetAt(final int index) {
+    return reader.getSheetAt(index);
   }
 
   /**
@@ -122,14 +118,11 @@ public class StreamingWorkbook implements Workbook, Date1904Support, AutoCloseab
    * @param name - of the sheet
    * @return Sheet with the name provided
    * @throws MissingSheetException if no sheet is found with the provided <code>name</code>
-   * @throws ReadException if there is a problem reading the Excel file
    */
   @Override
-  public Sheet getSheet(String name) throws MissingSheetException, ReadException {
+  public Sheet getSheet(String name) throws MissingSheetException {
     try {
       return reader.getSheet(name);
-    } catch (XMLStreamException|IOException e) {
-      throw new ReadException(e);
     } catch (NoSuchElementException nse) {
       throw new MissingSheetException("Failed to find sheet: " + name);
     }

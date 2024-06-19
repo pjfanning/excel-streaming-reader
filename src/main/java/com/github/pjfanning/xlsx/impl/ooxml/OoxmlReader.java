@@ -22,8 +22,8 @@ import com.github.pjfanning.poi.xssf.streaming.TempFileCommentsTable;
 import com.github.pjfanning.poi.xssf.streaming.TempFileSharedStringsTable;
 import com.github.pjfanning.xlsx.CommentsImplementationType;
 import com.github.pjfanning.xlsx.StreamingReader;
+import com.github.pjfanning.xlsx.exceptions.CheckedReadException;
 import com.github.pjfanning.xlsx.exceptions.MissingSheetException;
-import com.github.pjfanning.xlsx.exceptions.OpenException;
 import org.apache.poi.ooxml.POIXMLException;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
@@ -72,13 +72,13 @@ public class OoxmlReader extends XSSFReader {
    * @param pkg The package this poi filesystem reader will use
    * @param strictOoxmlChecksNeeded whether to perform strict OOXML checks
    * @throws IOException if an error occurs while reading the package
-   * @throws OpenXML4JException if an error occurs while parsing the package
-   * @throws POIXMLException if the package is invalid
+   * @throws CheckedReadException if an error occurs while reading the package
+   * @throws OpenXML4JException if there is an error parsing the OpenXML file
    */
   @Internal
   public OoxmlReader(StreamingReader.Builder builder,
                      OPCPackage pkg, boolean strictOoxmlChecksNeeded)
-          throws IOException, OpenXML4JException, POIXMLException {
+          throws IOException, CheckedReadException, OpenXML4JException {
     super(pkg, true);
 
     PackageRelationship coreDocRelationship = this.pkg.getRelationshipsByType(
@@ -92,13 +92,17 @@ public class OoxmlReader extends XSSFReader {
               PackageRelationshipTypes.STRICT_CORE_DOCUMENT).getRelationship(0);
 
       if (coreDocRelationship == null) {
-        throw new POIXMLException("OOXML file structure broken/invalid - no core document found!");
+        throw new CheckedReadException("OOXML file structure broken/invalid - no core document found!");
       }
     }
 
     // Get the part that holds the workbook
     workbookPart = this.pkg.getPart(coreDocRelationship);
-    ooxmlSheetReader = new OoxmlSheetReader(builder, workbookPart, strictOoxmlChecksNeeded);
+    try {
+      ooxmlSheetReader = new OoxmlSheetReader(builder, workbookPart, strictOoxmlChecksNeeded);
+    } catch (InvalidFormatException e) {
+      throw new CheckedReadException("invalid format", e);
+    }
   }
 
 
@@ -150,7 +154,7 @@ public class OoxmlReader extends XSSFReader {
    * @throws IOException if an error occurs while reading the styles.
    */
   @Override
-  public StylesTable getStylesTable() throws IOException, InvalidFormatException {
+  public StylesTable getStylesTable() throws IOException {
     ArrayList<PackagePart> parts = pkg.getPartsByContentType(XSSFRelation.STYLES.getContentType());
     if (parts.isEmpty()) return null;
 
@@ -200,33 +204,30 @@ public class OoxmlReader extends XSSFReader {
      *
      * @param wb package part holding workbook.xml
      * @throws IOException if reading the data from the package fails
-     * @throws POIXMLException if the package data is invalid
+     * @throws InvalidFormatException if the package data is invalid
+     * @throws RuntimeException the underlying POI code can throw other RuntimeExceptions
      */
     OoxmlSheetReader(final StreamingReader.Builder builder,
                      final PackagePart wb, final boolean strictOoxmlChecksNeeded)
-            throws IOException, POIXMLException {
+            throws IOException, CheckedReadException, InvalidFormatException {
       this.builder = builder;
       this.strictOoxmlChecksNeeded = strictOoxmlChecksNeeded;
       /*
        * The order of sheets is defined by the order of CTSheet elements in workbook.xml
        */
-      try {
-        //step 1. Map sheet's relationship Id and the corresponding PackagePart
-        sheetMap = new HashMap<>();
-        OPCPackage pkg = wb.getPackage();
-        Set<String> worksheetRels = getSheetRelationships();
-        for (PackageRelationship rel : wb.getRelationships()) {
-          String relType = rel.getRelationshipType();
-          if (worksheetRels.contains(relType)) {
-            PackagePartName relName = PackagingURIHelper.createPartName(rel.getTargetURI());
-            sheetMap.put(rel.getId(), pkg.getPart(relName));
-          }
+      //step 1. Map sheet's relationship Id and the corresponding PackagePart
+      sheetMap = new HashMap<>();
+      OPCPackage pkg = wb.getPackage();
+      Set<String> worksheetRels = getSheetRelationships();
+      for (PackageRelationship rel : wb.getRelationships()) {
+        String relType = rel.getRelationshipType();
+        if (worksheetRels.contains(relType)) {
+          PackagePartName relName = PackagingURIHelper.createPartName(rel.getTargetURI());
+          sheetMap.put(rel.getId(), pkg.getPart(relName));
         }
-        //step 2. Read array of CTSheet elements, wrap it in a LinkedList
-        sheetRefList = createSheetListFromWB(wb);
-      } catch (InvalidFormatException e) {
-        throw new POIXMLException(e);
       }
+      //step 2. Read array of CTSheet elements, wrap it in a LinkedList
+      sheetRefList = createSheetListFromWB(wb);
     }
 
     int size() {
@@ -264,7 +265,7 @@ public class OoxmlReader extends XSSFReader {
       return sd;
     }
 
-    private ArrayList<XSSFSheetRef> createSheetListFromWB(PackagePart wb) throws IOException, OpenException, POIXMLException {
+    private ArrayList<XSSFSheetRef> createSheetListFromWB(PackagePart wb) throws IOException, CheckedReadException, POIXMLException {
 
       XMLSheetRefReader xmlSheetRefReader = new XMLSheetRefReader();
       XMLReader xmlReader;
@@ -277,7 +278,7 @@ public class OoxmlReader extends XSSFReader {
       try (InputStream stream = wb.getInputStream()) {
         xmlReader.parse(new InputSource(stream));
       } catch (SAXException e) {
-        throw new OpenException(e);
+        throw new CheckedReadException(e);
       }
 
       final ArrayList<XSSFSheetRef> validSheets = new ArrayList<>();
