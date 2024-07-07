@@ -19,7 +19,7 @@ sonarqube {
 }
 
 group = 'com.github.pjfanning'
-version = '4.3.2-SNAPSHOT'
+version = '4.4.0'
 
 sourceCompatibility = 1.8
 
@@ -35,7 +35,7 @@ ext {
 dependencies {
     api "org.apache.poi:poi:$poiVersion"
     api "org.apache.poi:poi-ooxml:$poiVersion"
-    implementation 'com.github.pjfanning:poi-shared-strings:2.8.0'
+    implementation 'com.github.pjfanning:poi-shared-strings:2.9.0'
     implementation "org.slf4j:slf4j-api:$slf4jVersion"
     implementation 'commons-io:commons-io:2.16.1'
     implementation 'org.apache.commons:commons-compress:1.26.2'
