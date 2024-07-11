@@ -339,22 +339,25 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
           sheet.getReader().close();
         }
       }
-      pkg.revert();
-      pkg.close();
     } finally {
-      if(tmp != null) {
-        if (log.isDebugEnabled()) {
-          log.debug("Deleting tmp file [{}]", tmp.getAbsolutePath());
+      try {
+        pkg.revert();
+        pkg.close();
+      } finally {
+        if(tmp != null) {
+          if (log.isDebugEnabled()) {
+            log.debug("Deleting tmp file [{}]", tmp.getAbsolutePath());
+          }
+          if (!tmp.delete()) {
+            log.debug("Failed tp delete temp file");
+          }
         }
-        if (!tmp.delete()) {
-          log.debug("Failed tp delete temp file");
-        }
-      }
-      if(sst instanceof AutoCloseable) {
-        try {
-          ((AutoCloseable) sst).close();
-        } catch (Exception e) {
-          log.warn("Failed to close sst", e);
+        if(sst instanceof AutoCloseable) {
+          try {
+            ((AutoCloseable) sst).close();
+          } catch (Exception e) {
+            log.warn("Failed to close sst", e);
+          }
         }
       }
     }
