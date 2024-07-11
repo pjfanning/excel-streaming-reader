@@ -3,11 +3,13 @@ package com.github.pjfanning.xlsx.impl;
 import com.github.pjfanning.poi.xssf.streaming.CommentsTableBase;
 import com.github.pjfanning.poi.xssf.streaming.MapBackedCommentsTable;
 import com.github.pjfanning.poi.xssf.streaming.MapBackedSharedStringsTable;
+import com.github.pjfanning.poi.xssf.streaming.SharedStringsTableBase;
 import com.github.pjfanning.poi.xssf.streaming.TempFileCommentsTable;
 import com.github.pjfanning.poi.xssf.streaming.TempFileSharedStringsTable;
 import com.github.pjfanning.xlsx.StreamingReader;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.xssf.model.Comments;
+import org.apache.poi.xssf.model.SharedStrings;
 import org.apache.poi.xssf.model.SharedStringsTable;
 
 import java.io.IOException;
@@ -58,6 +60,13 @@ public final class PoiSharedStringsSupport {
         if (comments instanceof CommentsTableBase) {
             ((CommentsTableBase) comments).readFrom(inputStream);
         }
+    }
+
+    public static String getSharedString(final SharedStrings sst, final int index) {
+        if (sst instanceof SharedStringsTableBase) {
+            return ((SharedStringsTableBase) sst).getString(index);
+        }
+        return sst.getItemAt(index).getString();
     }
 
     private PoiSharedStringsSupport() {

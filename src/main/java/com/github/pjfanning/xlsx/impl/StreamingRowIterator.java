@@ -1,6 +1,5 @@
 package com.github.pjfanning.xlsx.impl;
 
-import com.github.pjfanning.poi.xssf.streaming.SharedStringsTableBase;
 import com.github.pjfanning.xlsx.CloseableIterator;
 import com.github.pjfanning.xlsx.SharedFormula;
 import com.github.pjfanning.xlsx.StreamingReader;
@@ -55,6 +54,7 @@ class StreamingRowIterator implements CloseableIterator<Row> {
 
   private final StreamingSheetReader streamingSheetReader;
   private final SharedStrings sst;
+  private final boolean usesPoiSharedStrings;
   private final StylesTable stylesTable;
   private final XMLEventReader parser;
   private final boolean use1904Dates;
@@ -91,6 +91,7 @@ class StreamingRowIterator implements CloseableIterator<Row> {
                        final StreamingSheet sheet) throws ParseException {
     this.streamingSheetReader = streamingSheetReader;
     this.sst = sst;
+    this.usesPoiSharedStrings = sst != null && sst.getClass().getName().startsWith("com.github.pjfanning.poi.xssf");
     this.stylesTable = stylesTable;
     this.parser = parser;
     this.use1904Dates = use1904Dates;
@@ -510,8 +511,11 @@ class StreamingRowIterator implements CloseableIterator<Row> {
       case "s":           //string stored in shared table
         if (!lastContents.isEmpty()) {
           final int idx = parseInt(lastContents);
-          if (!getBuilder().fullFormatRichText() && sst instanceof SharedStringsTableBase) {
-            return new LazySupplier<>(() -> ((SharedStringsTableBase)sst).getString(idx));
+          if (!getBuilder().fullFormatRichText()) {
+            if (usesPoiSharedStrings) {
+              return new LazySupplier<>(() -> PoiSharedStringsSupport.getSharedString(sst, idx));
+            }
+            return new LazySupplier<>(() -> sst.getItemAt(idx).getString());
           }
           return new LazySupplier<>(() -> sst.getItemAt(idx));
         }
@@ -591,8 +595,8 @@ class StreamingRowIterator implements CloseableIterator<Row> {
         if (!lastContents.isEmpty()) {
           final int idx = parseInt(lastContents);
           if (sst == null) throw new NullPointerException("sst is null");
-          if (sst instanceof SharedStringsTableBase) {
-            return ((SharedStringsTableBase)sst).getString(idx);
+          if (usesPoiSharedStrings) {
+            return PoiSharedStringsSupport.getSharedString(sst, idx);
           }
           return sst.getItemAt(idx).getString();
         }
