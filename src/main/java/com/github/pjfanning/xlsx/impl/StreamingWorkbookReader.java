@@ -354,8 +354,12 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
           log.debug("Failed tp delete temp file");
         }
       }
-      if(sst instanceof Closeable) {
-        ((Closeable)sst).close();
+      if(sst instanceof AutoCloseable) {
+        try {
+          ((AutoCloseable) sst).close();
+        } catch (Exception e) {
+          log.warn("Failed to close sst", e);
+        }
       }
     }
   }
