@@ -1,10 +1,7 @@
 package com.github.pjfanning.xlsx.impl.ooxml;
 
-import com.github.pjfanning.poi.xssf.streaming.MapBackedCommentsTable;
-import com.github.pjfanning.poi.xssf.streaming.MapBackedSharedStringsTable;
-import com.github.pjfanning.poi.xssf.streaming.TempFileCommentsTable;
-import com.github.pjfanning.poi.xssf.streaming.TempFileSharedStringsTable;
 import com.github.pjfanning.xlsx.StreamingReader;
+import com.github.pjfanning.xlsx.impl.PoiSharedStringsSupport;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.openxml4j.opc.PackagePart;
 import org.apache.poi.xssf.eventusermodel.ReadOnlySharedStringsTable;
@@ -97,21 +94,28 @@ public class OoxmlStrictHelper {
               }
               return sst;
             case TEMP_FILE_BACKED:
-              TempFileSharedStringsTable tfst = new TempFileSharedStringsTable(
-                      builder.encryptSstTempFile(), builder.fullFormatRichText());
+              SharedStringsTable tfst = PoiSharedStringsSupport.createTempFileSharedStringsTable(builder);
               try {
                 tfst.readFrom(is);
               } catch (IOException|RuntimeException e) {
-                tfst.close();
+                try {
+                  tfst.close();
+                } catch (IOException e2) {
+                  e.addSuppressed(e2);
+                }
                 throw e;
               }
               return tfst;
             case CUSTOM_MAP_BACKED:
-              MapBackedSharedStringsTable mbst = new MapBackedSharedStringsTable(builder.fullFormatRichText());
+              SharedStringsTable mbst = PoiSharedStringsSupport.createMapBackedSharedStringsTable(builder);
               try {
                 mbst.readFrom(is);
               } catch (IOException|RuntimeException e) {
-                mbst.close();
+                try {
+                  mbst.close();
+                } catch (IOException e2) {
+                  e.addSuppressed(e2);
+                }
                 throw e;
               }
               return mbst;
@@ -138,22 +142,32 @@ public class OoxmlStrictHelper {
       try(InputStream is = tempData.getInputStream()) {
         switch (builder.getCommentsImplementationType()) {
           case TEMP_FILE_BACKED:
-            TempFileCommentsTable tfct = new TempFileCommentsTable(
-                    builder.encryptCommentsTempFile(),
-                    builder.fullFormatRichText());
+            Comments tfct = PoiSharedStringsSupport.createTempFileCommentsTable(builder);
             try {
-              tfct.readFrom(is);
+              PoiSharedStringsSupport.readComments(tfct, is);
             } catch (IOException|RuntimeException e) {
-              tfct.close();
+              if (tfct instanceof AutoCloseable) {
+                try {
+                  ((AutoCloseable) tfct).close();
+                } catch (Exception e2) {
+                  e.addSuppressed(e2);
+                }
+              }
               throw e;
             }
             return tfct;
           case CUSTOM_MAP_BACKED:
-            MapBackedCommentsTable mbct = new MapBackedCommentsTable(builder.fullFormatRichText());
+            Comments mbct = PoiSharedStringsSupport.createMapBackedCommentsTable(builder);
             try {
-              mbct.readFrom(is);
+              PoiSharedStringsSupport.readComments(mbct, is);
             } catch (IOException|RuntimeException e) {
-              mbct.close();
+              if (mbct instanceof AutoCloseable) {
+                try {
+                  ((AutoCloseable) mbct).close();
+                } catch (Exception e2) {
+                  e.addSuppressed(e2);
+                }
+              }
               throw e;
             }
             return mbct;

@@ -16,14 +16,11 @@
 ==================================================================== */
 package com.github.pjfanning.xlsx.impl.ooxml;
 
-import com.github.pjfanning.poi.xssf.streaming.MapBackedCommentsTable;
-import com.github.pjfanning.poi.xssf.streaming.MapBackedSharedStringsTable;
-import com.github.pjfanning.poi.xssf.streaming.TempFileCommentsTable;
-import com.github.pjfanning.poi.xssf.streaming.TempFileSharedStringsTable;
 import com.github.pjfanning.xlsx.CommentsImplementationType;
 import com.github.pjfanning.xlsx.StreamingReader;
 import com.github.pjfanning.xlsx.exceptions.MissingSheetException;
 import com.github.pjfanning.xlsx.exceptions.OpenException;
+import com.github.pjfanning.xlsx.impl.PoiSharedStringsSupport;
 import org.apache.poi.ooxml.POIXMLException;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
@@ -133,9 +130,9 @@ public class OoxmlReader extends XSSFReader {
         case POI_DEFAULT:
           return new SharedStringsTable(parts.get(0));
         case CUSTOM_MAP_BACKED:
-          return new MapBackedSharedStringsTable(parts.get(0).getPackage());
+          return PoiSharedStringsSupport.createMapBackedSharedStringsTable(parts.get(0).getPackage(), builder);
         case TEMP_FILE_BACKED:
-          return new TempFileSharedStringsTable(parts.get(0).getPackage(), builder.encryptSstTempFile());
+          return PoiSharedStringsSupport.createTempFileSharedStringsTable(parts.get(0).getPackage(), builder);
         default:
           return new ReadOnlySharedStringsTable(parts.get(0));
       }
@@ -378,25 +375,34 @@ public class OoxmlReader extends XSSFReader {
           throws IOException, XMLStreamException {
     if (builder.getCommentsImplementationType() == CommentsImplementationType.TEMP_FILE_BACKED) {
       try (InputStream is = commentsPart.getInputStream()) {
-        TempFileCommentsTable ct = new TempFileCommentsTable(
-                builder.encryptCommentsTempFile(),
-                builder.fullFormatRichText());
+        Comments ct = PoiSharedStringsSupport.createTempFileCommentsTable(builder);
         try {
-          ct.readFrom(is);
+          PoiSharedStringsSupport.readComments(ct, is);
         } catch (IOException | RuntimeException e) {
-          ct.close();
+          if (ct instanceof AutoCloseable) {
+            try {
+              ((AutoCloseable) ct).close();
+            } catch (Exception e2) {
+              e.addSuppressed(e2);
+            }
+          }
           throw e;
         }
         return ct;
       }
     } else if (builder.getCommentsImplementationType() == CommentsImplementationType.CUSTOM_MAP_BACKED) {
       try (InputStream is = commentsPart.getInputStream()) {
-        MapBackedCommentsTable ct = new MapBackedCommentsTable(
-                builder.fullFormatRichText());
+        Comments ct = PoiSharedStringsSupport.createMapBackedCommentsTable(builder);
         try {
-          ct.readFrom(is);
+          PoiSharedStringsSupport.readComments(ct, is);
         } catch (IOException | RuntimeException e) {
-          ct.close();
+          if (ct instanceof AutoCloseable) {
+            try {
+              ((AutoCloseable) ct).close();
+            } catch (Exception e2) {
+              e.addSuppressed(e2);
+            }
+          }
           throw e;
         }
         return ct;

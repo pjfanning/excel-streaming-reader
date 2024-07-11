@@ -1,7 +1,5 @@
 package com.github.pjfanning.xlsx.impl;
 
-import com.github.pjfanning.poi.xssf.streaming.MapBackedSharedStringsTable;
-import com.github.pjfanning.poi.xssf.streaming.TempFileSharedStringsTable;
 import com.github.pjfanning.xlsx.SharedStringsImplementationType;
 import com.github.pjfanning.xlsx.StreamingReader.Builder;
 import com.github.pjfanning.xlsx.exceptions.ExcelRuntimeException;
@@ -186,9 +184,9 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
 
     if (builder.getSharedStringsImplementationType() == SharedStringsImplementationType.TEMP_FILE_BACKED) {
       log.info("Created sst cache file");
-      sst = new TempFileSharedStringsTable(pkg, builder.encryptSstTempFile(), builder.fullFormatRichText());
+      sst = PoiSharedStringsSupport.createTempFileSharedStringsTable(pkg, builder);
     } else if (builder.getSharedStringsImplementationType() == SharedStringsImplementationType.CUSTOM_MAP_BACKED) {
-      sst = new MapBackedSharedStringsTable(pkg, builder.fullFormatRichText());
+      sst = PoiSharedStringsSupport.createMapBackedSharedStringsTable(pkg, builder);
     } else if (strictFormat) {
       sst = OoxmlStrictHelper.getSharedStringsTable(builder, pkg);
     } else {

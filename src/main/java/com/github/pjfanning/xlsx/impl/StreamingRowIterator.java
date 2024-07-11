@@ -522,7 +522,7 @@ class StreamingRowIterator implements CloseableIterator<Row> {
       case "e":           //error type
         return new StringSupplier("ERROR:  " + lastContents);
       case "n":           //numeric type
-        if(currentCell.getNumericFormat() != null && lastContents.length() > 0) {
+        if(currentCell.getNumericFormat() != null && !lastContents.isEmpty()) {
           // the formatRawCellContents operation incurs a significant overhead on large sheets,
           // and we want to defer the execution of this method until the value is actually needed.
           // it is not needed in all cases..
@@ -538,7 +538,7 @@ class StreamingRowIterator implements CloseableIterator<Row> {
           return new StringSupplier(lastContents);
         }
       case "d":           //date type (Strict OOXML format)
-        if(currentCell.getNumericFormat() != null && lastContents.length() > 0) {
+        if(currentCell.getNumericFormat() != null && !lastContents.isEmpty()) {
           // the formatRawCellContents operation incurs a significant overhead on large sheets,
           // and we want to defer the execution of this method until the value is actually needed.
           // it is not needed in all cases..
