@@ -23,6 +23,14 @@ version = '5.0.0-SNAPSHOT'
 
 sourceCompatibility = 1.8
 
+java {
+    withJavadocJar()
+    withSourcesJar()
+    registerFeature('poiSharedStrings') {
+        usingSourceSet(sourceSets.main)
+    }
+}
+
 repositories {
     mavenCentral()
 }
@@ -39,13 +47,12 @@ dependencies {
     implementation "org.slf4j:slf4j-api:$slf4jVersion"
     implementation 'commons-io:commons-io:2.16.1'
     implementation 'org.apache.commons:commons-compress:1.26.2'
-    compileOnly "com.github.pjfanning:poi-shared-strings:$poiSharedStringsVersion"
+    poiSharedStringsImplementation "com.github.pjfanning:poi-shared-strings:$poiSharedStringsVersion"
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.nanohttpd:nanohttpd:2.3.1'
     testImplementation 'org.mockito:mockito-core:4.11.0'
     testRuntimeOnly "org.slf4j:slf4j-simple:$slf4jVersion"
     testRuntimeOnly 'org.apache.logging.log4j:log4j-to-slf4j:2.23.1'
-    testRuntimeOnly "com.github.pjfanning:poi-shared-strings:$poiSharedStringsVersion"
 }
 
 test {
@@ -63,11 +70,6 @@ tasks.named('jar') {
 compileTestJava.dependsOn('copyLicenseToBuildResources')
 jar.dependsOn('copyLicenseToBuildResources')
 javadoc.dependsOn('copyLicenseToBuildResources')
-
-java {
-    withJavadocJar()
-    withSourcesJar()
-}
 
 nexusPublishing {
     repositories {
