@@ -345,6 +345,7 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
         }
       }
       pkg.revert();
+      pkg.close();
     } finally {
       if(tmp != null) {
         if (log.isDebugEnabled()) {
