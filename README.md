@@ -108,6 +108,8 @@ You can use the `setUseSstTempFile(true)` option to have this data stored in a t
           .open(is);
 ```
 
+You will need to add a dependency on [poi-shared-strings](https://search.maven.org/artifact/com.github.pjfanning/poi-shared-strings).
+
 ## Temp File Comments
 
 As with shared strings, comments are stored in a separate part of the xlsx file and by default,
@@ -122,6 +124,8 @@ choose whether you want them stored in memory or in a temp file while reading th
           .setFullFormatRichText(true) //if you want the rich text formatting as well as the text
           .open(is);
 ```
+
+You will need to add a dependency on [poi-shared-strings](https://search.maven.org/artifact/com.github.pjfanning/poi-shared-strings).
 
 ## Reading Very Large Excel Files
 
