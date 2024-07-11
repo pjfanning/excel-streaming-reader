@@ -31,10 +31,12 @@ To use it, add this to your POM:
   <dependency>
     <groupId>com.github.pjfanning</groupId>
     <artifactId>excel-streaming-reader</artifactId>
-    <version>5.0.0</version>
+    <version>5.0.1</version>
   </dependency>
 </dependencies>  
 ```
+
+You may also need to add a dependency on [poi-shared-strings](https://search.maven.org/artifact/com.github.pjfanning/poi-shared-strings).
 
 # Usage
 
