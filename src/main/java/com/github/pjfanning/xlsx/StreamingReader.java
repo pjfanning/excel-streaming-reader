@@ -287,6 +287,10 @@ public class StreamingReader implements AutoCloseable {
      * Set the type of Shared Strings Table to use. The default is <code>POI_READ_ONLY</code>.
      * <p>
      * If you enable this feature, you may also want to enable <code>fullFormatRichText</code>.
+     * <p>
+     *     poi-shared-strings is an optional dependency since v5.0.0 - you will need to include it in your project
+     *     if you want to use TEMP_FILE_BACKED or CUSTOM_MAP_BACKED implementations.
+     * </p>
      *
      * @param sharedStringsImplementationType type of Shared Strings Table to use (must not be null)
      * @return reference to current {@code Builder}
@@ -306,6 +310,10 @@ public class StreamingReader implements AutoCloseable {
      * Set the type of Comments Table to use. The default is <code>POI_DEFAULT</code>.
      * <p>
      * If you enable this feature, you may also want to enable <code>fullFormatRichText</code>.
+     * <p>
+     *     poi-shared-strings is an optional dependency since v5.0.0 - you will need to include it in your project
+     *     if you want to use TEMP_FILE_BACKED or CUSTOM_MAP_BACKED implementations.
+     * </p>
      *
      * @param commentsImplementationType type of Comments Table to use (must not be null)
      * @return reference to current {@code Builder}

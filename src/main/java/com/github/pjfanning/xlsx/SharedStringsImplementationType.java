@@ -13,6 +13,9 @@ public enum SharedStringsImplementationType {
   /**
    * The temp file backed <code>SharedStringsTable</code> in <code>poi-shared-strings</code>.
    * Saves on memory but still has good performance, especially if full-format text is set to false.
+   * <p>
+   *     poi-shared-strings is an optional dependency since v5.0.0 - you will need to include it in your project if you want to use this implementation
+   * </p>
    * @see StreamingReader.Builder#setFullFormatRichText(boolean)
    * @see StreamingReader.Builder#setEncryptSstTempFile(boolean)
    */
@@ -20,6 +23,9 @@ public enum SharedStringsImplementationType {
   /**
    * The concurrent map backed <code>SharedStringsTable</code> in <code>poi-shared-strings</code>.
    * More performant if full-format text is set to false.
+   * <p>
+   *     poi-shared-strings is an optional dependency since v5.0.0 - you will need to include it in your project if you want to use this implementation
+   * </p>
    * @see StreamingReader.Builder#setFullFormatRichText(boolean)
    */
   CUSTOM_MAP_BACKED
