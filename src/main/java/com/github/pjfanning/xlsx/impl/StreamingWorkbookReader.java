@@ -33,7 +33,6 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import javax.xml.stream.XMLStreamException;
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
