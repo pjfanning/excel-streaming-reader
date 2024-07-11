@@ -311,7 +311,18 @@ public class StreamingSheetReader implements Iterable<Row> {
   }
 
   public void close() throws CloseException {
-    iterators.forEach(iter -> iter.close(false));
+    try {
+      iterators.forEach(iter -> iter.close(false));
+    } finally {
+      // The sst instance is closed at the workbook level
+      if (commentsTable instanceof AutoCloseable) {
+        try {
+          ((AutoCloseable) commentsTable).close();
+        } catch (Exception e) {
+          throw new CloseException("Failed to close CommentsTable", e);
+        }
+      }
+    }
   }
 
   StreamingReader.Builder getBuilder() {
