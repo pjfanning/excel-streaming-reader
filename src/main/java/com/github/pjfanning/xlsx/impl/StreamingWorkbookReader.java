@@ -269,7 +269,6 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
 
   private StreamingSheet createSheet(final int idx) throws MissingSheetException {
     final OoxmlReader.SheetData sheetData = ooxmlReader.getSheetDataAt(idx);
-    final Map<PackagePart, Comments> sheetComments = new HashMap<>();
     if (builder.readShapes()) {
       shapeMap.put(sheetData.getSheetName(), sheetData.getShapes());
     }
@@ -277,13 +276,10 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     if (part == null) {
       throw new MissingSheetException("Sheet at index " + idx + " is missing");
     }
-    if (builder.readComments()) {
-      sheetComments.put(part, sheetData.getComments());
-    }
     return new StreamingSheet(
               sheetProperties.get(idx).get("name"),
               new StreamingSheetReader(this, part, sst, styles,
-                      sheetComments.get(part), use1904Dates, builder.getRowCacheSize()));
+                      sheetData.getComments(), use1904Dates, builder.getRowCacheSize()));
   }
 
   private void lookupSheetNames(Document workbookDoc) {
