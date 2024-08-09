@@ -38,7 +38,7 @@ repositories {
 ext {
     poiVersion = '5.3.0'
     poiSharedStringsVersion = '2.9.0'
-    slf4jVersion = '2.0.14'
+    slf4jVersion = '2.0.15'
 }
 
 dependencies {
