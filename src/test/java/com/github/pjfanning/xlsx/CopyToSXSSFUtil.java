@@ -29,7 +29,7 @@ public class CopyToSXSSFUtil {
             CellUtil.copyCell(cellInput, cellOutput, cellCopyPolicy, cellCopyContext);
           }
         }
-        //this loop only works with POI 5.2.3
+        //this loop only works with POI 5.2.3 and above
         for (Hyperlink hyperlink : sheetInput.getHyperlinkList()) {
           sheetOutput.addHyperlink(((XlsxHyperlink)hyperlink).createXSSFHyperlink());
         }
