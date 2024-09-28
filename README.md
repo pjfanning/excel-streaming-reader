@@ -37,7 +37,7 @@ To use it, add this to your POM:
 ```
 
 You may also need to add a dependency on [poi-shared-strings](https://search.maven.org/artifact/com.github.pjfanning/poi-shared-strings).
-The poi-shared-strings dependendcy was not option until the excel-streaming-reader 5.0.0 release. 
+The poi-shared-strings dependendcy was not optional until the excel-streaming-reader 5.0.0 release. 
 
 # Usage
 
