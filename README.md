@@ -31,12 +31,13 @@ To use it, add this to your POM:
   <dependency>
     <groupId>com.github.pjfanning</groupId>
     <artifactId>excel-streaming-reader</artifactId>
-    <version>5.0.1</version>
+    <version>5.0.2</version>
   </dependency>
 </dependencies>  
 ```
 
 You may also need to add a dependency on [poi-shared-strings](https://search.maven.org/artifact/com.github.pjfanning/poi-shared-strings).
+The poi-shared-strings dependendcy was not option until the excel-streaming-reader 5.0.0 release. 
 
 # Usage
 
@@ -102,11 +103,13 @@ You can use the `setUseSstTempFile(true)` option to have this data stored in a t
 
 ```java
   Workbook workbook = StreamingReader.builder()
-          .setUseSstTempFile(true)
+          .setSharedStringsImplementationType(SharedStringsImplementationType.TEMP_FILE_BACKED)
           .setEncryptSstTempFile(false)
           .setFullFormatRichText(true) //if you want the rich text formatting as well as the text
           .open(is);
 ```
+
+There is a map based implementation that avoids the temp file but is more efficient than the Apache POI default (SharedStringsImplementationType.CUSTOM_MAP_BACKED).
 
 You will need to add a dependency on [poi-shared-strings](https://search.maven.org/artifact/com.github.pjfanning/poi-shared-strings).
 
@@ -119,11 +122,13 @@ choose whether you want them stored in memory or in a temp file while reading th
 ```java
   Workbook workbook = StreamingReader.builder()
           .setReadComments(true)
-          .setUseCommentsTempFile(true)
+          .setCommentsImplementationType(CommentsImplementationType.TEMP_FILE_BACKED)
           .setEncryptCommentsTempFile(false)
           .setFullFormatRichText(true) //if you want the rich text formatting as well as the text
           .open(is);
 ```
+
+There is a map based implementation that avoids the temp file but is more efficient than the Apache POI default (CommentsImplementationType.CUSTOM_MAP_BACKED).
 
 You will need to add a dependency on [poi-shared-strings](https://search.maven.org/artifact/com.github.pjfanning/poi-shared-strings).
 
