@@ -12,9 +12,10 @@ This implementation supports [Apache POI](http://poi.apache.org) 5.x and only su
 * [Sample](https://github.com/pjfanning/excel-streaming-reader-sample)
 
 This implementation has some extra features
-* OOXML Strict format support (see below)
+* Bug fixes
 * More methods are implemented. Some require that features are enabled in the StreamingReader.Builder instance because they might have an additional overhead.
-* Check [Builder](https://www.javadoc.io/doc/com.github.pjfanning/excel-streaming-reader/latest/index.html) implementation to see what options are available.
+    * Check [Builder](https://www.javadoc.io/doc/com.github.pjfanning/excel-streaming-reader/latest/index.html) implementation to see what options are available.
+* OOXML Strict format support (see below)
 
 ## Used By
 * [Apache Drill](https://drill.apache.org/)
