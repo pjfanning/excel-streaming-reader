@@ -1681,6 +1681,29 @@ public class StreamingReaderTest {
     }
   }
 
+  @Test
+  public void testSXSSF() throws Exception {
+    // tests a file create using POI SXSSF
+    // https://bz.apache.org/bugzilla/show_bug.cgi?id=69433
+    try (
+        InputStream inputStream = new FileInputStream("src/test/resources/poi-69433.xlsx");
+        Workbook wb = StreamingReader.builder().open(inputStream)
+    ) {
+      Iterator<Sheet> sheetIterator = wb.sheetIterator();
+
+      final AtomicInteger cellCount = new AtomicInteger();
+      sheetIterator.forEachRemaining(sheet -> {
+        for (Row r : sheet) {
+          r.cellIterator().forEachRemaining(cell -> {
+            assertNotNull(cell);
+            cellCount.incrementAndGet();
+          });
+        }
+      });
+      assertEquals(12, cellCount.get());
+    }
+  }
+
   private void testReadFile(boolean useReadOnlySst) throws Exception {
     try (
             InputStream inputStream = new FileInputStream("src/test/resources/stream_reader_test.xlsx");
