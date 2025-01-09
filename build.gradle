@@ -33,9 +33,6 @@ java {
 
 repositories {
     mavenCentral()
-    maven {
-        url 'https://repository.apache.org/content/groups/staging'
-    }
 }
 
 ext {
