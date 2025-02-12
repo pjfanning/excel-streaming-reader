@@ -42,7 +42,8 @@ public class CopyToSXSSFUtil {
         */
       }
     } catch (Exception e) {
-      sxssfWorkbook.dispose();
+      // since POI 5.3.0, you no longer need to call dispose() on SXSSFWorkbook
+      sxssfWorkbook.close();
       throw e;
     }
     return sxssfWorkbook;

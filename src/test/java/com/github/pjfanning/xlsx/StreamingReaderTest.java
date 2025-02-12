@@ -1573,12 +1573,9 @@ public class StreamingReaderTest {
             InputStream inputStream = new FileInputStream("src/test/resources/stream_reader_test.xlsx");
             UnsynchronizedByteArrayOutputStream bos = UnsynchronizedByteArrayOutputStream.builder().get()
     ) {
-      SXSSFWorkbook wbOutput = CopyToSXSSFUtil.copyToSXSSF(inputStream);
-      try {
+      // since POI 5.3.0, you no longer need to call dispose() on SXSSFWorkbook
+      try (SXSSFWorkbook wbOutput = CopyToSXSSFUtil.copyToSXSSF(inputStream)) {
         wbOutput.write(bos);
-      } finally {
-        wbOutput.close();
-        wbOutput.dispose();
       }
 
       try (XSSFWorkbook xssfWorkbook = new XSSFWorkbook(bos.toInputStream())) {
@@ -1624,12 +1621,9 @@ public class StreamingReaderTest {
             InputStream inputStream = new FileInputStream("src/test/resources/59775.xlsx");
             UnsynchronizedByteArrayOutputStream bos = UnsynchronizedByteArrayOutputStream.builder().get()
     ) {
-      SXSSFWorkbook wbOutput = CopyToSXSSFUtil.copyToSXSSF(inputStream);
-      try {
+      // since POI 5.3.0, you no longer need to call dispose() on SXSSFWorkbook
+      try (SXSSFWorkbook wbOutput = CopyToSXSSFUtil.copyToSXSSF(inputStream)) {
         wbOutput.write(bos);
-      } finally {
-        wbOutput.close();
-        wbOutput.dispose();
       }
 
       try (XSSFWorkbook xssfWorkbook = new XSSFWorkbook(bos.toInputStream())) {
