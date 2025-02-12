@@ -1650,6 +1650,55 @@ public class StreamingReaderTest {
   }
 
   @Test
+  public void copyToSXSSFFormattedDateTime() throws Exception {
+    try (
+        InputStream inputStream = new FileInputStream("src/test/resources/datetime.xlsx");
+        UnsynchronizedByteArrayOutputStream bos = UnsynchronizedByteArrayOutputStream.builder().get()
+    ) {
+      // since POI 5.3.0, you no longer need to call dispose() on SXSSFWorkbook
+      try (SXSSFWorkbook wbOutput = CopyToSXSSFUtil.copyToSXSSF(inputStream)) {
+        wbOutput.write(bos);
+      }
+
+      try (XSSFWorkbook xssfWorkbook = new XSSFWorkbook(bos.toInputStream())) {
+        DataFormatter formatter = new DataFormatter();
+
+        Sheet sheet = xssfWorkbook.getSheet("Sheet1");
+        Iterator<Row> rowIterator = sheet.rowIterator();
+
+        assertTrue(rowIterator.hasNext());
+        // header
+        Row row0 = rowIterator.next();
+        List<String> expected0 = Arrays.asList(
+            "DateTime", "2/12/25 22:00"
+        );
+
+        for (int i = 0; i < row0.getLastCellNum(); i++) {
+          Cell cell = row0.getCell(i, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+
+          String value = formatter.formatCellValue(cell);
+
+          assertEquals(expected0.get(i), value);
+        }
+
+        assertTrue(rowIterator.hasNext());
+        Row row1 = rowIterator.next();
+        List<String> expected1 = Arrays.asList(
+            "Time", "22:00"
+        );
+
+        for (int i = 0; i < row1.getLastCellNum(); i++) {
+          Cell cell = row1.getCell(i, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+
+          String value = formatter.formatCellValue(cell);
+
+          assertEquals(expected1.get(i), value);
+        }
+      }
+    }
+  }
+
+  @Test
   public void copyToSXSSFWithHyperlinks() throws Exception {
     ArrayList<String> originalLocations = new ArrayList<>();
     try (
