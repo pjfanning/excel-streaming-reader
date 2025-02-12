@@ -1609,6 +1609,47 @@ public class StreamingReaderTest {
   }
 
   @Test
+  public void copyToSXSSFFormattedDate() throws Exception {
+    try (
+        InputStream inputStream = new FileInputStream("src/test/resources/formatted-date.xlsx");
+        UnsynchronizedByteArrayOutputStream bos = UnsynchronizedByteArrayOutputStream.builder().get()
+    ) {
+      // since POI 5.3.0, you no longer need to call dispose() on SXSSFWorkbook
+      try (SXSSFWorkbook wbOutput = CopyToSXSSFUtil.copyToSXSSF(inputStream)) {
+        wbOutput.write(bos);
+      }
+
+      try (XSSFWorkbook xssfWorkbook = new XSSFWorkbook(bos.toInputStream())) {
+        DataFormatter formatter = new DataFormatter();
+
+        Sheet sheet = xssfWorkbook.getSheet("Sheet0");
+        Iterator<Row> rowIterator = sheet.rowIterator();
+
+        assertTrue(rowIterator.hasNext());
+        // header
+        Row currentRow = rowIterator.next();
+        assertTrue(rowIterator.hasNext());
+        currentRow = rowIterator.next();
+
+        List<String> expected = Arrays.asList(
+            "10002", "John", "Doe", "06 September 1976", "1", "NORMAL", "NORMAL", "CUSTOMER", "Customer",
+            "NOT_CONFIRMED", "94", "2", "FALSE()"
+        );
+
+        for (int i = 0; i < currentRow.getLastCellNum(); i++) {
+          Cell cell = currentRow.getCell(i, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+
+          String value = formatter.formatCellValue(cell);
+
+          assertEquals(expected.get(i), value);
+        }
+
+        assertEquals("1976-09-06T00:00", currentRow.getCell(3).getLocalDateTimeCellValue().toString());
+      }
+    }
+  }
+
+  @Test
   public void copyToSXSSFWithHyperlinks() throws Exception {
     ArrayList<String> originalLocations = new ArrayList<>();
     try (
