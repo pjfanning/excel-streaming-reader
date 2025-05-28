@@ -134,7 +134,7 @@ public class OoxmlReader extends XSSFReader {
         case TEMP_FILE_BACKED:
           return PoiSharedStringsSupport.createTempFileSharedStringsTable(parts.get(0).getPackage(), builder);
         default:
-          return new ReadOnlySharedStringsTable(parts.get(0));
+          return new ReadOnlySharedStringsTable(parts.get(0), builder.includePhoneticRuns());
       }
     }
   }
