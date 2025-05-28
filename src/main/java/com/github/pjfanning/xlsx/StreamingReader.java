@@ -52,6 +52,7 @@ public class StreamingReader implements AutoCloseable {
     private boolean readStyles = true;
     private boolean readSharedFormulas = false;
     private boolean fullFormatRichText = false;
+    private boolean includePhoneticRuns = false;
     private String password;
 
     /**
@@ -223,6 +224,18 @@ public class StreamingReader implements AutoCloseable {
      */
     public boolean fullFormatRichText() {
       return fullFormatRichText;
+    }
+
+    /**
+     * Whether to include phonetic runs from the shared strings.
+     * Phonetic runs are used for East Asian languages.
+     * This is only relevant if you are using <code>SharedStringsImplementationType.POI_READ_ONLY</code>).
+     * @return Whether to include phonetic runs from the rich text shared strings
+     *    (only affects <code>SharedStringsImplementationType.POI_READ_ONLY</code>). The default is false.
+     * @since v5.1.0
+     */
+    public boolean includePhoneticRuns() {
+      return includePhoneticRuns;
     }
 
     /**
@@ -541,6 +554,21 @@ public class StreamingReader implements AutoCloseable {
      */
     public Builder setFullFormatRichText(boolean fullFormatRichText) {
       this.fullFormatRichText = fullFormatRichText;
+      return this;
+    }
+
+    /**
+     * Sets whether to include phonetic runs from the shared strings.
+     * Phonetic runs are used for East Asian languages.
+     * This is only relevant if you are using <code>SharedStringsImplementationType.POI_READ_ONLY</code>).
+     * @param includePhoneticRuns Whether to include phonetic runs from the rich text shared strings
+     *    (only affects <code>SharedStringsImplementationType.POI_READ_ONLY</code>). The default is false.
+     * @return reference to current {@code Builder}
+     * @see #setSharedStringsImplementationType(SharedStringsImplementationType)
+     * @since v5.1.0
+     */
+    public Builder setIncludePhoneticRuns(boolean includePhoneticRuns) {
+      this.includePhoneticRuns = includePhoneticRuns;
       return this;
     }
 
