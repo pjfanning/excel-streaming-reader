@@ -895,6 +895,34 @@ public class StreamingWorkbookTest {
     }
   }
 
+  @Test
+  public void testJapaneseTextIgnoresPhoneticRuns() throws Exception {
+    try (
+        InputStream stream = getInputStream("ja-issue.xlsx");
+        Workbook workbook = StreamingReader.builder().open(stream)
+    ) {
+      Sheet sheet0 = workbook.getSheetAt(0);
+      Iterator<Row> rowIterator = sheet0.rowIterator();
+      Row row0 = rowIterator.next();
+      Cell cell = row0.getCell(0);
+      assertEquals("売上", cell.getStringCellValue());
+    }
+  }
+
+  @Test
+  public void testJapaneseTextIncludesPhoneticRuns() throws Exception {
+    try (
+        InputStream stream = getInputStream("ja-issue.xlsx");
+        Workbook workbook = StreamingReader.builder().setIncludePhoneticRuns(true).open(stream)
+    ) {
+      Sheet sheet0 = workbook.getSheetAt(0);
+      Iterator<Row> rowIterator = sheet0.rowIterator();
+      Row row0 = rowIterator.next();
+      Cell cell = row0.getCell(0);
+      assertEquals("売上 ウリアゲ ", cell.getStringCellValue());
+    }
+  }
+
   private void validateFormatsSheet(Sheet sheet) throws IOException {
     Iterator<Row> rowIterator = sheet.rowIterator();
 
