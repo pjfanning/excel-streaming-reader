@@ -19,7 +19,7 @@ sonarqube {
 }
 
 group = 'com.github.pjfanning'
-version = '5.1.1'
+version = '5.1.2-SNAPSHOT'
 
 sourceCompatibility = 1.8
 
