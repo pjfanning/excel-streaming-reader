@@ -1718,7 +1718,7 @@ public class StreamingReaderTest {
 
       try (XSSFWorkbook xssfWorkbook = new XSSFWorkbook(bos.toInputStream())) {
         XSSFSheet xssfSheet = xssfWorkbook.getSheetAt(0);
-        assertEquals(4, xssfSheet.getHyperlinkList().size());
+        assertEquals(7, xssfSheet.getHyperlinkList().size());
 
         ArrayList<String> xssfLocations = new ArrayList<>();
         xssfSheet.getHyperlinkList().forEach(hyperlink -> xssfLocations.add(hyperlink.getAddress()));

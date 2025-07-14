@@ -100,7 +100,7 @@ public class XlsxHyperlink implements Hyperlink, Duplicatable {
   private String getAddressWithoutLocation() {
     String addr = _address;
     String locn = getLocation();
-    if (addr != null && !addr.equals(locn) && addr.endsWith(locn)) {
+    if (locn != null && addr != null && !addr.equals(locn) && addr.endsWith(locn)) {
       return addr.substring(0, addr.length() - locn.length() - 1);
     }
     return addr;
@@ -275,10 +275,20 @@ public class XlsxHyperlink implements Hyperlink, Duplicatable {
     xssfHyperlink.setLastRow(getLastRow());
     xssfHyperlink.setFirstColumn(getFirstColumn());
     xssfHyperlink.setLastColumn(getLastColumn());
-    xssfHyperlink.setLabel(getLabel());
-    xssfHyperlink.setTooltip(getTooltip());
     xssfHyperlink.setAddress(getAddressWithoutLocation());
-    xssfHyperlink.setLocation(getLocation());
+
+    if (this.getLabel() != null) {
+      xssfHyperlink.setLabel(this.getLabel());
+    }
+
+    if (this.getTooltip() != null) {
+      xssfHyperlink.setTooltip(this.getTooltip());
+    }
+
+    if (this.getLocation() != null) {
+      xssfHyperlink.setLocation(this.getLocation());
+    }
+
     return xssfHyperlink;
   }
 }
