@@ -160,7 +160,7 @@ public class StreamingSheetTest {
     ) {
       Sheet sheet = workbook.getSheetAt(0);
       Iterator<Row> rowIterator = sheet.rowIterator();
-      Cell a2 = null, a3 = null, a4 = null, a7 = null;
+      Cell a2 = null, a3 = null, a4 = null, a7 = null, a8 = null, a9 = null, a12 = null;
       while(rowIterator.hasNext()) {
         Row row = nextRow(rowIterator);
         if (row.getRowNum() == 1) {
@@ -171,56 +171,94 @@ public class StreamingSheetTest {
           a4 = row.getCell(0);
         } else if (row.getRowNum() == 6) {
           a7 = row.getCell(0);
+        } else if (row.getRowNum() == 7) {
+          a8 = row.getCell(0);
+        } else if (row.getRowNum() == 8) {
+          a9 = row.getCell(0);
+        } else if (row.getRowNum() == 11) {
+          a12 = row.getCell(0);
         }
       }
+
       assertNotNull( "a2 found", a2);
       assertNotNull( "a3 found", a3);
       assertNotNull( "a4 found", a4);
       assertNotNull( "a7 found", a7);
-      assertEquals("http://twitter.com/#!/apacheorg", a2.getStringCellValue());
-      assertEquals("http://www.bailii.org/databases.html#ie", a3.getStringCellValue());
-      assertEquals("https://en.wikipedia.org/wiki/Apache_POI#See_also", a4.getStringCellValue());
-      assertEquals("#Sheet1", a7.getStringCellValue());
+      assertNotNull( "a8 found", a8);
+      assertNotNull( "a9 found", a9);
+      assertNotNull( "a12 found", a12);
+
+      assertEquals("http://google.com", a2.getStringCellValue());
+      assertEquals("https://apache.org/", a3.getStringCellValue());
+      assertEquals("https://en.wikipedia.org/", a4.getStringCellValue());
+      assertEquals("http://twitter.com/#!/apacheorg", a7.getStringCellValue());
+      assertEquals("http://www.bailii.org/databases.html#ie", a8.getStringCellValue());
+      assertEquals("https://en.wikipedia.org/wiki/Apache_POI#See_also", a9.getStringCellValue());
+      assertEquals("#Sheet1", a12.getStringCellValue());
 
       for (Row row : sheet) {
         //iterate again to make sure we don't duplicate the hyperlink data
       }
 
       List<? extends Hyperlink> hps = sheet.getHyperlinkList();
-      assertEquals(4, hps.size());
+      assertEquals(7, hps.size());
 
       CellAddress A2 = new CellAddress("A2");
       CellAddress A3 = new CellAddress("A3");
       CellAddress A4 = new CellAddress("A4");
       CellAddress A7 = new CellAddress("A7");
+      CellAddress A8 = new CellAddress("A8");
+      CellAddress A9 = new CellAddress("A9");
+      CellAddress A12 = new CellAddress("A12");
 
       XlsxHyperlink link1 = (XlsxHyperlink)sheet.getHyperlink(A2);
       assertEquals("A2", link1.getCellRef());
       assertEquals(HyperlinkType.URL, link1.getType());
-      assertEquals("http://twitter.com/#!/apacheorg", link1.getAddress());
-      assertEquals("!/apacheorg", link1.getLocation());
+      assertEquals("http://google.com/", link1.getAddress());
+      assertEquals(null, link1.getLocation());
       assertTrue(hps.contains(link1));
 
       XlsxHyperlink link2 = (XlsxHyperlink)sheet.getHyperlink(A3);
       assertEquals("A3", link2.getCellRef());
       assertEquals(HyperlinkType.URL, link2.getType());
-      assertEquals("http://www.bailii.org/databases.html#ie", link2.getAddress());
-      assertEquals("ie", link2.getLocation());
+      assertEquals("https://apache.org/", link2.getAddress());
+      assertEquals(null, link2.getLocation());
       assertTrue(hps.contains(link2));
 
       XlsxHyperlink link3 = (XlsxHyperlink)sheet.getHyperlink(A4);
       assertEquals("A4", link3.getCellRef());
       assertEquals(HyperlinkType.URL, link3.getType());
-      assertEquals("https://en.wikipedia.org/wiki/Apache_POI#See_also", link3.getAddress());
-      assertEquals("See_also", link3.getLocation());
+      assertEquals("https://en.wikipedia.org/", link3.getAddress());
+      assertEquals(null, link3.getLocation());
       assertTrue(hps.contains(link3));
 
       XlsxHyperlink link4 = (XlsxHyperlink)sheet.getHyperlink(A7);
       assertEquals("A7", link4.getCellRef());
-      assertEquals(HyperlinkType.DOCUMENT, link4.getType());
-      assertEquals("Sheet1", link4.getAddress());
-      assertEquals("Sheet1", link4.getLocation());
+      assertEquals(HyperlinkType.URL, link4.getType());
+      assertEquals("http://twitter.com/#!/apacheorg", link4.getAddress());
+      assertEquals("!/apacheorg", link4.getLocation());
       assertTrue(hps.contains(link4));
+
+      XlsxHyperlink link5 = (XlsxHyperlink)sheet.getHyperlink(A8);
+      assertEquals("A8", link5.getCellRef());
+      assertEquals(HyperlinkType.URL, link5.getType());
+      assertEquals("http://www.bailii.org/databases.html#ie", link5.getAddress());
+      assertEquals("ie", link5.getLocation());
+      assertTrue(hps.contains(link5));
+
+      XlsxHyperlink link6 = (XlsxHyperlink)sheet.getHyperlink(A9);
+      assertEquals("A9", link6.getCellRef());
+      assertEquals(HyperlinkType.URL, link6.getType());
+      assertEquals("https://en.wikipedia.org/wiki/Apache_POI#See_also", link6.getAddress());
+      assertEquals("See_also", link6.getLocation());
+      assertTrue(hps.contains(link6));
+
+      XlsxHyperlink link7 = (XlsxHyperlink)sheet.getHyperlink(A12);
+      assertEquals("A12", link7.getCellRef());
+      assertEquals(HyperlinkType.DOCUMENT, link7.getType());
+      assertEquals("Sheet1", link7.getAddress());
+      assertEquals("Sheet1", link7.getLocation());
+      assertTrue(hps.contains(link7));
 
       assertEquals(hps, sheet.getHyperlinkList());
 
@@ -229,12 +267,20 @@ public class StreamingSheetTest {
       assertEquals(link1.hashCode(), link1a.hashCode());
 
       XSSFHyperlink link1b = link1.createXSSFHyperlink();
-      assertEquals(link1.getAddress(), link1b.getAddress() + "#" + link1b.getLocation());
+      assertEquals(link1.getAddress(), link1b.getAddress());
       assertEquals(link1.getLocation(), link1b.getLocation());
       assertEquals(link1.getCellRef(), link1b.getCellRef());
       assertEquals(link1.getType(), link1b.getType());
       assertEquals(link1.getLabel(), link1b.getLabel());
       assertEquals(link1.getTooltip(), link1b.getTooltip());
+
+      XSSFHyperlink link4b = link4.createXSSFHyperlink();
+      assertEquals(link4.getAddress(), link4b.getAddress() + "#" + link4b.getLocation());
+      assertEquals(link4.getLocation(), link4b.getLocation());
+      assertEquals(link4.getCellRef(), link4b.getCellRef());
+      assertEquals(link4.getType(), link4b.getType());
+      assertEquals(link4.getLabel(), link4b.getLabel());
+      assertEquals(link4.getTooltip(), link4b.getTooltip());
     }
   }
 
@@ -246,7 +292,7 @@ public class StreamingSheetTest {
     ) {
       XSSFSheet sheet = workbook.getSheetAt(0);
       Iterator<Row> rowIterator = sheet.rowIterator();
-      Cell a2 = null, a3 = null, a4 = null, a7 = null;
+      Cell a2 = null, a3 = null, a4 = null, a7 = null, a8 = null, a9 = null, a12 = null;
       while(rowIterator.hasNext()) {
         Row row = nextRow(rowIterator);
         if (row.getRowNum() == 1) {
@@ -257,56 +303,94 @@ public class StreamingSheetTest {
           a4 = row.getCell(0);
         } else if (row.getRowNum() == 6) {
           a7 = row.getCell(0);
+        } else if (row.getRowNum() == 7) {
+          a8 = row.getCell(0);
+        } else if (row.getRowNum() == 8) {
+          a9 = row.getCell(0);
+        } else if (row.getRowNum() == 11) {
+          a12 = row.getCell(0);
         }
       }
+
       assertNotNull( "a2 found", a2);
       assertNotNull( "a3 found", a3);
       assertNotNull( "a4 found", a4);
       assertNotNull( "a7 found", a7);
-      assertEquals("http://twitter.com/#!/apacheorg", a2.getStringCellValue());
-      assertEquals("http://www.bailii.org/databases.html#ie", a3.getStringCellValue());
-      assertEquals("https://en.wikipedia.org/wiki/Apache_POI#See_also", a4.getStringCellValue());
-      assertEquals("#Sheet1", a7.getStringCellValue());
+      assertNotNull( "a8 found", a8);
+      assertNotNull( "a9 found", a9);
+      assertNotNull( "a12 found", a12);
+
+      assertEquals("http://google.com", a2.getStringCellValue());
+      assertEquals("https://apache.org/", a3.getStringCellValue());
+      assertEquals("https://en.wikipedia.org/", a4.getStringCellValue());
+      assertEquals("http://twitter.com/#!/apacheorg", a7.getStringCellValue());
+      assertEquals("http://www.bailii.org/databases.html#ie", a8.getStringCellValue());
+      assertEquals("https://en.wikipedia.org/wiki/Apache_POI#See_also", a9.getStringCellValue());
+      assertEquals("#Sheet1", a12.getStringCellValue());
 
       for (Row row : sheet) {
         //iterate again to make sure we don't duplicate the hyperlink data
       }
 
       List<? extends Hyperlink> hps = sheet.getHyperlinkList();
-      assertEquals(4, hps.size());
+      assertEquals(7, hps.size());
 
       CellAddress A2 = new CellAddress("A2");
       CellAddress A3 = new CellAddress("A3");
       CellAddress A4 = new CellAddress("A4");
       CellAddress A7 = new CellAddress("A7");
+      CellAddress A8 = new CellAddress("A8");
+      CellAddress A9 = new CellAddress("A9");
+      CellAddress A12 = new CellAddress("A12");
 
       XSSFHyperlink link1 = sheet.getHyperlink(A2);
       assertEquals("A2", link1.getCellRef());
       assertEquals(HyperlinkType.URL, link1.getType());
-      assertEquals("http://twitter.com/#!/apacheorg", link1.getAddress());
-      assertEquals("!/apacheorg", link1.getLocation());
+      assertEquals("http://google.com/", link1.getAddress());
+      assertEquals(null, link1.getLocation());
       assertTrue(hps.contains(link1));
 
       XSSFHyperlink link2 = sheet.getHyperlink(A3);
       assertEquals("A3", link2.getCellRef());
       assertEquals(HyperlinkType.URL, link2.getType());
-      assertEquals("http://www.bailii.org/databases.html#ie", link2.getAddress());
-      assertEquals("ie", link2.getLocation());
+      assertEquals("https://apache.org/", link2.getAddress());
+      assertEquals(null, link2.getLocation());
       assertTrue(hps.contains(link2));
 
       XSSFHyperlink link3 = sheet.getHyperlink(A4);
       assertEquals("A4", link3.getCellRef());
       assertEquals(HyperlinkType.URL, link3.getType());
-      assertEquals("https://en.wikipedia.org/wiki/Apache_POI#See_also", link3.getAddress());
-      assertEquals("See_also", link3.getLocation());
+      assertEquals("https://en.wikipedia.org/", link3.getAddress());
+      assertEquals(null, link3.getLocation());
       assertTrue(hps.contains(link3));
 
       XSSFHyperlink link4 = sheet.getHyperlink(A7);
       assertEquals("A7", link4.getCellRef());
-      assertEquals(HyperlinkType.DOCUMENT, link4.getType());
-      assertEquals("Sheet1", link4.getAddress());
-      assertEquals("Sheet1", link4.getLocation());
+      assertEquals(HyperlinkType.URL, link4.getType());
+      assertEquals("http://twitter.com/#!/apacheorg", link4.getAddress());
+      assertEquals("!/apacheorg", link4.getLocation());
       assertTrue(hps.contains(link4));
+
+      XSSFHyperlink link5 = sheet.getHyperlink(A8);
+      assertEquals("A8", link5.getCellRef());
+      assertEquals(HyperlinkType.URL, link5.getType());
+      assertEquals("http://www.bailii.org/databases.html#ie", link5.getAddress());
+      assertEquals("ie", link5.getLocation());
+      assertTrue(hps.contains(link5));
+
+      XSSFHyperlink link6 = sheet.getHyperlink(A9);
+      assertEquals("A9", link6.getCellRef());
+      assertEquals(HyperlinkType.URL, link6.getType());
+      assertEquals("https://en.wikipedia.org/wiki/Apache_POI#See_also", link6.getAddress());
+      assertEquals("See_also", link6.getLocation());
+      assertTrue(hps.contains(link6));
+
+      XSSFHyperlink link7 = sheet.getHyperlink(A12);
+      assertEquals("A12", link7.getCellRef());
+      assertEquals(HyperlinkType.DOCUMENT, link7.getType());
+      assertEquals("Sheet1", link7.getAddress());
+      assertEquals("Sheet1", link7.getLocation());
+      assertTrue(hps.contains(link7));
 
       assertEquals(hps, sheet.getHyperlinkList());
     }
@@ -363,7 +447,7 @@ public class StreamingSheetTest {
     ) {
       Sheet sheet = workbook.getSheetAt(0);
       nextRow(sheet.rowIterator()); //need to force a read of first row before getActiveCell works
-      assertEquals(new CellAddress("A1"), sheet.getActiveCell());
+      assertEquals(new CellAddress("B2"), sheet.getActiveCell());
     }
   }
 
