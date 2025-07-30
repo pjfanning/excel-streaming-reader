@@ -46,7 +46,7 @@ dependencies {
     api "org.apache.poi:poi-ooxml:$poiVersion"
     implementation "org.slf4j:slf4j-api:$slf4jVersion"
     implementation 'commons-io:commons-io:2.20.0'
-    implementation 'org.apache.commons:commons-compress:1.27.1'
+    implementation 'org.apache.commons:commons-compress:1.28.0'
     poiSharedStringsImplementation "com.github.pjfanning:poi-shared-strings:$poiSharedStringsVersion"
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.nanohttpd:nanohttpd:2.3.1'
