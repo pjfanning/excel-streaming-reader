@@ -923,6 +923,21 @@ public class StreamingWorkbookTest {
     }
   }
 
+  @Test
+  public void testStrayWhitespaceInSstRefs() throws Exception {
+    try (
+        InputStream stream = getInputStream("bug69769.xlsx");
+        Workbook workbook = StreamingReader.builder().open(stream)
+    ) {
+      Sheet sheet0 = workbook.getSheetAt(0);
+      Iterator<Row> rowIterator = sheet0.rowIterator();
+      Row row0 = rowIterator.next();
+      Row row1 = rowIterator.next();
+      Cell cellB2 = row1.getCell(1);
+      assertEquals("Mustermann", cellB2.getStringCellValue());
+    }
+  }
+
   private void validateFormatsSheet(Sheet sheet) throws IOException {
     Iterator<Row> rowIterator = sheet.rowIterator();
 
