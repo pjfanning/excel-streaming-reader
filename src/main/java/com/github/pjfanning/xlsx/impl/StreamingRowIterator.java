@@ -317,14 +317,14 @@ class StreamingRowIterator implements CloseableIterator<Row> {
       String tagLocalName = endElement.getName().getLocalPart();
 
       if ("v".equals(tagLocalName) || "t".equals(tagLocalName)) {
-          if (currentCell == null) {
-              throw new ParseException("Found value/text element outside of cell, this may be caused by malformed XML");
-          }
+        if (currentCell == null) {
+          throw new ParseException("Found value/text element outside of cell, this may be caused by malformed XML");
+        }
 
-          insideCharElement = false;
-          Supplier formattedContentSupplier = formattedContents();
-          currentCell.setRawContents(unformattedContents(formattedContentSupplier));
-          currentCell.setContentSupplier(formattedContentSupplier);
+        insideCharElement = false;
+        Supplier formattedContentSupplier = formattedContents();
+        currentCell.setRawContents(unformattedContents(formattedContentSupplier));
+        currentCell.setContentSupplier(formattedContentSupplier);
       } else if ("row".equals(tagLocalName) && currentRow != null) {
         rowCache.add(currentRow);
         currentRowNum++;

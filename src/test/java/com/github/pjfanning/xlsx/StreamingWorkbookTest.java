@@ -946,12 +946,12 @@ public class StreamingWorkbookTest {
         InputStream stream = getInputStream("corrupt.xlsx");
         Workbook workbook = StreamingReader.builder().open(stream)
     ) {
-        assertThrows(ParseException.class, () -> {
-            Iterator<Row> rowIterator = workbook.getSheetAt(0).rowIterator();
-            while (rowIterator.hasNext()) {
-                rowIterator.next();
-            }
-        });
+      assertThrows(ParseException.class, () -> {
+        Iterator<Row> rowIterator = workbook.getSheetAt(0).rowIterator();
+        while (rowIterator.hasNext()) {
+          rowIterator.next();
+        }
+      });
     }
   }
 
