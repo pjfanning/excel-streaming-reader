@@ -1,6 +1,7 @@
 package com.github.pjfanning.xlsx;
 
 import com.github.pjfanning.xlsx.exceptions.OpenException;
+import com.github.pjfanning.xlsx.exceptions.ParseException;
 import com.github.pjfanning.xlsx.exceptions.ReadException;
 import com.github.pjfanning.xlsx.impl.XlsxPictureData;
 import fi.iki.elonen.NanoHTTPD;
@@ -28,6 +29,7 @@ import java.util.function.Consumer;
 import static com.github.pjfanning.xlsx.TestUtils.*;
 import static org.apache.poi.ss.usermodel.CellType.*;
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertThrows;
 
 public class StreamingWorkbookTest {
   private static Locale defaultLocale;
@@ -935,6 +937,21 @@ public class StreamingWorkbookTest {
       Row row1 = rowIterator.next();
       Cell cellB2 = row1.getCell(1);
       assertEquals("Mustermann", cellB2.getStringCellValue());
+    }
+  }
+
+  @Test
+  public void testCorruptFile() throws Exception {
+    try (
+        InputStream stream = getInputStream("corrupt.xlsx");
+        Workbook workbook = StreamingReader.builder().open(stream)
+    ) {
+        assertThrows(ParseException.class, () -> {
+            Iterator<Row> rowIterator = workbook.getSheetAt(0).rowIterator();
+            while (rowIterator.hasNext()) {
+                rowIterator.next();
+            }
+        });
     }
   }
 
