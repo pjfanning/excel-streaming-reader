@@ -19,7 +19,7 @@ sonarqube {
 }
 
 group = 'com.github.pjfanning'
-version = '5.1.3-SNAPSHOT'
+version = '5.2.0-SNAPSHOT'
 
 sourceCompatibility = 1.8
 
@@ -33,10 +33,11 @@ java {
 
 repositories {
     mavenCentral()
+    maven { url "https://repository.apache.org/content/groups/staging/" }
 }
 
 ext {
-    poiVersion = '5.4.1'
+    poiVersion = '5.5.0'
     poiSharedStringsVersion = '2.9.2'
     slf4jVersion = '2.0.17'
 }
