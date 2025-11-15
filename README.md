@@ -1,6 +1,6 @@
 [![OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/projects/6321/badge)](https://bestpractices.coreinfrastructure.org/projects/6321)
 ![Build Status](https://github.com/pjfanning/excel-streaming-reader/actions/workflows/ci.yml/badge.svg)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.pjfanning/excel-streaming-reader/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.pjfanning/excel-streaming-reader)
+![Maven Central](https://img.shields.io/maven-central/v/com.github.pjfanning/excel-streaming-reader)
 [![Javadoc](https://javadoc.io/badge/com.github.pjfanning/excel-streaming-reader.svg)](http://www.javadoc.io/doc/com.github.pjfanning/excel-streaming-reader)
 
 # Excel Streaming Reader
