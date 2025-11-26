@@ -33,11 +33,11 @@ java {
 
 repositories {
     mavenCentral()
-    // maven { url "https://repository.apache.org/content/groups/staging/" }
+    maven { url "https://repository.apache.org/content/groups/staging/" }
 }
 
 ext {
-    poiVersion = '5.5.0'
+    poiVersion = '5.5.1'
     poiSharedStringsVersion = '2.9.2'
     slf4jVersion = '2.0.17'
 }
