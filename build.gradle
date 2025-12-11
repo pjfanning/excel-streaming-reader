@@ -19,7 +19,7 @@ sonarqube {
 }
 
 group = 'com.github.pjfanning'
-version = '5.2.0-SNAPSHOT'
+version = '5.2.0'
 
 sourceCompatibility = 1.8
 
@@ -38,7 +38,7 @@ repositories {
 
 ext {
     poiVersion = '5.5.1'
-    poiSharedStringsVersion = '2.9.2'
+    poiSharedStringsVersion = '2.10.0'
     slf4jVersion = '2.0.17'
 }
 
