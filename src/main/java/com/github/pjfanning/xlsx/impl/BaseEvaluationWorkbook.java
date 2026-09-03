@@ -76,7 +76,7 @@ abstract class BaseEvaluationWorkbook implements FormulaRenderingWorkbook, Evalu
   private int resolveBookIndex(String bookName) throws ReadException {
     // Strip the [] wrapper, if still present
     if (bookName.startsWith("[") && bookName.endsWith("]")) {
-      bookName = bookName.substring(1, bookName.length()-2);
+      bookName = bookName.substring(1, bookName.length()-1);
     }
 
     // Is it already in numeric form?
