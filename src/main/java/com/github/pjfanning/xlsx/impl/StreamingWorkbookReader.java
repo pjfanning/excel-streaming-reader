@@ -354,8 +354,11 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
       closeSheets();
     } finally {
       try {
-        pkg.revert();
-        pkg.close();
+        //pkg is null if init() was never called, or failed before the package was opened
+        if (pkg != null) {
+          pkg.revert();
+          pkg.close();
+        }
       } finally {
         if(tmp != null) {
           if (log.isDebugEnabled()) {

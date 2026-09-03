@@ -332,7 +332,24 @@ public class StreamingSheetReader implements Iterable<Row> {
 
   public void close() throws CloseException {
     try {
-      iterators.forEach(iter -> iter.close(false));
+      //every iterator is closed even if one of them fails, so that a single bad iterator
+      //cannot leak the rest. we avoid ConcurrentModificationException by passing
+      //removeFromReader=false
+      CloseException failure = null;
+      for (StreamingRowIterator iterator : iterators) {
+        try {
+          iterator.close(false);
+        } catch (CloseException e) {
+          if (failure == null) {
+            failure = e;
+          } else {
+            failure.addSuppressed(e);
+          }
+        }
+      }
+      if (failure != null) {
+        throw failure;
+      }
     } finally {
       // The sst instance is closed at the workbook level
       if (commentsTable instanceof AutoCloseable) {
