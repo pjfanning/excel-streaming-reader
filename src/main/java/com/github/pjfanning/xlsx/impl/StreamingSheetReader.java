@@ -42,6 +42,7 @@ import static com.github.pjfanning.xlsx.impl.NumberUtil.parseInt;
 
 public class StreamingSheetReader implements Iterable<Row> {
   private static final Logger LOG = LoggerFactory.getLogger(StreamingSheetReader.class);
+  private static final QName QNAME_S = QName.valueOf("s");
 
   private final StreamingWorkbookReader streamingWorkbookReader;
   private final PackagePart packagePart;
@@ -188,29 +189,46 @@ public class StreamingSheetReader implements Iterable<Row> {
   }
 
   /**
-   * Read the numeric format string out of the styles table for this cell. Stores
-   * the result in the Cell.
+   * Resolve the style for this cell and store it, plus the numeric format it implies, on the Cell.
+   * <p>
+   * The style is looked up once and used for both. StylesTable.getStyleAt allocates a new
+   * XSSFCellStyle on every call, so looking it up separately for the cell style and for the
+   * numeric format doubled the per cell allocation.
+   * </p>
    *
-   * @param startElement
-   * @param cell
+   * @param startElement the c element for the cell
+   * @param cell the cell to apply the style to
    */
-  void setFormatString(StartElement startElement, StreamingCell cell) {
-    Attribute cellStyle = startElement.getAttributeByName(new QName("s"));
-    String cellStyleString = (cellStyle != null) ? cellStyle.getValue() : null;
-    XSSFCellStyle style = null;
+  void applyCellStyle(StartElement startElement, StreamingCell cell) {
+    final XSSFCellStyle style = resolveCellStyle(startElement);
+    cell.setCellStyle(style);
+    setFormatString(style, cell);
+  }
 
-    if (stylesTable != null) {
-      if(cellStyleString != null) {
-        try {
-          style = stylesTable.getStyleAt(parseInt(cellStyleString));
-        } catch (NumberFormatException nfe) {
-          LOG.warn("Ignoring invalid cell style index {}", cellStyleString);
-        }
-      } else if(stylesTable.getNumCellStyles() > 0) {
-        style = stylesTable.getStyleAt(0);
-      }
+  private XSSFCellStyle resolveCellStyle(StartElement startElement) {
+    if (stylesTable == null) {
+      return null;
     }
+    final Attribute cellStyle = startElement.getAttributeByName(QNAME_S);
+    if (cellStyle == null) {
+      return stylesTable.getNumCellStyles() > 0 ? stylesTable.getStyleAt(0) : null;
+    }
+    final String cellStyleString = cellStyle.getValue();
+    try {
+      return stylesTable.getStyleAt(parseInt(cellStyleString));
+    } catch (NumberFormatException nfe) {
+      LOG.warn("Ignoring invalid cell style index {}", cellStyleString);
+      return null;
+    }
+  }
 
+  /**
+   * Read the numeric format string out of the supplied style. Stores the result in the Cell.
+   *
+   * @param style the already resolved style for the cell (can be null)
+   * @param cell the cell to apply the numeric format to
+   */
+  private void setFormatString(XSSFCellStyle style, StreamingCell cell) {
     if(style != null) {
       cell.setNumericFormatIndex(style.getDataFormat());
       String formatString = style.getDataFormatString();
