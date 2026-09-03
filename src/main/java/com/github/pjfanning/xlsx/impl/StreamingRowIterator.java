@@ -49,6 +49,7 @@ class StreamingRowIterator implements CloseableIterator<Row> {
   private static final QName QNAME_R = QName.valueOf("r");
   private static final QName QNAME_REF = QName.valueOf("ref");
   private static final QName QNAME_S = QName.valueOf("s");
+  private static final QName QNAME_SI = QName.valueOf("si");
   private static final QName QNAME_T = QName.valueOf("t");
   private static final QName QNAME_WIDTH = QName.valueOf("width");
 
@@ -225,28 +226,14 @@ class StreamingRowIterator implements CloseableIterator<Row> {
         } else {
           currentCell = new StreamingCell(sheet, currentColNum, currentRowNum, use1904Dates);
         }
-        streamingSheetReader.setFormatString(startElement, currentCell);
+        //resolves the style once and applies it to both the cell style and the numeric format
+        streamingSheetReader.applyCellStyle(startElement, currentCell);
 
         Attribute type = startElement.getAttributeByName(QNAME_T);
         if (type != null) {
           currentCell.setType(type.getValue());
         } else {
           currentCell.setType("n");
-        }
-
-        if (stylesTable != null) {
-          Attribute style = startElement.getAttributeByName(QNAME_S);
-          if (style != null) {
-            String indexStr = style.getValue();
-            try {
-              final int index = Integer.parseInt(indexStr);
-              currentCell.setCellStyle(stylesTable.getStyleAt(index));
-            } catch (NumberFormatException nfe) {
-              LOG.warn("Ignoring invalid style index {}", indexStr);
-            }
-          } else {
-            currentCell.setCellStyle(stylesTable.getStyleAt(0));
-          }
         }
       } else if ("pane".equals(tagLocalName)) {
         parsePane(startElement);
@@ -289,11 +276,11 @@ class StreamingRowIterator implements CloseableIterator<Row> {
         insideFormulaElement = true;
         if (currentCell != null) {
           currentCell.setFormulaType(true);
-          Attribute tAttr = startElement.getAttributeByName(new QName("t"));
+          Attribute tAttr = startElement.getAttributeByName(QNAME_T);
           if (tAttr != null && tAttr.getValue().equals("shared")) {
             currentCell.setSharedFormula(true);
           }
-          Attribute siAttr = startElement.getAttributeByName(new QName("si"));
+          Attribute siAttr = startElement.getAttributeByName(QNAME_SI);
           if (siAttr != null) {
             currentCell.setFormulaSI(siAttr.getValue());
           }
