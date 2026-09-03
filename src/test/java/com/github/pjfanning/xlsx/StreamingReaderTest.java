@@ -831,6 +831,26 @@ public class StreamingReaderTest {
     }
   }
 
+  // This sheet has a <c> element that is not enclosed in a <row>. It used to trigger a
+  // NullPointerException; the cell should be skipped and the real rows read as normal.
+  @Test
+  public void testCellOutsideRowIgnored() throws Exception {
+    try (
+            InputStream is = new FileInputStream("src/test/resources/cell_outside_row.xlsx");
+            Workbook wb = StreamingReader.builder().open(is)
+    ) {
+      List<Row> rows = new ArrayList<>();
+      for (Row r : wb.getSheetAt(0)) {
+        rows.add(r);
+        for (Cell c : r) {
+          assertNotNull(c);
+        }
+      }
+      assertEquals(3, rows.size());
+      assertEquals(3, rows.get(2).getFirstCellNum());
+    }
+  }
+
   // The last cell on this sheet should be a NUMERIC but there is a lingering "f"
   // tag that was getting attached to the last cell causing it to be a FORUMLA.
   @Test
