@@ -21,6 +21,10 @@ public class XlsxHyperlink implements Hyperlink, Duplicatable {
   private final PackageRelationship _externalRel;
   private final HyperlinkData hyperlinkData; //contains a reference to the cell where the hyperlink is anchored, getRef()
   private String _address; //what the hyperlink refers to
+  //the ref is immutable, so the parsed form is cached - getFirstRow/getLastRow/getFirstColumn/
+  //getLastColumn are called for every hyperlink for every cell lookup on the sheet
+  private CellReference _firstCell;
+  private CellReference _lastCell;
 
   /**
    * Create a XlsxHyperlink and initialize it from the supplied HyperlinkData bean and package relationship
@@ -127,11 +131,22 @@ public class XlsxHyperlink implements Hyperlink, Duplicatable {
   }
 
   private CellReference buildFirstCellReference() {
-    return buildCellReference(false);
+    //parsed lazily so that a malformed ref still fails on access, as it did before caching
+    CellReference firstCell = _firstCell;
+    if (firstCell == null) {
+      firstCell = buildCellReference(false);
+      _firstCell = firstCell;
+    }
+    return firstCell;
   }
 
   private CellReference buildLastCellReference() {
-    return buildCellReference(true);
+    CellReference lastCell = _lastCell;
+    if (lastCell == null) {
+      lastCell = buildCellReference(true);
+      _lastCell = lastCell;
+    }
+    return lastCell;
   }
 
   private CellReference buildCellReference(boolean lastCell) {
