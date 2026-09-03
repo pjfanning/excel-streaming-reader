@@ -38,7 +38,7 @@ public class StreamingReader implements AutoCloseable {
 
   public static class Builder {
     private int rowCacheSize = 10;
-    private int bufferSize = 1024;
+    private int bufferSize = 8192;
     private boolean avoidTempFiles = false;
     private SharedStringsImplementationType sharedStringsImplementationType = SharedStringsImplementationType.POI_READ_ONLY;
     private boolean encryptSstTempFile = false;
@@ -71,7 +71,7 @@ public class StreamingReader implements AutoCloseable {
      * Gets the number of bytes to read into memory from the input
      * resource.
      * <p>
-     * Defaults to 1024.
+     * Defaults to 8192.
      * </p>
      *
      * @return the number of bytes to read into memory from the input resource
@@ -256,7 +256,7 @@ public class StreamingReader implements AutoCloseable {
      * The number of bytes to read into memory from the input
      * resource.
      * <p>
-     * Defaults to 1024.
+     * Defaults to 8192.
      * </p>
      *
      * @param bufferSize buffer size in bytes
