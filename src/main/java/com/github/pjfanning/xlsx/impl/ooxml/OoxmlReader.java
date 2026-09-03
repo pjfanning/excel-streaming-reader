@@ -242,7 +242,7 @@ public class OoxmlReader extends XSSFReader {
     }
 
     SheetData getSheetData(final int idx) throws MissingSheetException {
-      if (idx > sheetRefList.size()) {
+      if (idx < 0 || idx >= sheetRefList.size()) {
         throw new MissingSheetException("Failed to find sheet with id " + idx);
       }
       XSSFSheetRef matchedSheetRef = sheetRefList.get(idx);
