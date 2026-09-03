@@ -43,8 +43,6 @@ import static com.github.pjfanning.xlsx.impl.NumberUtil.parseInt;
 public class StreamingSheetReader implements Iterable<Row> {
   private static final Logger LOG = LoggerFactory.getLogger(StreamingSheetReader.class);
 
-  private static XMLInputFactory xmlInputFactory;
-
   private final StreamingWorkbookReader streamingWorkbookReader;
   private final PackagePart packagePart;
   private final SharedStrings sst;
@@ -266,7 +264,7 @@ public class StreamingSheetReader implements Iterable<Row> {
     try {
       //StreamingRowIterator requires a new XMLEventReader with a new InputStream to be provided to start from the
       //beginning of the Sheet
-      XMLEventReader parser = getXmlInputFactory().createXMLEventReader(packagePart.getInputStream());
+      XMLEventReader parser = createXmlInputFactory().createXMLEventReader(packagePart.getInputStream());
       StreamingRowIterator iterator = new StreamingRowIterator(this,
               sst, stylesTable, parser, use1904Dates, rowCacheSize, hiddenColumns, columnWidths, mergedCells, hyperlinks,
               sharedFormulaMap, defaultRowHeight, sheet);
@@ -369,15 +367,18 @@ public class StreamingSheetReader implements Iterable<Row> {
     }
   }
 
-  private static XMLInputFactory getXmlInputFactory() {
-    if (xmlInputFactory == null) {
-      try {
-        xmlInputFactory = XMLHelper.newXMLInputFactory();
-      } catch (Exception e) {
-        LOG.error("Issue creating XMLInputFactory", e);
-        throw e;
-      }
+  /**
+   * A new factory is created for each reader rather than caching one in a static field.
+   * XMLInputFactory implementations are not thread-safe: the JDK implementation writes to its own
+   * fTempReader and fPropertyChanged fields on every createXMLEventReader call. Sheets belonging to
+   * the same workbook can be iterated concurrently, so a shared factory is a data race.
+   */
+  private static XMLInputFactory createXmlInputFactory() {
+    try {
+      return XMLHelper.newXMLInputFactory();
+    } catch (Exception e) {
+      LOG.error("Issue creating XMLInputFactory", e);
+      throw e;
     }
-    return xmlInputFactory;
   }
 }

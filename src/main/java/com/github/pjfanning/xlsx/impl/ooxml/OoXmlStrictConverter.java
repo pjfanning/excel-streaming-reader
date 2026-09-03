@@ -19,14 +19,12 @@ public class OoXmlStrictConverter implements AutoCloseable {
     private static final Logger LOGGER = LoggerFactory.getLogger(OoXmlStrictConverter.class);
     private static final QName CONFORMANCE = new QName("conformance");
     private static final Properties mappings;
-    private static XMLEventFactory XEF;
-    private static XMLInputFactory XIF;
-    private static XMLOutputFactory XOF;
 
     static {
         mappings = OoXmlStrictConverterUtils.readMappings();
     }
 
+    private final XMLEventFactory xef;
     private final XMLEventWriter xew;
     private final XMLEventReader xer;
     private int depth = 0;
@@ -34,8 +32,9 @@ public class OoXmlStrictConverter implements AutoCloseable {
     private boolean inDateValue;
 
     public OoXmlStrictConverter(InputStream is, OutputStream os) throws XMLStreamException {
-        this.xer = getXmlInputFactory().createXMLEventReader(is);
-        this.xew = getXmlOutputFactory().createXMLEventWriter(os);
+        this.xer = newXmlInputFactory().createXMLEventReader(is);
+        this.xew = newXmlOutputFactory().createXMLEventWriter(os);
+        this.xef = newXmlEventFactory();
     }
 
     public boolean convertNextElement() throws XMLStreamException {
@@ -73,7 +72,7 @@ public class OoXmlStrictConverter implements AutoCloseable {
 
         double excelDate = DateUtil.getExcelDate(date);
 
-        return getXmlEventFactory().createCharacters(Double.toString(excelDate));
+        return xef.createCharacters(Double.toString(excelDate));
     }
 
     private EndElement updateDateFlagsOnEndElement(EndElement endElement) {
@@ -110,7 +109,7 @@ public class OoXmlStrictConverter implements AutoCloseable {
         this.inDateCell = true;
 
         // Change to numeric cell.
-        return getXmlEventFactory().createStartElement(startElement.getName(),
+        return xef.createStartElement(startElement.getName(),
                 changeTypeAttributeToNumeric(startElement.getAttributes()),
                 startElement.getNamespaces());
 
@@ -127,7 +126,7 @@ public class OoXmlStrictConverter implements AutoCloseable {
                 continue;
             }
 
-            result.add(getXmlEventFactory().createAttribute(attribute.getName(), "n"));
+            result.add(xef.createAttribute(attribute.getName(), "n"));
         }
 
         return Collections.unmodifiableList(result).iterator();
@@ -157,14 +156,14 @@ public class OoXmlStrictConverter implements AutoCloseable {
         xew.close();
     }
 
-    private static StartElement convertStartElement(StartElement startElement, boolean root) {
-        return getXmlEventFactory().createStartElement(updateQName(startElement.getName()),
+    private StartElement convertStartElement(StartElement startElement, boolean root) {
+        return xef.createStartElement(updateQName(startElement.getName()),
                 processAttributes(startElement.getAttributes(), startElement.getName().getNamespaceURI(), root),
                 processNamespaces(startElement.getNamespaces()));
     }
 
-    private static EndElement convertEndElement(EndElement endElement) {
-        return getXmlEventFactory().createEndElement(updateQName(endElement.getName()),
+    private EndElement convertEndElement(EndElement endElement) {
+        return xef.createEndElement(updateQName(endElement.getName()),
                 processNamespaces(endElement.getNamespaces()));
 
     }
@@ -181,7 +180,7 @@ public class OoXmlStrictConverter implements AutoCloseable {
         return qn;
     }
 
-    private static Iterator<Attribute> processAttributes(final Iterator<Attribute> iter,
+    private Iterator<Attribute> processAttributes(final Iterator<Attribute> iter,
             final String elementNamespaceUri, final boolean rootElement) {
         ArrayList<Attribute> list = new ArrayList<>();
         while(iter.hasNext()) {
@@ -197,7 +196,7 @@ public class OoXmlStrictConverter implements AutoCloseable {
                         break;
                     }
                 }
-                list.add(getXmlEventFactory().createAttribute(qn, newValue));
+                list.add(xef.createAttribute(qn, newValue));
             }
         }
         return Collections.unmodifiableList(list).iterator();
@@ -214,39 +213,36 @@ public class OoXmlStrictConverter implements AutoCloseable {
         return Collections.unmodifiableList(list).iterator();
     }
 
-    private static XMLInputFactory getXmlInputFactory() {
-        if (XIF == null) {
-            try {
-                XIF = XMLHelper.newXMLInputFactory();
-            } catch (Exception e) {
-                LOGGER.error("Issue creating XMLInputFactory", e);
-                throw e;
-            }
+    /**
+     * The StAX factories are created per converter instead of being cached in static fields.
+     * None of them are thread-safe (the JDK XMLInputFactory writes to its own fTempReader and
+     * fPropertyChanged fields on every createXMLEventReader call, and XMLEventFactory carries a
+     * mutable Location), and converters can be run concurrently.
+     */
+    private static XMLInputFactory newXmlInputFactory() {
+        try {
+            return XMLHelper.newXMLInputFactory();
+        } catch (Exception e) {
+            LOGGER.error("Issue creating XMLInputFactory", e);
+            throw e;
         }
-        return XIF;
     }
 
-    private static XMLOutputFactory getXmlOutputFactory() {
-        if (XOF == null) {
-            try {
-                XOF = XMLHelper.newXMLOutputFactory();
-            } catch (Exception e) {
-                LOGGER.error("Issue creating XMLOutputFactory", e);
-                throw e;
-            }
+    private static XMLOutputFactory newXmlOutputFactory() {
+        try {
+            return XMLHelper.newXMLOutputFactory();
+        } catch (Exception e) {
+            LOGGER.error("Issue creating XMLOutputFactory", e);
+            throw e;
         }
-        return XOF;
     }
 
-    private static XMLEventFactory getXmlEventFactory() {
-        if (XEF == null) {
-            try {
-                XEF = XMLHelper.newXMLEventFactory();
-            } catch (Exception e) {
-                LOGGER.error("Issue creating XMLEventFactory", e);
-                throw e;
-            }
+    private static XMLEventFactory newXmlEventFactory() {
+        try {
+            return XMLHelper.newXMLEventFactory();
+        } catch (Exception e) {
+            LOGGER.error("Issue creating XMLEventFactory", e);
+            throw e;
         }
-        return XEF;
     }
 }

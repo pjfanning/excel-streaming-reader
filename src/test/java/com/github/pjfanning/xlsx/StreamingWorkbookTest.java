@@ -567,6 +567,44 @@ public class StreamingWorkbookTest {
   }
 
   @Test
+  public void testConcurrentSheetIteration() throws Exception {
+    //each StreamingRowIterator needs its own XMLInputFactory - a shared one is a data race
+    //because XMLInputFactory implementations mutate instance state on createXMLEventReader
+    final int threads = 8;
+    final int iterationsPerThread = 20;
+    final ExecutorService executorService = Executors.newFixedThreadPool(threads);
+    try {
+      final List<CompletableFuture<Integer>> futures = new ArrayList<>();
+      for(int t = 0; t < threads; t++) {
+        final CompletableFuture<Integer> future = new CompletableFuture<>();
+        futures.add(future);
+        executorService.submit(() -> {
+          try {
+            int rowCount = 0;
+            for(int i = 0; i < iterationsPerThread; i++) {
+              try(Workbook workbook = openWorkbook("gaps.xlsx")) {
+                for(Row row : workbook.getSheetAt(0)) {
+                  assertNotNull(row);
+                  rowCount++;
+                }
+              }
+            }
+            future.complete(rowCount);
+          } catch (Throwable e) {
+            future.completeExceptionally(e);
+          }
+        });
+      }
+      for(CompletableFuture<Integer> future : futures) {
+        assertEquals(Integer.valueOf(3 * iterationsPerThread), future.get(2, TimeUnit.MINUTES));
+      }
+    } finally {
+      executorService.shutdown();
+      assertTrue(executorService.awaitTermination(1, TimeUnit.MINUTES));
+    }
+  }
+
+  @Test
   public void testCallingSheetIteratorTwice() throws IOException {
     try(Workbook workbook = openWorkbook("formats.xlsx")) {
       Iterator<Sheet> iter1 = workbook.sheetIterator();
