@@ -9,6 +9,7 @@ import java.io.*;
 class TempFileDataStore implements TempDataStore {
 
   private static final Logger log = LoggerFactory.getLogger(TempFileDataStore.class);
+  private static final int BUFFER_SIZE = 8192;
   private File tempFile;
 
   @Override
@@ -17,7 +18,7 @@ class TempFileDataStore implements TempDataStore {
       throw new IOException("temp file already created");
     }
     tempFile = TempFile.createTempFile("excel-streaming-reader", ".xml");
-    return new FileOutputStream(tempFile);
+    return new BufferedOutputStream(new FileOutputStream(tempFile), BUFFER_SIZE);
   }
 
   @Override
@@ -25,7 +26,7 @@ class TempFileDataStore implements TempDataStore {
     if (tempFile == null) {
       throw new IOException("temp file was never populated");
     }
-    return new FileInputStream(tempFile);
+    return new BufferedInputStream(new FileInputStream(tempFile), BUFFER_SIZE);
   }
 
   @Override

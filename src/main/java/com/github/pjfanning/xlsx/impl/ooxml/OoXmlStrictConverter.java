@@ -19,9 +19,17 @@ public class OoXmlStrictConverter implements AutoCloseable {
     private static final Logger LOGGER = LoggerFactory.getLogger(OoXmlStrictConverter.class);
     private static final QName CONFORMANCE = new QName("conformance");
     private static final Properties mappings;
+    //stringPropertyNames() builds a fresh HashSet on every call, and this is consulted once per
+    //attribute, so the prefix mappings are materialised once here instead
+    private static final Map<String, String> prefixMappings;
 
     static {
         mappings = OoXmlStrictConverterUtils.readMappings();
+        final Map<String, String> prefixes = new LinkedHashMap<>();
+        for (String key : mappings.stringPropertyNames()) {
+            prefixes.put(key, mappings.getProperty(key));
+        }
+        prefixMappings = Collections.unmodifiableMap(prefixes);
     }
 
     private final XMLEventFactory xef;
@@ -57,8 +65,6 @@ public class OoXmlStrictConverter implements AutoCloseable {
                 xew.add(xe);
             }
         }
-
-        xew.flush();
 
         return true;
     }
@@ -152,8 +158,18 @@ public class OoXmlStrictConverter implements AutoCloseable {
 
     @Override
     public void close() throws XMLStreamException {
-        xer.close();
-        xew.close();
+        //the writer is flushed here rather than after every single element. All callers use
+        //try-with-resources with the converter declared last, so this runs before the
+        //underlying OutputStream is closed.
+        try {
+            xew.flush();
+        } finally {
+            try {
+                xer.close();
+            } finally {
+                xew.close();
+            }
+        }
     }
 
     private StartElement convertStartElement(StartElement startElement, boolean root) {
@@ -190,9 +206,9 @@ public class OoXmlStrictConverter implements AutoCloseable {
                 //drop attribute
             } else {
                 String newValue = att.getValue();
-                for(String key : mappings.stringPropertyNames()) {
-                    if(att.getValue().startsWith(key)) {
-                        newValue = att.getValue().replace(key, mappings.getProperty(key));
+                for(Map.Entry<String, String> mapping : prefixMappings.entrySet()) {
+                    if(att.getValue().startsWith(mapping.getKey())) {
+                        newValue = att.getValue().replace(mapping.getKey(), mapping.getValue());
                         break;
                     }
                 }
@@ -202,11 +218,20 @@ public class OoXmlStrictConverter implements AutoCloseable {
         return Collections.unmodifiableList(list).iterator();
     }
 
-    private static Iterator<Namespace> processNamespaces(final Iterator<Namespace> iter) {
+    private Iterator<Namespace> processNamespaces(final Iterator<Namespace> iter) {
         ArrayList<Namespace> list = new ArrayList<>();
         while(iter.hasNext()) {
             Namespace ns = iter.next();
-            if(!ns.isDefaultNamespaceDeclaration() && !mappings.containsKey(ns.getNamespaceURI())) {
+            final String mappedUri = prefixMappings.get(ns.getNamespaceURI());
+            if(mappedUri != null) {
+                //rewrite the declaration to the mapped namespace rather than dropping it. If it is
+                //dropped, the writer is left with elements in a namespace nothing declares, and
+                //POI's XMLOutputFactory has isRepairingNamespaces set, so it has to synthesise a
+                //declaration for every single element.
+                list.add(ns.isDefaultNamespaceDeclaration()
+                        ? xef.createNamespace(mappedUri)
+                        : xef.createNamespace(ns.getPrefix(), mappedUri));
+            } else if(!ns.isDefaultNamespaceDeclaration()) {
                 list.add(ns);
             }
         }
