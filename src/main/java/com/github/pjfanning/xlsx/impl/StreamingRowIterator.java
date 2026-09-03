@@ -193,11 +193,20 @@ class StreamingRowIterator implements CloseableIterator<Row> {
         if (isHidden || width >= 0) {
           Attribute minAttr = startElement.getAttributeByName(QNAME_MIN);
           Attribute maxAttr = startElement.getAttributeByName(QNAME_MAX);
-          int min = parseInt(minAttr.getValue()) - 1;
-          int max = parseInt(maxAttr.getValue()) - 1;
-          for (int columnIndex = min; columnIndex <= max; columnIndex++) {
-            if (isHidden) hiddenColumns.add(columnIndex);
-            if (width >= 0) columnWidths.put(columnIndex, width);
+          if (minAttr == null || maxAttr == null) {
+            LOG.warn("Ignoring col element that has no min and/or max attribute");
+          } else {
+            try {
+              int min = parseInt(minAttr.getValue()) - 1;
+              int max = parseInt(maxAttr.getValue()) - 1;
+              for (int columnIndex = min; columnIndex <= max; columnIndex++) {
+                if (isHidden) hiddenColumns.add(columnIndex);
+                if (width >= 0) columnWidths.put(columnIndex, width);
+              }
+            } catch (NumberFormatException nfe) {
+              LOG.warn("Ignoring col element with invalid min {} and/or max {}",
+                      minAttr.getValue(), maxAttr.getValue());
+            }
           }
         }
       } else if ("c".equals(tagLocalName)) {
