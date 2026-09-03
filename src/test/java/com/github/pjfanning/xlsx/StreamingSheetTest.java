@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.NoSuchElementException;
 
 import static com.github.pjfanning.xlsx.TestUtils.getInputStream;
 import static com.github.pjfanning.xlsx.TestUtils.nextRow;
@@ -131,6 +132,42 @@ public class StreamingSheetTest {
         assertEquals(1, sheet.getMergedRegions().size());
         assertEquals(1, sheet.getNumMergedRegions());
       }
+    }
+  }
+
+  @Test
+  public void testMergedRegionIndexOutOfRange() throws IOException {
+    try (UnsynchronizedByteArrayOutputStream bos = UnsynchronizedByteArrayOutputStream.builder().get()) {
+      try (XSSFWorkbook wb = new XSSFWorkbook()) {
+        XSSFSheet sheet = wb.createSheet();
+        assertEquals(0, sheet.addMergedRegion(new CellRangeAddress(1, 1, 1, 2)));
+        wb.write(bos);
+      }
+      try (Workbook workbook = StreamingReader.builder().open(bos.toInputStream())) {
+        Sheet sheet = workbook.getSheetAt(0);
+        for (Row row : sheet) {
+          //need to iterate over all rows before merged region data is read (it is at end of sheet data)
+        }
+        assertEquals(1, sheet.getNumMergedRegions());
+        assertNotNull(sheet.getMergedRegion(0));
+        //index == size used to raise IndexOutOfBoundsException instead
+        assertThrows(NoSuchElementException.class, () -> sheet.getMergedRegion(1));
+        assertThrows(NoSuchElementException.class, () -> sheet.getMergedRegion(-1));
+      }
+    }
+  }
+
+  @Test
+  public void testSheetIndexEqualToSheetCount() throws Exception {
+    try(
+            InputStream is = getInputStream("empty_sheet.xlsx");
+            Workbook workbook = StreamingReader.builder().open(is)
+    ) {
+      int numberOfSheets = workbook.getNumberOfSheets();
+      assertEquals(1, numberOfSheets);
+      //index == number of sheets used to raise IndexOutOfBoundsException instead
+      assertThrows(MissingSheetException.class, () -> workbook.getSheetAt(numberOfSheets));
+      assertThrows(MissingSheetException.class, () -> workbook.getSheetAt(-1));
     }
   }
 

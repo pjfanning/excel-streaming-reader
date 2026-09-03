@@ -167,7 +167,7 @@ public class StreamingSheet implements Sheet {
   @Override
   public CellRangeAddress getMergedRegion(int index) throws NoSuchElementException {
     List<CellRangeAddress> regions = getMergedRegions();
-    if(index > regions.size()) {
+    if(index < 0 || index >= regions.size()) {
       throw new NoSuchElementException("index " + index + " is out of range");
     }
     return regions.get(index);
