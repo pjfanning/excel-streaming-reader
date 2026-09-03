@@ -203,7 +203,11 @@ public class StreamingSheetReader implements Iterable<Row> {
 
     if (stylesTable != null) {
       if(cellStyleString != null) {
-        style = stylesTable.getStyleAt(parseInt(cellStyleString));
+        try {
+          style = stylesTable.getStyleAt(parseInt(cellStyleString));
+        } catch (NumberFormatException nfe) {
+          LOG.warn("Ignoring invalid cell style index {}", cellStyleString);
+        }
       } else if(stylesTable.getNumCellStyles() > 0) {
         style = stylesTable.getStyleAt(0);
       }
