@@ -604,6 +604,23 @@ public class StreamingWorkbookTest {
     }
   }
 
+  // Sheet metadata is located by element local name, so it has to work for both the
+  // transitional and the strict OOXML namespace.
+  @Test
+  public void testSheetNamesReadForBothNamespaces() throws IOException {
+    try(Workbook workbook = openWorkbook("data_types-strict-ooxml.xlsx")) {
+      //strict OOXML uses http://purl.oclc.org/ooxml/spreadsheetml/main
+      assertEquals(1, workbook.getNumberOfSheets());
+      assertEquals("TestSheet1", workbook.getSheetName(0));
+      assertFalse(workbook.isSheetHidden(0));
+    }
+    try(Workbook workbook = openWorkbook("sheets.xlsx")) {
+      //transitional uses http://schemas.openxmlformats.org/spreadsheetml/2006/main
+      assertTrue(workbook.getNumberOfSheets() > 1);
+      assertNotNull(workbook.getSheetName(0));
+    }
+  }
+
   @Test
   public void testCallingSheetIteratorTwice() throws IOException {
     try(Workbook workbook = openWorkbook("formats.xlsx")) {

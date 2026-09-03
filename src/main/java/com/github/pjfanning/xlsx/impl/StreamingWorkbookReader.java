@@ -28,8 +28,8 @@ import org.apache.poi.xssf.usermodel.XSSFShape;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import javax.xml.stream.XMLStreamException;
@@ -40,7 +40,6 @@ import java.security.GeneralSecurityException;
 import java.util.*;
 
 import static com.github.pjfanning.xlsx.XmlUtils.readDocument;
-import static com.github.pjfanning.xlsx.XmlUtils.searchForNodeList;
 
 public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support, AutoCloseable {
   private static final Logger log = LoggerFactory.getLogger(StreamingWorkbookReader.class);
@@ -283,12 +282,12 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
 
   private void lookupSheetNames(Document workbookDoc) {
     sheetProperties.clear();
-    NodeList nl = searchForNodeList(workbookDoc, "/ss:workbook/ss:sheets/ss:sheet");
-    for(int i = 0; i < nl.getLength(); i++) {
+    final Element sheets = DomUtil.getFirstChildElement(workbookDoc.getDocumentElement(), "sheets");
+    for(Element sheet : DomUtil.getChildElements(sheets, "sheet")) {
       Map<String, String> props = new HashMap<>();
-      props.put("name", nl.item(i).getAttributes().getNamedItem("name").getTextContent());
+      props.put("name", sheet.getAttributes().getNamedItem("name").getTextContent());
 
-      Node state = nl.item(i).getAttributes().getNamedItem("state");
+      Node state = sheet.getAttributes().getNamedItem("state");
       props.put("state", state == null ? "visible" : state.getTextContent());
       sheetProperties.add(props);
     }
