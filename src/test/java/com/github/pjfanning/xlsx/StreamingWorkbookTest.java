@@ -11,6 +11,7 @@ import org.apache.poi.openxml4j.opc.ZipPackage;
 import org.apache.poi.openxml4j.util.ZipInputStreamZipEntrySource;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellAddress;
+import org.apache.poi.util.TempFile;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.*;
 import org.junit.AfterClass;
@@ -25,6 +26,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static com.github.pjfanning.xlsx.TestUtils.*;
 import static org.apache.poi.ss.usermodel.CellType.*;
@@ -503,6 +505,65 @@ public class StreamingWorkbookTest {
     } finally {
       ZipPackage.setUseTempFilePackageParts(false);
     }
+  }
+
+  @Test
+  public void testCloseReleasesSheetOpenedByIndex() throws IOException {
+    //sheets created by getSheetAt/getSheet are tracked separately from the ones created by the
+    //sheet iterator - Workbook.close() needs to close both of them
+    expectNoCommentsTempFilesLeftBehind(workbook -> workbook.getSheetAt(0));
+  }
+
+  @Test
+  public void testCloseReleasesSheetOpenedByName() throws IOException {
+    expectNoCommentsTempFilesLeftBehind(workbook -> workbook.getSheet("Sheet1"));
+  }
+
+  @Test
+  public void testCloseReleasesSheetOpenedByIterator() throws IOException {
+    expectNoCommentsTempFilesLeftBehind(workbook -> workbook.sheetIterator().next());
+  }
+
+  private void expectNoCommentsTempFilesLeftBehind(Function<Workbook, Sheet> sheetLookup)
+          throws IOException {
+    final File tempDir = getPoiTempDir();
+    final Set<String> before = listCommentsTempFiles(tempDir);
+    try(Workbook workbook = StreamingReader.builder()
+            .setReadComments(true)
+            .setCommentsImplementationType(CommentsImplementationType.TEMP_FILE_BACKED)
+            .open(new File("src/test/resources/commentTest.xlsx"))) {
+      for(Row row : sheetLookup.apply(workbook)) {
+        row.getRowNum();
+      }
+    }
+    final Set<String> after = listCommentsTempFiles(tempDir);
+    after.removeAll(before);
+    assertEquals("comments temp files should be deleted when the workbook is closed",
+            Collections.<String>emptySet(), after);
+  }
+
+  private static File getPoiTempDir() throws IOException {
+    final File probe = TempFile.createTempFile("probe", ".tmp");
+    try {
+      return probe.getParentFile();
+    } finally {
+      if(!probe.delete()) {
+        probe.deleteOnExit();
+      }
+    }
+  }
+
+  private static Set<String> listCommentsTempFiles(File dir) {
+    final String[] names = dir.list();
+    final Set<String> commentsFiles = new HashSet<>();
+    if(names != null) {
+      for(String name : names) {
+        if(name.startsWith("poi-comments")) {
+          commentsFiles.add(name);
+        }
+      }
+    }
+    return commentsFiles;
   }
 
   @Test

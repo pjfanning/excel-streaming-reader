@@ -331,14 +331,28 @@ public class StreamingWorkbookReader implements Iterable<Sheet>, Date1904Support
     return use1904Dates;
   }
 
+  /**
+   * Closes every sheet that has been created so far. Sheets can be created either by
+   * {@link #getSheets()} (which populates <code>sheets</code>) or by {@link #getSheetAt(int)}/
+   * {@link #getSheet(String)} (which populate <code>sheetMap</code>), so both need to be closed.
+   */
+  private void closeSheets() {
+    // a Set is used because the same sheet can appear in both collections;
+    // StreamingSheet does not override equals/hashCode, so this dedupes on identity
+    final Set<StreamingSheet> openSheets = new LinkedHashSet<>();
+    if (sheets != null) {
+      openSheets.addAll(sheets);
+    }
+    openSheets.addAll(sheetMap.values());
+    for(StreamingSheet sheet : openSheets) {
+      sheet.getReader().close();
+    }
+  }
+
   @Override
   public void close() throws IOException {
     try {
-      if (sheets != null) {
-        for(StreamingSheet sheet : sheets) {
-          sheet.getReader().close();
-        }
-      }
+      closeSheets();
     } finally {
       try {
         pkg.revert();
