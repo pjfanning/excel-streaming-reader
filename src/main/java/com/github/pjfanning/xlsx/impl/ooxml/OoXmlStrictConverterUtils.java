@@ -20,9 +20,15 @@ public class OoXmlStrictConverterUtils {
         return !isBlank(str);
     }
 
+    private static final String MAPPINGS_RESOURCE = "/ooxml-strict-mappings.properties";
+
     public static Properties readMappings() throws ReadException {
         Properties props = new Properties();
-        try(InputStream is = OoXmlStrictConverterUtils.class.getResourceAsStream("/ooxml-strict-mappings.properties");
+        final InputStream mappings = OoXmlStrictConverterUtils.class.getResourceAsStream(MAPPINGS_RESOURCE);
+        if (mappings == null) {
+            throw new ReadException("Failed to read mappings - " + MAPPINGS_RESOURCE + " is missing");
+        }
+        try(InputStream is = mappings;
                 BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.ISO_8859_1))) {
             String line;
             while((line = reader.readLine()) != null) {

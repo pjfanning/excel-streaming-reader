@@ -171,6 +171,26 @@ public class StreamingSheetTest {
     }
   }
 
+  // This sheet has a <col> element with no min/max attributes. It used to trigger a
+  // NullPointerException; the bad element should be ignored and the valid ones still applied.
+  @Test
+  public void testColWithoutMinAndMaxIgnored() throws Exception {
+    try(
+            InputStream is = getInputStream("col_missing_min_max.xlsx");
+            Workbook wb = StreamingReader.builder().open(is)
+    ) {
+      Sheet sheet = wb.getSheetAt(0);
+      for (Row row : sheet) {
+        assertNotNull(row);
+      }
+      assertEquals(5120, sheet.getColumnWidth(0));
+      assertEquals(2048, sheet.getColumnWidth(1));
+      assertEquals(0, sheet.getColumnWidth(2));
+      assertFalse(sheet.isColumnHidden(0));
+      assertTrue(sheet.isColumnHidden(2));
+    }
+  }
+
   @Test
   public void testRowIteratorNext() throws Exception {
     try(
