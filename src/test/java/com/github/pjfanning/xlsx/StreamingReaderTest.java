@@ -851,6 +851,25 @@ public class StreamingReaderTest {
     }
   }
 
+  // Cell A1 on this sheet has a non-numeric style index. StreamingRowIterator already
+  // logs and ignores such an index, so the sheet should still be readable.
+  @Test
+  public void testInvalidCellStyleIndexIgnored() throws Exception {
+    try (
+            InputStream is = new FileInputStream("src/test/resources/invalid_style_index.xlsx");
+            Workbook wb = StreamingReader.builder().open(is)
+    ) {
+      List<Row> rows = new ArrayList<>();
+      for (Row r : wb.getSheetAt(0)) {
+        rows.add(r);
+      }
+      assertEquals(3, rows.size());
+      Cell a1 = rows.get(0).getCell(0);
+      assertEquals("Dat", a1.getStringCellValue());
+      assertNull("no style should be resolved for an unparseable style index", a1.getCellStyle());
+    }
+  }
+
   // The last cell on this sheet should be a NUMERIC but there is a lingering "f"
   // tag that was getting attached to the last cell causing it to be a FORUMLA.
   @Test
