@@ -191,6 +191,37 @@ public class StreamingSheetTest {
     }
   }
 
+  // The parsed cell reference behind a hyperlink is cached, so repeated calls to the
+  // row/column getters must keep returning the same answer.
+  @Test
+  public void testHyperlinkBoundsAreStableAcrossCalls() throws Exception {
+    try(
+            InputStream is = getInputStream("59775.xlsx");
+            Workbook wb = StreamingReader.builder().setReadHyperlinks(true).open(is)
+    ) {
+      Sheet sheet = wb.getSheetAt(0);
+      for (Row row : sheet) {
+        //hyperlink data is at the end of the sheet, so it has to be fully read first
+      }
+      List<? extends Hyperlink> links = sheet.getHyperlinkList();
+      assertFalse(links.isEmpty());
+      for (Hyperlink link : links) {
+        int firstRow = link.getFirstRow();
+        int lastRow = link.getLastRow();
+        int firstColumn = link.getFirstColumn();
+        int lastColumn = link.getLastColumn();
+        for (int i = 0; i < 3; i++) {
+          assertEquals(firstRow, link.getFirstRow());
+          assertEquals(lastRow, link.getLastRow());
+          assertEquals(firstColumn, link.getFirstColumn());
+          assertEquals(lastColumn, link.getLastColumn());
+        }
+        assertTrue(lastRow >= firstRow);
+        assertTrue(lastColumn >= firstColumn);
+      }
+    }
+  }
+
   @Test
   public void testRowIteratorNext() throws Exception {
     try(
