@@ -206,7 +206,7 @@ class StreamingRowIterator implements CloseableIterator<Row> {
         if (ref != null) {
           CellAddress cellAddress = new CellAddress(ref.getValue());
           currentColNum = cellAddress.getColumn();
-          if (currentRow.getRowNum() == currentRowNum) {
+          if (currentRow != null && currentRow.getRowNum() == currentRowNum) {
             currentCell = new StreamingCell(sheet, currentColNum, currentRow, use1904Dates);
           } else {
             currentCell = new StreamingCell(sheet, currentColNum, cellAddress.getRow(), use1904Dates);
@@ -332,6 +332,8 @@ class StreamingRowIterator implements CloseableIterator<Row> {
         if (currentRow == null) {
           final CellAddress cellAddress = currentCell == null ? null : currentCell.getAddress();
           LOG.warn("failed to add cell {} to cell map because currentRow is null", cellAddress);
+        } else if (currentCell == null) {
+          LOG.warn("failed to add cell to row {} because currentCell is null", currentRow.getRowNum());
         } else {
           currentRow.getCellMap().put(currentCell.getColumnIndex(), currentCell);
         }
