@@ -302,6 +302,46 @@ public class StreamingWorkbookTest {
   }
 
   @Test
+  public void testInvalidCellReference() throws Exception {
+    // a cell whose "r" attribute has no row digits (e.g. r="B" instead of r="B1") makes
+    // org.apache.poi.ss.util.CellAddress throw a NumberFormatException; the cell is expected
+    // to be read as belonging to the row that is currently being parsed instead
+    try (Workbook workbook = openWorkbook("invalid_cell_reference.xlsx")) {
+      Sheet sheet = workbook.getSheetAt(0);
+      Iterator<Row> rowIterator = sheet.rowIterator();
+      assertTrue(rowIterator.hasNext());
+      Row row = rowIterator.next();
+      assertEquals(0, row.getRowNum());
+      assertFalse(rowIterator.hasNext());
+
+      Cell cell0 = row.getCell(0);
+      assertEquals("cell0 address matches", "A1", cell0.getAddress().formatAsString());
+      assertEquals("cell0 value matches", "First inline cell", cell0.getStringCellValue());
+
+      Cell cell1 = row.getCell(1);
+      assertEquals("cell1 address matches", "B1", cell1.getAddress().formatAsString());
+      assertEquals("cell1 row matches", 0, cell1.getRowIndex());
+      assertEquals("cell1 column matches", 1, cell1.getColumnIndex());
+      assertEquals("cell1 value matches", "Second inline cell", cell1.getStringCellValue());
+    }
+  }
+
+  @Test
+  public void testUnparseableCellReferenceThrowsParseException() throws Exception {
+    // a cell whose "r" attribute does not even start with a column (e.g. r="1B") cannot be
+    // assigned to any column, so a ParseException is expected
+    try (Workbook workbook = openWorkbook("unparseable_cell_reference.xlsx")) {
+      Sheet sheet = workbook.getSheetAt(0);
+      assertThrows(ParseException.class, () -> {
+        Iterator<Row> rowIterator = sheet.rowIterator();
+        while (rowIterator.hasNext()) {
+          rowIterator.next();
+        }
+      });
+    }
+  }
+
+  @Test
   public void testMissingRattrs() throws Exception {
     try(Workbook workbook = openWorkbook("missing-r-attrs.xlsx")) {
       Sheet sheet = workbook.getSheetAt(0);

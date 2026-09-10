@@ -115,6 +115,48 @@ class StreamingRowIterator implements CloseableIterator<Row> {
   }
 
   /**
+   * Parses the <code>r</code> attribute of a <code>c</code> element. Some tools write cell
+   * references with no row number (eg <code>r="B"</code>) - such a reference is treated as
+   * pointing at the row that is currently being read.
+   *
+   * @param ref the cell reference to parse
+   * @return the cell address to use for the current cell (never null)
+   * @throws ParseException if the reference does not even start with a valid column
+   */
+  private CellAddress parseCellAddress(String ref) {
+    try {
+      return new CellAddress(ref);
+    } catch (RuntimeException e) {
+      int colNum = parseColumn(ref);
+      if (colNum < 0) {
+        throw new ParseException("Invalid cell reference [" + ref + "]", e);
+      }
+      LOG.warn("Cell reference [{}] has no valid row number, assuming row {}", ref, currentRowNum + 1);
+      return new CellAddress(currentRowNum, colNum);
+    }
+  }
+
+  /**
+   * @param ref a cell reference
+   * @return the 0-based index of the column that the reference starts with, or -1 if the
+   * reference does not start with a valid column
+   */
+  private static int parseColumn(String ref) {
+    int pos = 0;
+    while (pos < ref.length() && Character.isLetter(ref.charAt(pos))) {
+      pos++;
+    }
+    if (pos == 0) {
+      return -1;
+    }
+    try {
+      return CellReference.convertColStringToIndex(ref.substring(0, pos).toUpperCase(Locale.ROOT));
+    } catch (RuntimeException e) {
+      return -1;
+    }
+  }
+
+  /**
    * Read through a number of rows equal to the rowCacheSize field or until there is no more data to read
    *
    * @return true if data was read
@@ -214,7 +256,7 @@ class StreamingRowIterator implements CloseableIterator<Row> {
         Attribute ref = startElement.getAttributeByName(QNAME_R);
 
         if (ref != null) {
-          CellAddress cellAddress = new CellAddress(ref.getValue());
+          CellAddress cellAddress = parseCellAddress(ref.getValue());
           currentColNum = cellAddress.getColumn();
           if (currentRow != null && currentRow.getRowNum() == currentRowNum) {
             currentCell = new StreamingCell(sheet, currentColNum, currentRow, use1904Dates);
