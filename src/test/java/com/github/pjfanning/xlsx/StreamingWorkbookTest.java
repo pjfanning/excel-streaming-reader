@@ -342,6 +342,38 @@ public class StreamingWorkbookTest {
   }
 
   @Test
+  public void testNumericCellWithEmptyValue() throws Exception {
+    // https://github.com/pjfanning/excel-streaming-reader/issues/391
+    // B2 is encoded as <c t="n"><v></v></c>: a numeric cell with an empty value. XSSFCell treats this
+    // as 0.0 rather than throwing a NumberFormatException, so StreamingCell should do the same
+    try (
+            InputStream stream = getInputStream("numeric-empty-repro.xlsx");
+            Workbook workbook = StreamingReader.builder().setReadHyperlinks(true).open(stream)
+    ) {
+      Sheet sheet = workbook.getSheetAt(0);
+      Iterator<Row> rowIterator = sheet.rowIterator();
+      rowIterator.next(); // header row
+      Row row2 = rowIterator.next();
+      Cell b2 = row2.getCell(1);
+      assertEquals("B2", b2.getAddress().formatAsString());
+      assertEquals(NUMERIC, b2.getCellType());
+      assertEquals(0.0, b2.getNumericCellValue(), 0.0);
+      assertEquals("", b2.getStringCellValue());
+
+      Row row3 = rowIterator.next();
+      assertEquals(456.0, row3.getCell(1).getNumericCellValue(), 0.0);
+      assertFalse(rowIterator.hasNext());
+
+      // this is the code path that failed in Apache NiFi's SplitExcel processor (NIFI-16361)
+      try (XSSFWorkbook target = new XSSFWorkbook()) {
+        XSSFCell targetCell = target.createSheet().createRow(0).createCell(0);
+        org.apache.poi.ss.util.CellUtil.copyCell(b2, targetCell, new CellCopyPolicy(), new CellCopyContext());
+        assertEquals(0.0, targetCell.getNumericCellValue(), 0.0);
+      }
+    }
+  }
+
+  @Test
   public void testMissingRattrs() throws Exception {
     try(Workbook workbook = openWorkbook("missing-r-attrs.xlsx")) {
       Sheet sheet = workbook.getSheetAt(0);
