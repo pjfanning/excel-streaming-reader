@@ -190,6 +190,10 @@ public class StreamingCell implements Cell {
    */
   @Override
   public double getNumericCellValue() {
+    if (rawContents == null || rawContents.trim().isEmpty()) {
+      // a numeric cell with an empty value (e.g. <c t="n"><v/></c>) is treated as 0.0, matching XSSFCell
+      return 0.0;
+    }
     if ("d".equals(type)) {
       try {
         LocalDateTime dt = DateTimeUtil.parseDateTime(rawContents);
@@ -202,7 +206,7 @@ public class StreamingCell implements Cell {
         }
       }
     }
-    return rawContents == null ? 0.0 : parseDouble(rawContents);
+    return parseDouble(rawContents);
   }
 
   /**
