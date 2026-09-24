@@ -32,11 +32,11 @@ java {
 
 repositories {
     mavenCentral()
-    // maven { url "https://repository.apache.org/content/groups/staging/" }
+    maven { url "https://repository.apache.org/content/groups/snapshots/" }
 }
 
 ext {
-    poiVersion = '5.5.1'
+    poiVersion = '6.0.0-SNAPSHOT'
     poiSharedStringsVersion = '2.11.0'
     slf4jVersion = '2.0.19'
 }
@@ -47,7 +47,7 @@ dependencies {
     implementation "org.slf4j:slf4j-api:$slf4jVersion"
     implementation 'commons-io:commons-io:2.22.0'
     implementation 'org.apache.commons:commons-compress:1.28.0'
-    implementation 'org.apache.xmlbeans:xmlbeans:5.4.0'
+    implementation 'org.apache.xmlbeans:xmlbeans:5.4.1'
     poiSharedStringsImplementation "com.github.pjfanning:poi-shared-strings:$poiSharedStringsVersion"
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.nanohttpd:nanohttpd:2.3.1'
