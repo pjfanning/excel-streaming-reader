@@ -327,7 +327,6 @@ public class StreamingWorkbook implements Workbook, Date1904Support, AutoCloseab
   /**
    * Not supported
    */
-  @Override
   public int getNumberOfFontsAsInt() { throw new UnsupportedOperationException(); }
 
   /**
