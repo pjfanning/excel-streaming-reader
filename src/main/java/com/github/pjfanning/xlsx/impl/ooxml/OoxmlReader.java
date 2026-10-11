@@ -151,8 +151,8 @@ public class OoxmlReader extends XSSFReader {
       } catch (InvalidFormatException e) {
         throw new POIXMLException(e);
       } catch (POIXMLException e) {
-        if (e.getCause() instanceof SAXException) {
-          throw new OpenException((SAXException) e.getCause());
+        if (e.getCause() instanceof SAXException saxException) {
+          throw new OpenException(saxException);
         }
         throw e;
       }
@@ -186,12 +186,8 @@ public class OoxmlReader extends XSSFReader {
     }
 
     SheetData getSheetData(final XSSFSheetRef sheetRef) {
-      SheetData sd = sheetDataMap.get(sheetRef);
-      if (sd == null) {
-        sd = createSheetData(builder, sheetRef, sheetIterator.getSheetPart(sheetRef), strictOoxmlChecksNeeded);
-        sheetDataMap.put(sheetRef, sd);
-      }
-      return sd;
+      return sheetDataMap.computeIfAbsent(sheetRef, ref ->
+              createSheetData(builder, ref, sheetIterator.getSheetPart(ref), strictOoxmlChecksNeeded));
     }
   }
 

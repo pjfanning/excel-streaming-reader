@@ -20,9 +20,9 @@ sonarqube {
 group = 'com.github.pjfanning'
 version = '5.3.3-SNAPSHOT'
 
-sourceCompatibility = 1.8
-
 java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
     withJavadocJar()
     withSourcesJar()
     registerFeature('poiSharedStrings') {
@@ -60,6 +60,10 @@ test {
     options {
         systemProperties(System.getProperties())
     }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 17
 }
 
 tasks.named('jar') {
