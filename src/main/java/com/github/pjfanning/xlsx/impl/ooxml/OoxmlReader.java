@@ -17,6 +17,7 @@
 package com.github.pjfanning.xlsx.impl.ooxml;
 
 import com.github.pjfanning.xlsx.CommentsImplementationType;
+import com.github.pjfanning.xlsx.SharedStringsImplementationType;
 import com.github.pjfanning.xlsx.StreamingReader;
 import com.github.pjfanning.xlsx.exceptions.MissingSheetException;
 import com.github.pjfanning.xlsx.exceptions.OpenException;
@@ -65,45 +66,29 @@ public class OoxmlReader extends XSSFReader {
     ooxmlSheetReader = new OoxmlSheetReader(builder, this, strictOoxmlChecksNeeded);
   }
 
-
   /**
    * Opens up the Shared Strings Table, parses it, and
    * returns a handy object for working with
    * shared strings.
-   * @return the shared strings table
-   * @throws IOException if an error occurs while reading the shared strings
-   */
-  @Override
-  public SharedStringsTable getSharedStringsTable() throws IOException {
-    ArrayList<PackagePart> parts = pkg.getPartsByContentType(XSSFRelation.SHARED_STRINGS.getContentType());
-    return parts.isEmpty() ? null : new SharedStringsTable(parts.get(0));
-  }
-
-  /**
-   * Opens up the Shared Strings Table, parses it, and
-   * returns a handy object for working with
-   * shared strings.
+   * <p>
+   * Only {@link SharedStringsImplementationType#POI_DEFAULT} and
+   * {@link SharedStringsImplementationType#POI_READ_ONLY} are handled here. The temp file
+   * and map backed implementations are created by the workbook reader before this is called.
+   * </p>
    * @param builder the builder to use
    * @return the shared strings table
    * @throws IOException if an error occurs while reading the shared strings
    * @throws SAXException if an error occurs while parsing the shared strings
    */
   public SharedStrings getSharedStrings(StreamingReader.Builder builder) throws IOException, SAXException {
-    ArrayList<PackagePart> parts = pkg.getPartsByContentType(XSSFRelation.SHARED_STRINGS.getContentType());
+    final List<PackagePart> parts = pkg.getPartsByContentType(XSSFRelation.SHARED_STRINGS.getContentType());
     if (parts.isEmpty()) {
       return null;
-    } else {
-      switch (builder.getSharedStringsImplementationType()) {
-        case POI_DEFAULT:
-          return new SharedStringsTable(parts.get(0));
-        case CUSTOM_MAP_BACKED:
-          return PoiSharedStringsSupport.createMapBackedSharedStringsTable(parts.get(0).getPackage(), builder);
-        case TEMP_FILE_BACKED:
-          return PoiSharedStringsSupport.createTempFileSharedStringsTable(parts.get(0).getPackage(), builder);
-        default:
-          return new ReadOnlySharedStringsTable(parts.get(0), builder.includePhoneticRuns());
-      }
     }
+    final PackagePart part = parts.get(0);
+    return builder.getSharedStringsImplementationType() == SharedStringsImplementationType.POI_DEFAULT
+            ? new SharedStringsTable(part)
+            : new ReadOnlySharedStringsTable(part, builder.includePhoneticRuns());
   }
 
   public int getSheetIndex(final String name) throws MissingSheetException {
