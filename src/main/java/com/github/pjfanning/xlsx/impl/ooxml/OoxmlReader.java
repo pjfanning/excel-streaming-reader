@@ -77,24 +77,6 @@ public class OoxmlReader extends XSSFReader {
                      OPCPackage pkg, boolean strictOoxmlChecksNeeded)
           throws IOException, OpenXML4JException, POIXMLException {
     super(pkg, true);
-
-    PackageRelationship coreDocRelationship = this.pkg.getRelationshipsByType(
-            PackageRelationshipTypes.CORE_DOCUMENT).getRelationship(0);
-
-    // strict OOXML likely not fully supported, see #57699
-    // this code is similar to POIXMLDocumentPart.getPartFromOPCPackage(), but I could not combine it
-    // easily due to different return values
-    if (coreDocRelationship == null) {
-      coreDocRelationship = this.pkg.getRelationshipsByType(
-              PackageRelationshipTypes.STRICT_CORE_DOCUMENT).getRelationship(0);
-
-      if (coreDocRelationship == null) {
-        throw new POIXMLException("OOXML file structure broken/invalid - no core document found!");
-      }
-    }
-
-    // Get the part that holds the workbook
-    workbookPart = this.pkg.getPart(coreDocRelationship);
     ooxmlSheetReader = new OoxmlSheetReader(builder, workbookPart, strictOoxmlChecksNeeded);
   }
 
@@ -137,27 +119,6 @@ public class OoxmlReader extends XSSFReader {
           return new ReadOnlySharedStringsTable(parts.get(0), builder.includePhoneticRuns());
       }
     }
-  }
-
-  /**
-   * Opens up the Styles Table, parses it, and
-   * returns a handy object for working with cell styles.
-   *
-   * @return the styles table
-   * @throws IOException if an error occurs while reading the styles.
-   */
-  @Override
-  public StylesTable getStylesTable() throws IOException, InvalidFormatException {
-    ArrayList<PackagePart> parts = pkg.getPartsByContentType(XSSFRelation.STYLES.getContentType());
-    if (parts.isEmpty()) return null;
-
-    // Create the Styles Table, and associate the Themes if present
-    StylesTable styles = new StylesTable(parts.get(0));
-    parts = pkg.getPartsByContentType(XSSFRelation.THEME.getContentType());
-    if (!parts.isEmpty()) {
-      styles.setTheme(new ThemesTable(parts.get(0)));
-    }
-    return styles;
   }
 
   public int getSheetIndex(final String name) throws MissingSheetException {
