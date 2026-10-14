@@ -966,6 +966,8 @@ public class StreamingReaderTest {
                     .open(inputStream)
     ) {
       DataFormatter formatter = new DataFormatter();
+      // POI 6 defaults to cached formula values; these tests check the formula text
+      formatter.setUseCachedValuesForFormulaCells(false);
 
       Sheet sheet = wb.getSheet("Sheet0");
       Iterator<Row> rowIterator = sheet.rowIterator();
@@ -1619,6 +1621,8 @@ public class StreamingReaderTest {
 
       try (XSSFWorkbook xssfWorkbook = new XSSFWorkbook(bos.toInputStream())) {
         DataFormatter formatter = new DataFormatter();
+        // POI 6 defaults to cached formula values; these tests check the formula text
+        formatter.setUseCachedValuesForFormulaCells(false);
 
         Sheet sheet = xssfWorkbook.getSheet("Sheet0");
         Iterator<Row> rowIterator = sheet.rowIterator();
@@ -1660,6 +1664,8 @@ public class StreamingReaderTest {
 
       try (XSSFWorkbook xssfWorkbook = new XSSFWorkbook(bos.toInputStream())) {
         DataFormatter formatter = new DataFormatter();
+        // POI 6 defaults to cached formula values; these tests check the formula text
+        formatter.setUseCachedValuesForFormulaCells(false);
 
         Sheet sheet = xssfWorkbook.getSheet("Sheet0");
         Iterator<Row> rowIterator = sheet.rowIterator();
@@ -1842,6 +1848,8 @@ public class StreamingReaderTest {
       }
 
       DataFormatter formatter = new DataFormatter();
+      // POI 6 defaults to cached formula values; these tests check the formula text
+      formatter.setUseCachedValuesForFormulaCells(false);
 
       Sheet sheet = wb.getSheet("Sheet0");
       Iterator<Row> rowIterator = sheet.rowIterator();
