@@ -18,7 +18,7 @@ sonarqube {
 }
 
 group = 'com.github.pjfanning'
-version = '5.3.3-SNAPSHOT'
+version = '6.0.0-SNAPSHOT'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
@@ -32,7 +32,7 @@ java {
 
 repositories {
     mavenCentral()
-    maven { url "https://repository.apache.org/content/groups/staging/" }
+    // maven { url = "https://repository.apache.org/content/groups/staging/" }
 }
 
 ext {
