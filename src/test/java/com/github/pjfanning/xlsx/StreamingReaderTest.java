@@ -608,11 +608,11 @@ public class StreamingReaderTest {
 
     assertEquals(2, contents.size());
     assertEquals(4, contents.get(0).size());
-    assertEquals("Thu\", \"Dec 25\", \"14", contents.get(0).get(0).getStringCellValue());
+    assertEquals("Thu, Dec 25, 14", contents.get(0).get(0).getStringCellValue());
     assertEquals(df.parse("25/12/2014"), contents.get(0).get(0).getDateCellValue());
     assertEquals("02/04/15", contents.get(0).get(1).getStringCellValue());
     assertEquals(df.parse("04/02/2015"), contents.get(0).get(1).getDateCellValue());
-    assertEquals("14\". \"Mar\". \"2015", contents.get(0).get(2).getStringCellValue());
+    assertEquals("14. Mar. 2015", contents.get(0).get(2).getStringCellValue());
     assertEquals(df.parse("14/03/2015"), contents.get(0).get(2).getDateCellValue());
     assertEquals("2015-05-05", contents.get(0).get(3).getStringCellValue());
     assertEquals(df.parse("05/05/2015"), contents.get(0).get(3).getDateCellValue());
@@ -966,6 +966,8 @@ public class StreamingReaderTest {
                     .open(inputStream)
     ) {
       DataFormatter formatter = new DataFormatter();
+      // POI 6 defaults to cached formula values; these tests check the formula text
+      formatter.setUseCachedValuesForFormulaCells(false);
 
       Sheet sheet = wb.getSheet("Sheet0");
       Iterator<Row> rowIterator = sheet.rowIterator();
@@ -1619,6 +1621,8 @@ public class StreamingReaderTest {
 
       try (XSSFWorkbook xssfWorkbook = new XSSFWorkbook(bos.toInputStream())) {
         DataFormatter formatter = new DataFormatter();
+        // POI 6 defaults to cached formula values; these tests check the formula text
+        formatter.setUseCachedValuesForFormulaCells(false);
 
         Sheet sheet = xssfWorkbook.getSheet("Sheet0");
         Iterator<Row> rowIterator = sheet.rowIterator();
@@ -1660,6 +1664,8 @@ public class StreamingReaderTest {
 
       try (XSSFWorkbook xssfWorkbook = new XSSFWorkbook(bos.toInputStream())) {
         DataFormatter formatter = new DataFormatter();
+        // POI 6 defaults to cached formula values; these tests check the formula text
+        formatter.setUseCachedValuesForFormulaCells(false);
 
         Sheet sheet = xssfWorkbook.getSheet("Sheet0");
         Iterator<Row> rowIterator = sheet.rowIterator();
@@ -1842,6 +1848,8 @@ public class StreamingReaderTest {
       }
 
       DataFormatter formatter = new DataFormatter();
+      // POI 6 defaults to cached formula values; these tests check the formula text
+      formatter.setUseCachedValuesForFormulaCells(false);
 
       Sheet sheet = wb.getSheet("Sheet0");
       Iterator<Row> rowIterator = sheet.rowIterator();
