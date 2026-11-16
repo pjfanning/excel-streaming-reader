@@ -17,6 +17,14 @@ This implementation has some extra features
     * Check [Builder](https://www.javadoc.io/doc/com.github.pjfanning/excel-streaming-reader/latest/index.html) implementation to see what options are available.
 * OOXML Strict format support (see below)
 
+## How is this different from POI's own streaming support?
+
+* `XSSFWorkbook` is not streaming - it loads the whole file into memory.
+* `SXSSFWorkbook` is streaming, but for writing only.
+* POI's streaming read option is the SAX-based event API (`XSSFReader` and `XSSFSheetXMLHandler`). It is memory efficient but callback-based, and you handle shared strings, styles and dates yourself.
+* This library uses that event API internally and exposes it through the familiar `Workbook`/`Sheet`/`Row`/`Cell` interfaces, so you can just iterate over rows.
+* Trade-offs: it is read-only, forward-only, and only a subset of the POI methods are supported (see [Supported Methods](#supported-methods)).
+
 ## Used By
 * [Apache Drill](https://drill.apache.org/)
 * [Apache Linkis](https://linkis.apache.org/)
