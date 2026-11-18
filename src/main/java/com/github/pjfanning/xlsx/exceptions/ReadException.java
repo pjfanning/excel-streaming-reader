@@ -1,5 +1,11 @@
 package com.github.pjfanning.xlsx.exceptions;
 
+/**
+ * A Runtime Exception that is thrown if there is a problem reading the Excel file.
+ * This is used in APIs where the method is unable to throw a checked exception.
+ *
+ * @see CheckedReadException
+ */
 public class ReadException extends ExcelRuntimeException {
 
   public ReadException() {
